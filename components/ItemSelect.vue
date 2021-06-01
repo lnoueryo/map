@@ -6,11 +6,11 @@
                     <div style="margin-left: 5px;" :style="{color: color}">{{ placeholder }}</div>
                     <div style="position:relative"><div :class="iconClass"></div></div>
                 </div>
-                <span v-else><span class="chip" v-for="(selectedItem, i) in selectedItems" :key="i">{{selectedItem}}<span style="margin-left:5px;font-size:15px" @click.stop="clear(i)">×</span></span></span>
+                <div class="flex-wrap" v-else><span class="chip" v-for="(selectedItem, i) in selectedItems" :key="i">{{selectedItem.text}}<span style="margin-left:5px;font-size:15px" @click.stop="clear(i)">×</span></span></div>
             </div>
             <div class="view" @click.stop="">
                 <form :class="menuClass">
-                    <label class="item" v-ripple="ripple" v-for="(item, i) in items" :key="i" :for="item"><input type="checkbox" :value="item" v-model="selectedItems" :id="item"><label :for="item">{{item.text}}</label></label>
+                    <label class="item" v-ripple="ripple" v-for="(item, i) in items" :key="i" :for="item.name"><input type="checkbox" :value="item" v-model="selectedItems" :id="item.name"><label :for="item.name">{{item.text}}</label></label>
                     <label class="item" v-ripple="ripple" @click="openMenu">決定</label>
                     <label class="item" v-ripple="ripple" for="reset"><input type="reset" id="reset" value=""><label for="reset" @click="reset">リセット</label></label>
                 </form>
@@ -27,18 +27,27 @@ export default Vue.extend({
         width: Number || null,
         color: String || null,
         backgroundColor: String || null,
-        ripple: Boolean || null
+        ripple: String || null,
+    },
+    model: {
+        event: "change"
     },
     data() {
         return {
             items: [
                 {name: 'JR', text:'JR'},
                 {name: 'Keio', text:'京王電鉄'},
-                {name: 'Toei', text:'都営地下鉄'},
+                {name: 'TokyoMetropolitanBureauofTransportation', text:'東京交通局'},
                 {name: 'TokyoMetro', text:'東京メトロ'},
                 {name: 'Seibu', text:'西武鉄道'},
                 {name: 'Tobu', text:'東武鉄道'},
                 {name: 'OdakyuDentetsu', text:'小田急電鉄'},
+                {name: 'Tokyu', text:'東急電鉄'},
+                {name: 'KeihinKyuko', text:'京浜急行電鉄'},
+                {name: 'Rinkai', text:'東京臨海高速鉄道'},
+                {name: 'Yurikamome', text:'ゆりかもめ'},
+                {name: 'TokyoMonorail', text:'東京モノレール'},
+                {name: 'MetropolitanIntercity', text:'首都圏新都市鉄道'},
             ],
             // items: ['JR', '京王電鉄', '都営地下鉄', '東京メトロ'],
             value: '',
@@ -57,6 +66,11 @@ export default Vue.extend({
     computed:{
         indexChange(){
             return (this as any).menuClass.active ? {zIndex: 0, backgroundColor: this.backgroundColor} : {zIndex: 1,transitionDelay: '.5s', backgroundColor: this.backgroundColor};
+        },
+    },
+    watch:{
+        selectedItems(){
+            this.$emit('change', this.selectedItems);
         }
     },
     methods:{
@@ -77,6 +91,7 @@ export default Vue.extend({
         },
         reset(){
             this.selectedItems.length = 0;
+            this.$emit('change', this.selectedItems)
             this.menuActive();
         },
         clear(index: number){
@@ -98,9 +113,14 @@ export default Vue.extend({
         z-index:1;
         cursor: pointer;
         min-height:34px;
+        word-break: break-all;
+        .flex-wrap{
+            display: flex;
+            flex-wrap: wrap;
+        }
         .chip{
-            margin:0 3px;
-            padding:3px 9px;
+            margin:1px 3px;
+            padding:1px 9px;
             background-color:black;
             border-radius:10px;
             font-size:12px

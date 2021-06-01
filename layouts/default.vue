@@ -21,7 +21,7 @@
                     <v-list-item-title>Switch drawer (click me)</v-list-item-title>
                 </v-list-item> -->
                 <v-list-item>
-                    <item-select placeholder="鉄道会社名で絞り込む" background-color="white" ripple="true"></item-select>
+                    <item-select v-model="hello" placeholder="鉄道会社名で絞り込む" background-color="white" ripple="true"></item-select>
                 </v-list-item>
             </v-list>
         </v-navigation-drawer>
@@ -47,9 +47,9 @@
                 <nuxt />
             </v-container>
         </v-main>
-        <v-footer :absolute="!fixed" app>
+        <!-- <v-footer :absolute="!fixed" app>
         <span>&copy; {{ new Date().getFullYear() }}</span>
-        </v-footer>
+        </v-footer> -->
     </v-app>
 </template>
 
@@ -62,6 +62,7 @@ export default Vue.extend({
     },
     data() {
         return {
+            hello: [],
             clipped: true,
             drawer: false,
             fixed: true,

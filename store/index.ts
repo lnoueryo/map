@@ -2,21 +2,28 @@ import { $axios } from '~/utils/api';
 
 interface State {
     token: null | string,
-    windowSize: WindowSize
+    windowSize: WindowSize,
+    lines: Line[],
+    map: google.maps.Map | null
   }
-  interface Token {
+interface Token {
     access: string, refresh: string
-  }
-  interface WindowSize {x: number, y: number}
-
+}
+interface WindowSize {x: number, y: number};
+interface Line {id: number, company_name: string, line_name: string, polygon: Polygon, color: string};
+interface Polygon {lat: number, lng: number}[]
+interface MapOptions {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean} | null, zoom: number};
+interface Bounds {north: number, south: number, west: number, east: number};
 const state = {
     token: null,
-    windowSize: {x: 0,y: 0}
+    windowSize: {x: 0,y: 0},
+    lines: [],
+    map: null
 };
 
 const getters = {
-    
-    windowSize(state: any){return state.windowSize}
+    windowSize(state: any){return state.windowSize},
+    lines(state: any){return state.lines},
 }
 
 const mutations = {
@@ -25,6 +32,14 @@ const mutations = {
     },
     windowSize(state: State, payload: WindowSize){
         state.windowSize = Object.assign({}, state.windowSize, payload);
+    },
+    setLines(state: State, payload: Line[]){
+        payload.forEach(line => {
+            state.lines.push(line)
+        });
+    },
+    setMap(state: State, payload: google.maps.Map){
+        state.map = payload;
     }
 };
 
@@ -49,39 +64,22 @@ const actions = {
     },
     windowSize(context: any, payload: WindowSize){
         context.commit('windowSize', payload)
+    },
+    async getLines(context: any){
+        const response = await $axios.$get('/api/map/station/polygon/');
+        context.commit('setLines', response);
+    },
+    resetPolyline(context: any, payload: google.maps.Polyline[]){
+        payload.forEach(polyline => {
+            polyline.setMap(null);
+        });
     }
 };
 
 export default {
+    namespace: true,
     state,
     getters,
     mutations,
     actions,
 }
-// NuxtのVuex内で$routerを使うことになった。
-// Nuxtでは
-
-// ```javascript
-// $nuxt.$router.push('/')
-// ```
-
-// のように使うのだが、storeが現在index.tsのため$nuxtにエラーが発生してしまう。
-// なので$axiosと同じ手法で$nuxtを定義した。
-
-// ```typescript:utils/api.ts
-// import { NuxtAxiosInstance } from '@nuxtjs/axios';
-// import { NuxtApp } from '@nuxt/types/app'
-// let $axios: NuxtAxiosInstance;
-// let $nuxt: NuxtApp
-// export function initializeAxios(axiosInstance: NuxtAxiosInstance): void {
-//   $axios = axiosInstance;
-// }
-
-// export { $axios, $nuxt };
-// ```
-
-// ```store/index.ts
-// import { $axios, $nuxt } from '~/utils/api';
-// ```
-
-// これでエラーが消えた。
