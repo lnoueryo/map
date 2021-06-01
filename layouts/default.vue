@@ -12,7 +12,20 @@
                 </v-list-item>
             </v-list>
         </v-navigation-drawer>
-        <v-app-bar :clipped-left="clipped" fixed app>
+        <v-navigation-drawer v-model="rightDrawer" :right="right" :clipped="clipped" fixed app>
+            <v-list>
+                <!-- <v-list-item @click.native="right = !right">
+                    <v-list-item-action>
+                        <v-icon light> mdi-repeat </v-icon>
+                    </v-list-item-action>
+                    <v-list-item-title>Switch drawer (click me)</v-list-item-title>
+                </v-list-item> -->
+                <v-list-item>
+                    <item-select placeholder="鉄道会社名で絞り込む" background-color="white" ripple="true"></item-select>
+                </v-list-item>
+            </v-list>
+        </v-navigation-drawer>
+        <v-app-bar :clipped-left="clipped" :clipped-right="clipped" fixed app>
             <v-app-bar-nav-icon @click.stop="drawer = !drawer" />
             <v-btn icon @click.stop="miniVariant = !miniVariant">
                 <v-icon>mdi-{{ `chevron-${miniVariant ? 'right' : 'left'}` }}</v-icon>
@@ -34,16 +47,6 @@
                 <nuxt />
             </v-container>
         </v-main>
-        <v-navigation-drawer v-model="rightDrawer" :right="right" temporary fixed>
-            <v-list>
-                <v-list-item @click.native="right = !right">
-                    <v-list-item-action>
-                        <v-icon light> mdi-repeat </v-icon>
-                    </v-list-item-action>
-                    <v-list-item-title>Switch drawer (click me)</v-list-item-title>
-                </v-list-item>
-            </v-list>
-        </v-navigation-drawer>
         <v-footer :absolute="!fixed" app>
         <span>&copy; {{ new Date().getFullYear() }}</span>
         </v-footer>
@@ -52,12 +55,16 @@
 
 <script lang="ts">
 import Vue from 'vue'
+import ItemSelect from '../components/ItemSelect.vue'
 export default Vue.extend({
+    components:{
+        ItemSelect
+    },
     data() {
         return {
-            clipped: false,
+            clipped: true,
             drawer: false,
-            fixed: false,
+            fixed: true,
             items: [
                 {
                     icon: 'mdi-apps',
@@ -72,7 +79,7 @@ export default Vue.extend({
             ],
             miniVariant: false,
             right: true,
-            rightDrawer: false,
+            rightDrawer: true,
             title: 'Vuetify.js',
             windowSize: {x: 0, y: 0 }
         }

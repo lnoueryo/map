@@ -22,6 +22,7 @@
 <script lang="ts">
 import Vue from 'vue'
 import populationData from '~/assets/json/population.json'
+// import tokyo2020 from '~/assets/json/tokyo2020.json'
 interface dataType {
     chartConfig: ChartConfig
     horizontalAxis: number[] | string[],
@@ -46,13 +47,9 @@ export default Vue.extend({
             timer: null
         }
     },
-    created(){
+    async created(){
         this.data = populationData[this.index];
         this.verticalAxis = populationData[this.index].population
-        // let total = 0
-        // for (let i = 2; i < 25; i++) {
-        //     total = total + populationData[i].population[13];
-        // }
     },
     computed: {
         horizontalAxisFilter(){
