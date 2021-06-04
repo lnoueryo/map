@@ -2,7 +2,7 @@
     <div>
         <nav class="bottom-bar">
             <div>
-                <v-btn color="orange" @click="onClickMakePolyline">makepolyline</v-btn>
+                <!-- <v-btn color="orange" @click="onClickMakePolyline">makepolyline</v-btn> -->
             </div>
         </nav>
     </div>

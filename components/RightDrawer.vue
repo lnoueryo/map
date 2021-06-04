@@ -38,16 +38,22 @@ export default Vue.extend({
                 'drawer': true,
                 'open': false
             },
-            markerSwitch: false,
+            markerSwitch: true,
             lineSwitch: false,
         }
     },
     watch:{
-        markerSwitch(v){
-            this.$store.dispatch('home/changeMarkerSwitch',v);
+        markerSwitch:{
+            handler(v){
+                this.$store.dispatch('home/changeMarkerSwitch',v);
+            },
+            immediate: true
         },
-        lineSwitch(v){
-            this.$store.dispatch('home/changeLineSwitch',v);
+        lineSwitch:{
+            handler(v){
+                this.$store.dispatch('home/changeLineSwitch',v);
+            },
+            immediate:true,
         },
     },
     methods:{

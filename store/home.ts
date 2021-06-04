@@ -6,18 +6,21 @@ interface State {
     currentBounds: Bounds,
     markerSwitch: boolean,
     lineSwitch: boolean,
+    selectedMarker: Station
   }
 interface Line {id: number, company_name: string, line_name: string, polygon: Polygon, color: string};
 interface Polygon {lat: number, lng: number}[]
-interface MapOptions {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean} | null, zoom: number};
 interface Bounds {north: number, south: number, west: number, east: number};
+interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,station_lat:number,station_lon:number,station_name:string}
+
 const state = {
     lines: [],
     selectedItems: [],
     map: null,
     currentBounds: {south: 0, north: 0,east: 0, west: 0},
     markerSwitch: false,
-    lineSwitch: false
+    lineSwitch: false,
+    selectedMarker: {},
 };
 
 const getters = {
@@ -40,6 +43,7 @@ const getters = {
     bounds: (state: State) =>{return state.currentBounds;},
     markerSwitch: (state: State) =>{return state.markerSwitch;},
     lineSwitch: (state: State) =>{return state.lineSwitch;},
+    selectedMarker: (state: State) =>{return state.selectedMarker;},
 }
 
 const mutations = {
@@ -66,6 +70,9 @@ const mutations = {
     },
     lineSwitch(state: State, payload: boolean){
         state.lineSwitch = payload;
+    },
+    selectMarker(state: State, payload: Station){
+        state.selectedMarker = Object.assign({},state.selectedMarker,payload);
     },
 };
 
@@ -101,6 +108,9 @@ const actions = {
     changeLineSwitch(context: any, payload: boolean){
         context.commit('lineSwitch',payload)
     },
+    selectMarker(context: any, payload: Station){
+        context.commit('selectMarker',payload)
+    }
 };
 
 export default {

@@ -2,8 +2,8 @@
     <div>
         <div class="toggle-switch">
             <div class="mr-3"><slot></slot></div>
-            <input :id="id" class="toggle-input" type='checkbox' v-model="checked" @change="onClick"/>
-            <label :for="id" :style="checked?{backgroundColor: backgroundColor}:{backgroundColor: '#ccc'}" class="toggle-label"/>
+            <input :id="id" class="toggle-input" type='checkbox' v-model="checked"/>
+            <label :for="id" :style="value?{backgroundColor: backgroundColor}:{backgroundColor: '#ccc'}" class="toggle-label"/>
             <span></span>
         </div>
     </div>
@@ -11,20 +11,30 @@
 
 <script>
 export default {
-  props:['id', 'backgroundColor'],
-    model: {
-        event: "change"//このコンポーネントのv-model用
-    },
-    data() {
-      return {
-        checked: false
-      }
-    },
-    methods:{
-      onClick(){
-        this.$emit('change', this.checked)
+  props:['id', 'backgroundColor', 'value'],
+    // model: {
+    //     event: "change"//このコンポーネントのv-model用
+    // },
+    // data() {
+    //   return {
+    //     checked: false
+    //   }
+    // },
+    computed:{
+      checked:{
+        get(){
+          return this.value;
+        },
+        set(newValue) {
+          this.$emit("input", newValue);
+        },
       }
     }
+    // methods:{
+    //   onClick(){
+    //     this.$emit('change', this.checked)
+    //   }
+    // }
 }
 </script>
 

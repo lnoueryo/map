@@ -43,20 +43,29 @@ export default Vue.extend({
         markerSwitch:{
             handler(){
                 this.$store.dispatch('home/resetMarkers',this.markers)
-                if (this.markerSwitch) {
-                    this.makeLineMarker(this.lines);
-                }
+                .then(()=>{
+                    this.markers = [];
+                    if (this.markerSwitch) {
+                        this.makeLineMarker(this.lines);
+                    }
+                })
             },
-            immediate: true
+            immediate: true,
         },
         lineSwitch:{
             handler(){
                 this.$store.dispatch('home/resetPolyline',this.polylines)
-                if (this.lineSwitch) {
-                    this.makeLineArray(this.lines);
-                }
+                .then(()=>{
+                    this.polylines = [];
+                    if (this.lineSwitch) {
+                        this.makeLineArray(this.lines);
+                    }
+                })
             },
             immediate: true
+        },
+        selectedMarker(v){
+            this.focusMarker(v);
         }
     },
     computed:{
@@ -65,6 +74,7 @@ export default Vue.extend({
             'bounds',
             'markerSwitch',
             'lineSwitch',
+            'selectedMarker'
         ])
     },
     mounted(){
@@ -103,9 +113,13 @@ export default Vue.extend({
         (this as any).map.addListener('click', (e: google.maps.MapMouseEvent)=>{
             // that.clickMap(e);
         })
-            // (this as any).map.fitBounds(tokyoBounds);
     },
     methods:{
+        focusMarker(station: Station){
+            (this as any).map.setZoom(16);
+            const latLng = new google.maps.LatLng(station.station_lat, station.station_lon);
+            (this as any).map.panTo(latLng);
+        },
         culcCurrentBounds(map: google.maps.Map){
             const bounds = map.getBounds() as google.maps.LatLngBounds;
             const north = bounds.getNorthEast().lat();
@@ -127,7 +141,7 @@ export default Vue.extend({
                 line.stations.forEach((station: Station)=>{
                     let marker = this.makeMarker(station.station_lat, station.station_lon);
                     marker.addListener("click", () => {
-                        console.log(station.station_lat, station.station_lon, i)
+                        this.$store.dispatch('home/selectMarker',station);
                     });
                     lineMarkerArray.push(marker);
                 })

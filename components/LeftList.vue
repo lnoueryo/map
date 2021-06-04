@@ -7,7 +7,7 @@
                         <div v-if="boundsFilter(line.stations).length!==0" style="padding:10px;text-align:center;border-radius:5px;color:white;" :style="{backgroundColor: line.color}">{{line.line_name}}</div>
                     </transition>
                     <transition-group name="list" tag="div">
-                        <div v-for="(station,j) in boundsFilter(line.stations)" :key="j">
+                        <div v-for="(station,j) in boundsFilter(line.stations)" :key="j" @click="onClickList(station)" :style="selectedMarker.station_name==station.station_name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}">
                             <div style="padding:10px;background-color:white;">{{station.station_name}}</div>
                         </div>
                     </transition-group>
@@ -29,6 +29,7 @@ export default Vue.extend({
             'bounds',
             'markerSwitch',
             'lineSwitch',
+            'selectedMarker',
         ])
     },
     methods:{
@@ -39,6 +40,10 @@ export default Vue.extend({
                 return verticalCondition && horizonalCondition;
             });
             return filteredStations;
+        },
+        onClickList(station: Station){
+            console.log(station)
+            this.$store.dispatch('home/selectMarker', station)
         }
     }
 })
@@ -52,6 +57,7 @@ export default Vue.extend({
         position:relative;
         max-height:calc(100vh - 114px);
         overflow-y: scroll;
+        overflow-x: hidden;
         max-width: 256px;
     }
     .list-enter-active, .list-leave-active {
