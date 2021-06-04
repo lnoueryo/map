@@ -6,23 +6,12 @@
         <v-btn @click="drawTriangle">click</v-btn>
         <v-btn @click="back" :disabled="index==0">back</v-btn>
         <v-btn @click="next">next</v-btn>
-        <!-- <div class="d-flex" v-for="(value, i) in verticalAxisFilter" :key="i">
-            <div>{{value}}</div>
-            <div v-for="(value, i) in horizontalAxisFilter" :key="i">a</div>
-        </div>
-        <div class="d-flex">
-            <div>{{data.city}}</div>
-            <div v-for="(value, i) in horizontalAxisFilter" :key="i">
-                {{value}}
-            </div>
-        </div> -->
     </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
 import populationData from '~/assets/json/population.json'
-// import tokyo2020 from '~/assets/json/tokyo2020.json'
 interface dataType {
     chartConfig: ChartConfig
     horizontalAxis: number[] | string[],
@@ -266,6 +255,6 @@ export default Vue.extend({
         left: 0;
         width: 100%;
         height: 100%;
-        background-color:white;
+        /* background-color:white; */
     }
 </style>

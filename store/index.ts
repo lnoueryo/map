@@ -3,27 +3,20 @@ import { $axios } from '~/utils/api';
 interface State {
     token: null | string,
     windowSize: WindowSize,
-    lines: Line[],
-    map: google.maps.Map | null
+    map: any
   }
 interface Token {
     access: string, refresh: string
 }
 interface WindowSize {x: number, y: number};
-interface Line {id: number, company_name: string, line_name: string, polygon: Polygon, color: string};
-interface Polygon {lat: number, lng: number}[]
-interface MapOptions {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean} | null, zoom: number};
-interface Bounds {north: number, south: number, west: number, east: number};
+
 const state = {
     token: null,
     windowSize: {x: 0,y: 0},
-    lines: [],
-    map: null
 };
 
 const getters = {
-    windowSize(state: any){return state.windowSize},
-    lines(state: any){return state.lines},
+
 }
 
 const mutations = {
@@ -33,14 +26,6 @@ const mutations = {
     windowSize(state: State, payload: WindowSize){
         state.windowSize = Object.assign({}, state.windowSize, payload);
     },
-    setLines(state: State, payload: Line[]){
-        payload.forEach(line => {
-            state.lines.push(line)
-        });
-    },
-    setMap(state: State, payload: google.maps.Map){
-        state.map = payload;
-    }
 };
 
 const actions = {
@@ -65,15 +50,6 @@ const actions = {
     windowSize(context: any, payload: WindowSize){
         context.commit('windowSize', payload)
     },
-    async getLines(context: any){
-        const response = await $axios.$get('/api/map/station/polygon/');
-        context.commit('setLines', response);
-    },
-    resetPolyline(context: any, payload: google.maps.Polyline[]){
-        payload.forEach(polyline => {
-            polyline.setMap(null);
-        });
-    }
 };
 
 export default {

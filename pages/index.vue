@@ -1,42 +1,18 @@
 <template>
     <div>
-        <nav :class="drawerClass">
-            <div class="top-menu">
-                <div>hello</div>
-                <div>hello</div>
-                <div>hello</div>
-            </div>
-            <div style="position:absolute;bottom:0;">yes</div>
-        </nav>
-        <div id="container" :style="drawerClass.open?{paddingRight: 160+'px', transition: 'all .3s'}:{paddingRight: 0, transition: 'all .3s'}">
-            <div id="map" ref="map"></div>
-            <!-- <div id="overview-wrapper">
-                <div id="overview-container">
-                    <div id="overview" ref="overview"></div>
-                </div>
-            </div> -->
-            <!-- <v-btn color="success" @click="back">back</v-btn>
-            <v-btn color="success" @click="next">next</v-btn>
-            <v-btn color="success" @click="allPolygons(polygons)">allPolygons</v-btn>
-            <v-btn color="success" @click="resetPolygons(polygons)">resetPolygons</v-btn>
-            <v-btn color="success" @click="refresh">refresh</v-btn> -->
-            <!-- <v-btn color="success" @click="makeStationsMarkers">showMarkers</v-btn> -->
-            <v-btn color="success" @click="check">check</v-btn>
-            <!-- <v-btn color="success" @click="markerPosition">markerPosition</v-btn> -->
-            <v-btn color="success" @click="makeLineArray">makeLineArray</v-btn>
-            <!-- <v-btn color="success" @click="makeLineMarker">makeLineMarker</v-btn> -->
-            <v-btn color="success" @click="onClickResetPolyline">onClickResetPolyline</v-btn>
-            <v-btn color="success" @click="drawerClass.open=!drawerClass.open">open</v-btn>
+        <right-drawer></right-drawer>
+        <div id="container" :style="open?{paddingRight:256+'px'}:''">
+            <main-view ref="view"></main-view>
         </div>
-        <line-chart></line-chart>
+        <bottom-bar></bottom-bar>
     </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import LineChart from '../components/LineChart.vue'
-import ItemSelect from '../components/ItemSelect.vue'
-import polygonData from '~/assets/json/coordinates.json'
+import RightDrawer from '../components/RightDrawer.vue'
+import MainView from '../components/MainView.vue'
+import BottomBar from '../components/BottomBar.vue'
 import practice from '~/assets/json/line/practice.json'
 import Mixin from '~/utils/mixin.ts'
 interface Polygons {"code":string,"city":string,"polygons":Polygon[][]}
@@ -45,9 +21,9 @@ interface Station {id: number, pref_name: string, station_name: string, station_
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, line_name: string, polygon: LinePolyline[], color: string}
 interface DataType {
-    drawerClass: {drawer: boolean,open: boolean}
+    open: boolean,
     addMarker: LinePolyline[]
-    map: google.maps.Map | null,
+    // map: google.maps.Map | null,
     overview: google.maps.Map | null,
     index: number,
     polygon: google.maps.Polygon[] | null,
@@ -55,22 +31,20 @@ interface DataType {
     stations: LinePolyline[],
     markers: google.maps.Marker[],
     // lines: Line[]
-    polylines: google.maps.Polyline[]
+    polylines: google.maps.Polyline[],
 }
 export default Vue.extend({
     mixins: [Mixin],
     components: {
-        LineChart,
-        ItemSelect
+        MainView,
+        RightDrawer,
+        BottomBar
     },
     data(): DataType {
         return {
-            drawerClass: {
-                'drawer': true,
-                'open': false
-            },
+            open: false,
             addMarker: [],
-            map: null,
+            // map: null,
             overview: null,
             index: 0,
             polygon: null,
@@ -82,87 +56,19 @@ export default Vue.extend({
     },
     computed:{
         lines(){
-            return this.$store.getters.lines;
-        }
+            return this.$store.getters['home/lines'];
+        },
     },
     async created(){
-        this.$store.dispatch('getLines')
+        this.$store.dispatch('home/getLines')
     },
     mounted(){
-        const mapEl = this.$refs.map;
-        // this.$axios.$get('/api/map/station/line/').then((res)=>{this.stations = res;})
-        const OVERVIEW_DIFFERENCE = 5;
-        const OVERVIEW_MIN_ZOOM = 3;
-        const OVERVIEW_MAX_ZOOM = 13;
-        const TOKYO_BOUNDS = {
-            north: 35.860687,
-            south: 35.530351,
-            west: 138.9403931,
-            east: 139.9368243,
-        };
-        const mapOptions = {
-            center: new google.maps.LatLng( 35.6729712, 139.7585771 ),
-            restriction: {
-                latLngBounds: TOKYO_BOUNDS,
-                strictBounds: false,
-            },
-            zoom: 12,
-        }
-
-        let that = this;
-        (this as any).map = new google.maps.Map(mapEl as HTMLElement, {
-            ...mapOptions,
-        });
-        // this.map?.addListener('click', (e: any)=>{this.addMarker.push({"lat": Math.round(e.latLng.lat()*1000000)/1000000, "lng": Math.round(e.latLng.lng()*1000000)/1000000})})
-        // const overview = this.$refs.overview as HTMLElement;
-        // this.overview = new google.maps.Map(
-        //      overview,
-        //     {
-        //     ...mapOptions,
-        //     disableDefaultUI: true,
-        //     gestureHandling: "none",
-        //     zoomControl: false,
-        //     }
-        // ) as any;
-        // (this as InstanceType<typeof Mixin>).currentPosition();
-
-        // const that = this;
-        (this as any).map.addListener("bounds_changed", () => {
-            // (that as any).overview.setCenter((that as any).map.getCenter());
-            // (that as any).overview.setZoom(
-            //     (that as InstanceType<typeof Mixin>).clamp(
-            //         (that as any).overview.getZoom() - OVERVIEW_DIFFERENCE,
-            //         OVERVIEW_MIN_ZOOM,
-            //         OVERVIEW_MAX_ZOOM
-            //     )
-            // );
-        });
-        // (this as any).map.addListener('click', (e: google.maps.MapMouseEvent)=>{
-        //     that.clickMap(e);
-        // })
-        const flightPlanCoordinates = [
-            { lat: 37.772, lng: -122.214 },
-            { lat: 21.291, lng: -157.821 },
-            { lat: -18.142, lng: 178.431 },
-            { lat: -27.467, lng: 153.027 },
-        ];
-        const flightPath = new google.maps.Polyline({
-            path: flightPlanCoordinates,
-            geodesic: true,
-            strokeColor: "#FF0000",
-            strokeOpacity: 1.0,
-            strokeWeight: 3,
-        });
-
-        flightPath.setMap((this as any).map);
-        // this.setPolygons()
-        const latLngBounds = new google.maps.LatLngBounds(
-            new google.maps.LatLng(35.554351, 138.9403931) ,
-            new google.maps.LatLng(35.860687, 139.9368243)
-        );
-        // this.makeLineMarker()
+        this.$on('open', (this as any).drawer);
     },
     methods:{
+        drawer(){
+            (this as any).open=!(this as any).open;
+        },
         onClickResetPolyline(){
             this.$store.dispatch('resetPolyline', (this as any).polylines);
         },
@@ -176,7 +82,7 @@ export default Vue.extend({
         },
         makeLineArray(){
             let paths: {color: string, polygon: google.maps.LatLng[]}[] = [];
-            this.lines.forEach((line: Line)=>{
+            (this as any).lines.forEach((line: Line)=>{
                 let polygon: google.maps.LatLng[] = []
                 line.polygon.forEach((coordinate: LinePolyline)=>{
                     polygon.push(new google.maps.LatLng(coordinate.lat, coordinate.lng))
@@ -184,7 +90,7 @@ export default Vue.extend({
                 paths.push({color: line.color, polygon: polygon})
             })
             paths.forEach((path)=>{
-                this.makePolyline(path)
+                (this as any).makePolyline(path)
             })
             const TOKYO_BOUNDS = {
                 north: 35.760687,
@@ -209,139 +115,16 @@ export default Vue.extend({
             });
             (this as any).polylines.push(polyline)
         },
-        markerPosition(){
-            // console.log(this.markers[0].setPosition(new google.maps.LatLng( 35.6666601740126, 139.35275529999995 )))
-            // console.log(this.markers[0].position.lat.lat())
-        },
-        async check(){
-            const bounds = (this as any).map.getBounds()
-            console.log(bounds)
-            const north = bounds.getNorthEast().lat();
-            const south = bounds.getSouthWest().lat();
-            const east = bounds.getNorthEast().lng();
-            console.log(east)
-            const west = bounds.getSouthWest().lng();
-            const paramater = {params: {line_name: 'ＪＲ中央本線(東京－塩尻)',south: south, north: north,east: east, west: west}}
-            const response = await this.$axios.$get('/api/map/station/line/', paramater);
-            this.makeStationsMarkers(response)
-        },
-        makeStationsMarkers(stations: Station[]){
-            stations.forEach((station)=>{
-                const marker = (this as InstanceType<typeof Mixin>).makeMarker(station.station_lat, station.station_lon);
-                this.markers.push(marker)
-            })
-        },
-        async refresh(){
-            const token = localStorage.getItem('token');
-            const parsedToken = JSON.parse(token as string)
-            const response = await this.$axios.$post('/api/token/refresh/', {refresh: parsedToken.refresh});
-            this.$axios.setToken(response.access, 'Bearer')
-        },
-        setPolygons(){
-            polygonData.forEach((city: Polygons,i: number)=>{
-                let polygons: google.maps.Polygon[] = []
-                city.polygons.forEach(coordinates => {
-                    const polygon = new google.maps.Polygon({
-                        paths: coordinates,
-                        strokeColor: "#FF0000",
-                        strokeOpacity: 0.5,
-                        strokeWeight: 1.5,
-                        fillColor: "#FF0000",
-                        fillOpacity: 0.35,
-                    });
-                    const that = this;
-                    google.maps.event.addListener(polygon, 'click', function() {
-                        (that as InstanceType<typeof Mixin>).resetPoly(i)
-                        // that.designatePolygon(i)
-                    });
-                    polygons.push(polygon);
-                });
-                this.polygons.push(polygons as never)
-            })
-        },
-        async clickMap(e: google.maps.MapMouseEvent){
-            (this as InstanceType<typeof Mixin>).resetMapListeners('click')
-            const latLng = {lat: e.latLng?.lat(), lng: e.latLng?.lng()};
-            const response = await this.$axios.$post('/api/map/search-by-reverse-geocode', latLng as any);
-            polygonData.forEach((city: Polygons, i: number) => {
-                if (city.city == response.Property.AddressElement[1].Name) {
-                    (this as InstanceType<typeof Mixin>).makePolygon(i)
-                }
-            });
-            const that = this;
-            setTimeout(()=>{
-                (that as any).map.addListener('click', (e: google.maps.MapMouseEvent)=>{
-                    that.clickMap(e)
-                })
-            },1500)
-        },
-        next(){
-            this.index +=1 as any
-            (this as InstanceType<typeof Mixin>).resetPoly(this.index)
-            (this as InstanceType<typeof Mixin>).makePolygon(this.index)
-        },
-        back(){
-            this.index -=1 as any
-            (this as InstanceType<typeof Mixin>).resetPoly(this.index)
-            (this as InstanceType<typeof Mixin>).makePolygon(this.index)
-        },
     }
 })
 </script>
 
 <style lang="scss">
-    .drawer{
-        height: 100vh;
-        top: 0px;
-        position: fixed;
-        transform: translateX(256px) translateY(-64px);
-        width: 256px;
-        right:0;
-        background-color: #363636;
-        color: #FFFFFF;
-        z-index:2;
-        transition: all .3s;
-        .top-menu{
-            padding-top:64px;
-            padding-bottom:64px;
-            height:100%;
-        }
-    }
-    .open{
-        transform: translateX(0);
-        transition: all .3s;
-    }
     #container {
         height: 100%;
         width: 100%;
         position:relative;
-        #map {
-            height: 100%;
-            position: relative;
-            padding-top: 56.25%;
-        }
-    }
-    #overview-wrapper{
-        position:absolute;
-        width: 30%;
-        bottom: 50px;
-        left: 15px;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.7);
-        #overview-container {
-            position: relative;
-            width: 100%;
-            #overview {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-            }
-        }
-        #overview-container:before {
-            content:"";
-            display: block;
-            padding-top: 56.25%;
-        }
+        padding-right:100px;
+        transition: all .3s;
     }
 </style>

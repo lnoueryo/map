@@ -4,17 +4,11 @@ export default Vue.extend({
     data() {
         return {
             map: null,
+            overview: null,
             polygons: []
         }
     },
     methods:{
-        makeMarker(lat: number, lng: number){
-            const marker = new google.maps.Marker({
-                map: this.map,
-                position: new google.maps.LatLng(lat, lng),
-            });
-            return marker
-        },
         allPolygons(polygons: google.maps.Polygon[][]){
             this.resetPolygons(polygons)
             polygons.forEach((polygon: google.maps.Polygon[]) => {

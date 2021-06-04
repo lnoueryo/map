@@ -1,5 +1,5 @@
 <template>
-    <div class="w100" :style="{width: `${width}px`}">
+    <div class="w100" :style="{width: `${width}px`,margin: 'auto'}">
         <div class="bar">
             <div class="text-box" @click.stop="openMenu" :style="indexChange">
                 <div class="placeholder" v-if="selectedItems.length==0">
@@ -29,9 +29,6 @@ export default Vue.extend({
         backgroundColor: String || null,
         ripple: String || null,
     },
-    model: {
-        event: "change"
-    },
     data() {
         return {
             items: [
@@ -60,17 +57,19 @@ export default Vue.extend({
                 'down-icon': true,
                 'rotate': false
             },
-            selectedItems: []
         }
     },
     computed:{
         indexChange(){
-            return (this as any).menuClass.active ? {zIndex: 0, backgroundColor: this.backgroundColor} : {zIndex: 1,transitionDelay: '.5s', backgroundColor: this.backgroundColor};
+            return (this as any).menuClass.active ? {zIndex: -1, backgroundColor: this.backgroundColor} : {zIndex: 1,transitionDelay: '.5s', backgroundColor: this.backgroundColor};
         },
-    },
-    watch:{
-        selectedItems(){
-            this.$emit('change', this.selectedItems);
+        selectedItems: {
+            get(){
+                return this.$store.getters['home/selectedItems']
+            },
+            set(value){
+                this.$store.dispatch('home/selectedItems', value)
+            }
         }
     },
     methods:{
@@ -87,15 +86,13 @@ export default Vue.extend({
         },
         menuActive(){
             this.menuClass.active=false;
-            this.iconClass.rotate=false;
         },
         reset(){
             this.selectedItems.length = 0;
-            this.$emit('change', this.selectedItems)
             this.menuActive();
         },
-        clear(index: number){
-            this.selectedItems.splice(index,1)
+        async clear(index: number){
+            await this.$store.dispatch('home/clearItem', index);
         }
     }
 })
@@ -159,6 +156,7 @@ export default Vue.extend({
         width: 100%;
         top:0px;
         .menu{
+            height:0;
             visibility: hidden;
             opacity: 0;
             width:100%;
@@ -223,7 +221,7 @@ export default Vue.extend({
                 border-color:  whitesmoke; /* チェックの色変更 お好きな色を */
             }
             .item{
-                padding: 9px 15px;
+                padding: 8px 15px;
                 color: #FAF5EB;
                 cursor: pointer;
                 transition: all .3s;
@@ -252,7 +250,7 @@ export default Vue.extend({
             transition: all .2s;
             transition-delay: .1s;
             transition-timing-function: ease-out;
-            z-index:1;
+            z-index:3;
         }
     }
 }
