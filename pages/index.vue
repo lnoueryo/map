@@ -1,11 +1,11 @@
 <template>
-    <div>
+    <div style="max-height:calc(100vh);overflow:hidden">
         <!-- <div style="position:fixed;top:0;bottom:0;left:0;right:0;z-index:5;background-color:#00000050;transition-delay:3s;transition:all 3s" v-show="!ready"></div> -->
         <right-drawer></right-drawer>
         <div id="container" :style="open?{paddingRight:256+'px'}:''">
             <main-view ref="view"></main-view>
         </div>
-        <bottom-bar></bottom-bar>
+        <!-- <bottom-bar></bottom-bar> -->
     </div>
 </template>
 
@@ -82,41 +82,6 @@ export default Vue.extend({
                     console.log(station.lat, station.lng, i)
                 });
             })
-        },
-        makeLineArray(){
-            let paths: {color: string, polygon: google.maps.LatLng[]}[] = [];
-            (this as any).lines.forEach((line: Line)=>{
-                let polygon: google.maps.LatLng[] = []
-                line.polygon.forEach((coordinate: LinePolyline)=>{
-                    polygon.push(new google.maps.LatLng(coordinate.lat, coordinate.lng))
-                })
-                paths.push({color: line.color, polygon: polygon})
-            })
-            paths.forEach((path)=>{
-                (this as any).makePolyline(path)
-            })
-            const TOKYO_BOUNDS = {
-                north: 35.760687,
-                south: 35.530351,
-                west: 139.2403931,
-                east: 139.9368243,
-            };
-            (this as any).map.fitBounds( TOKYO_BOUNDS );
-        },
-        makePolyline(path: {color: string, polygon: google.maps.LatLng[]}){
-            const polyline = new google.maps.Polyline( {
-                map: (this as any).map,
-                // path:practice,
-                path:path.polygon,
-                strokeColor: path.color,
-                strokeOpacity: 0.9,
-                strokeWeight: 3
-            });
-            const latLngBounds = new google.maps.LatLngBounds();
-            polyline.getPath().forEach((latLng) => {
-                latLngBounds.extend(latLng);
-            });
-            (this as any).polylines.push(polyline)
         },
     }
 })

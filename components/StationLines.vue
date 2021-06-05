@@ -1,15 +1,5 @@
 <template>
     <div>
-        <div class="list-top">
-            <div>
-                <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord" @select="select(filteredSearchStations[0])">
-                    <div class="menu" v-if="searchStations.length!==0" style="background-color:orange">
-                        <div @mouseup.stop.prevent="select(searchStation)" v-for="(searchStation, i) in filteredSearchStations" :key="i" class="list">{{searchStation.station_name}}</div>
-                    </div>
-                </search-bar>
-            </div>
-            <div style="padding:10px" v-if="showNumberOfMarkers!==0">現在の表示件数<b>{{countMarkers}}</b>件</div>
-        </div>
         <div class="middle-list">
             <div v-for="(line, i) in lines" :key="i" style="color:black">
                 <transition name="list">
@@ -103,21 +93,18 @@ export default Vue.extend({
 })
 </script>
 
-<style lang="scss">
-    .list-top{
-        padding:10px;
-        padding-right:25px;
-        text-align:center;
-        border-radius:5px;
-        color:#363636;
-        background-color:white;
-        position:relative;
-        width:100%;
-    }
+<style lang="scss" scoped>
     .middle-list{
         overflow-y:scroll;
         overflow-x:hidden;
         height:100vh;
         max-height:calc(100vh - 213px);
+    }
+    .list-enter-active, .list-leave-active {
+        transition: all 1s;
+    }
+    .list-enter, .list-leave-to /* .list-leave-active for below version 2.1.8 */ {
+        opacity: 0;
+        transform: translateX(256px);
     }
 </style>

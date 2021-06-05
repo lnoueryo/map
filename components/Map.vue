@@ -1,12 +1,9 @@
 <template>
-    <div style="position:relative;width:100%;">
+    <div style="position:relative;width:100%;height:100vh;max-height:calc(100vh - 64px)">
         <div id="map" ref="map"></div>
         <div id="overview-wrapper">
             <div id="overview-container">
                 <div id="overview" ref="overview"></div>
-                <div style="position:absolute;bottom:-50px;left:-15px;width:300px;height:270px;background-color:white;color:black;overflow-x:hidden;overflow-y:scroll;">
-                    <span v-html="stationInfo"></span>
-                </div>
             </div>
         </div>
     </div>
@@ -21,7 +18,7 @@ interface Polygons {"code":string,"city":string,"polygons":Polygon[][]}
 interface Polygon {"lat":number,"lng":number}
 interface Station {id: number, pref_name: string, station_name: string, station_lat: number, station_lon: number, line_name: string, order: number, company_name: string}
 interface LinePolyline {lat: number, lng: number}
-interface Line {id: number, company_name: string, line_name: string, polygon: LinePolyline[], color: string}
+interface Line {id: number, company_name: string, line_name: string, polygon: LinePolyline[], color: string,stations: Station[]}
 interface DataType {map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},mapOptions: {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean,}, zoom: number,},markers: google.maps.Marker[][],polylines: google.maps.Polyline[]}
 export default Vue.extend({
     data(): DataType {
@@ -78,7 +75,9 @@ export default Vue.extend({
             'markerSwitch',
             'lineSwitch',
             'selectedMarker',
-            'stationInfo'
+            'stationInfo',
+            'searchStations',
+            'removeOverlap'
         ])
     },
     mounted(){
@@ -150,8 +149,8 @@ export default Vue.extend({
                     });
                     lineMarkerArray.push(marker);
                 })
-                this.markers.push(lineMarkerArray)
-            })
+                this.markers.push(lineMarkerArray);
+            });
         },
         makeMarker(lat: number, lng: number){
             const marker = new google.maps.Marker({

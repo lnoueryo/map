@@ -9,7 +9,6 @@ interface State {
     selectedMarker: Station,
     searchWord: string,
     stationInfo: null|string,
-    selectedList: number
   }
 interface Line {id: number, company_name: string, line_name: string, polygon: Polygon, color: string,stations: Station[]};
 interface Polygon {lat: number, lng: number}[]
@@ -26,7 +25,6 @@ const state = {
     selectedMarker: {},
     searchWord: null,
     stationInfo: null,
-    selectedList: 0,
 };
 
 const getters = {
@@ -79,7 +77,6 @@ const getters = {
         return Array.from(map.values());
     },
     stationInfo(state: State){return state.stationInfo},
-    selectedList(state: State){return state.selectedList},
 }
 
 const mutations = {
@@ -116,9 +113,6 @@ const mutations = {
     stationInfo(state: State, payload: string){
         state.stationInfo = payload;
     },
-    changeList(state: State, payload: number){
-        state.selectedList = payload;
-    }
 };
 
 const actions = {
@@ -162,9 +156,6 @@ const actions = {
     async getStationInfo(context: any, payload: string){
         const response = await $axios.$post('/api/map/station/line/wiki/',payload);
         context.commit('stationInfo', response)
-    },
-    async changeList(context: any, payload: number){
-        context.commit('changeList', payload)
     },
 };
 

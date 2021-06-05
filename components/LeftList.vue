@@ -1,34 +1,41 @@
 <template>
     <div>
-        <div class="left-list">
-            <station-lines></station-lines>
-            <!-- <div>
-                <div style="padding:10px;text-align:center;border-radius:5px;color:#363636;background-color:white;position:fixed;max-width:241px;width:100%">
-                    <div>
-                        <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord" @select="select(filteredSearchStations[0])">
-                            <div class="menu" v-if="searchStations.length!==0" style="background-color:orange">
-                                <div @mouseup.stop.prevent="select(searchStation)" v-for="(searchStation, i) in filteredSearchStations" :key="i" class="list">{{searchStation.station_name}}</div>
-                            </div>
-                        </search-bar>
-                    </div>
-                    <div style="padding:10px" v-if="showNumberOfMarkers!==0">現在の表示件数<b>{{countMarkers}}</b>件</div>
+        <div class="left-list" :style="{width: width+'px'}">
+            <v-btn-toggle v-model="changeList" color="indigo" background-color="indigo">
+                <v-btn>
+                    <v-icon>mdi-train</v-icon>
+                </v-btn>
+                <v-btn>
+                    <v-icon>mdi-information-outline</v-icon>
+                </v-btn>
+                <v-btn>
+                    <v-icon>mdi-format-align-right</v-icon>
+                </v-btn>
+                <v-btn>
+                    <v-icon>mdi-format-align-justify</v-icon>
+                </v-btn>
+                <v-btn>
+                    <v-icon>mdi-format-align-justify</v-icon>
+                </v-btn>
+                <v-btn>
+                    <v-icon>mdi-format-align-justify</v-icon>
+                </v-btn>
+            </v-btn-toggle>
+            <div class="list-top">
+                <div class="d-flex">
+                    <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord" @select="select(filteredSearchStations[0])">
+                        <div class="menu" v-if="searchStations.length!==0" style="background-color:orange">
+                            <div @mouseup.stop.prevent="select(searchStation)" v-for="(searchStation, i) in filteredSearchStations" :key="i" class="list">{{searchStation.station_name}}</div>
+                        </div>
+                    </search-bar>
+                    <v-btn class="ml-1" icon color="indigo" @click="width=315"><v-icon>mdi-arrow-collapse-horizontal</v-icon></v-btn>
                 </div>
-                <div style="padding-top:99px">
-                    <div v-for="(line, i) in lines" :key="i" style="color:black">
-                        <transition name="list">
-                            <div v-if="boundsFilter(line.stations).length!==0" style="padding:10px;text-align:center;border-radius:5px;color:white;" :style="{backgroundColor: line.color}">{{line.line_name}}</div>
-                        </transition>
-                        <transition-group name="list" tag="div">
-                            <div v-for="(station,j) in boundsFilter(line.stations)" :key="j" @click="onClickList(station)" :style="selectedMarker.station_name==station.station_name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}">
-                                <div style="padding:10px;background-color:white;">{{station.station_name}}</div>
-                            </div>
-                        </transition-group>
-                    </div>
-                </div>
-            </div> -->
-            <!-- <div style="position:fixed;bottom:0px;left:0px;width:300px;height:270px;background-color:white;color:black;overflow-x:hidden;overflow-y:scroll;">
-                <span v-html="stationInfo"></span>
-            </div> -->
+                <div style="padding:10px">現在の表示件数<b>{{countMarkers}}</b>件</div>
+            </div>
+            <keep-alive>
+                <div :is="component"></div>
+            </keep-alive>
+        <div style="position:absolute;top:0;bottom:0;right:-3px;width:6px;z-index:5;cursor:ew-resize;" @mousedown="dragStart"></div>
         </div>
     </div>
 </template>
@@ -37,23 +44,32 @@
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, line_name: string, polygon: LinePolyline[], color: string, stations: Station[]}
 interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,station_lat:number,station_lon:number,station_name:string}
-interface DataType {countMarkers: number,searchWord:string|null};
+interface DataType {componentTypes:string[],countMarkers: number,searchWord:string|null,changeList:number,width:number};
+interface DomEvent extends Event {clientX: number,clientY: number}
 import Vue from 'vue';
-import SearchBar from '~/components/SearchBar.vue';
+import {mapGetters} from 'vuex'
 import StationLines from '~/components/StationLines.vue';
-import { mapGetters } from 'vuex';
+import StationWiki from '~/components/StationWiki.vue';
+import SearchBar from '~/components/SearchBar.vue';
 export default Vue.extend({
     components:{
-        SearchBar,
-        StationLines
+        StationLines,
+        StationWiki,
+        SearchBar
     },
     data(): DataType {
         return {
+            componentTypes: ['station-lines', 'station-wiki', 'station-lines'],
+            changeList: 0,
             countMarkers: 0,
             searchWord: null,
+            width: 315,
         }
     },
     computed:{
+        component(){
+            return (this as any).componentTypes[(this as any).changeList];
+        },
         filteredSearchStations(){
             return this.searchStations.filter((_: any,index: number)=>{
                 return index < 5;
@@ -69,15 +85,9 @@ export default Vue.extend({
             'boundsFilter',
             'searchStations',
             'stationInfo',
-            'selectedList'
         ]),
     },
     watch:{
-        lines(v){
-            const boundsFilter = this.boundsFilter(v)
-            const isActive = (this as any).isActive(boundsFilter)
-            console.log(isActive)
-        },
         showNumberOfMarkers(newValue, OldValue){
             (this as any).count(newValue, OldValue);
         },
@@ -86,14 +96,25 @@ export default Vue.extend({
         }
     },
     methods:{
+        hello(e: DomEvent){
+            if (e.clientX<500&&e.clientX>100) {
+                (this as any).width = e.clientX
+            }
+        },
+        dragStart(){
+            const that = this;
+            const hello = (e: Event)=>{(that as any).hello(e)};
+            this.$root.$el.addEventListener('mousemove',hello);
+            this.$root.$el.addEventListener('mouseup',()=>{that.$root.$el.removeEventListener('mousemove',hello),{once:true}});
+        },
         select(searchStation: Station){
             (this.$refs.searchBar as any).blur = false;
             (this.$refs.searchBar as any).$refs.input.blur();
-            this.$store.dispatch('home/selectMarker',searchStation)
+            this.$store.dispatch('home/selectMarker',searchStation);
+            this.$store.dispatch('home/getStationInfo', {name: searchStation.station_name})
         },
         count(newValue: number, OldValue: number){
             const DURATION = 600
-
             const from = OldValue;
             const to = newValue;
             const startTime = Date.now()
@@ -110,11 +131,6 @@ export default Vue.extend({
                 }
             }, 1)
         },
-        isActive(filteredStations: Station[]){
-            return filteredStations.some((station)=>{
-                return station.station_name == this.selectedMarker.station_name;
-            })
-        },
         onClickList(station: Station){
             this.$store.dispatch('home/getStationInfo',{name: station.station_name})
             this.$store.dispatch('home/selectMarker', station);
@@ -123,7 +139,7 @@ export default Vue.extend({
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .list{
         background-color:orange;
         text-align:left;
@@ -131,17 +147,20 @@ export default Vue.extend({
     }
     .left-list{
         height:100vh;
-        min-width:300px;
+        width:100%;
         background-color: #363636;
         position:relative;
         max-height:calc(100vh - 114px);
-        max-width: 256px;
+        margin-bottom:100px
     }
-    .list-enter-active, .list-leave-active {
-        transition: all 1s;
-    }
-    .list-enter, .list-leave-to /* .list-leave-active for below version 2.1.8 */ {
-        opacity: 0;
-        transform: translateX(256px);
+    .list-top{
+        padding:10px;
+        padding-right:5px;
+        text-align:center;
+        border-radius:5px;
+        color:#363636;
+        background-color:white;
+        position:relative;
+        width:100%;
     }
 </style>

@@ -1,5 +1,5 @@
 <template>
-    <div style="display:flex;overflow:hidden;max-height:calc(100%-200px);">
+    <div style="display:flex;overflow:hidden;max-height:calc(100%-200px);background-color: white;">
         <left-list></left-list>
         <div style="position:relative;width:100%;">
             <map-view style="width:100%;height:100%;"></map-view>
