@@ -4,6 +4,9 @@
         <div id="overview-wrapper">
             <div id="overview-container">
                 <div id="overview" ref="overview"></div>
+                <div style="position:absolute;bottom:-50px;left:-15px;width:300px;height:270px;background-color:white;color:black;overflow-x:hidden;overflow-y:scroll;">
+                    <span v-html="stationInfo"></span>
+                </div>
             </div>
         </div>
     </div>
@@ -74,7 +77,8 @@ export default Vue.extend({
             'bounds',
             'markerSwitch',
             'lineSwitch',
-            'selectedMarker'
+            'selectedMarker',
+            'stationInfo'
         ])
     },
     mounted(){
@@ -142,6 +146,7 @@ export default Vue.extend({
                     let marker = this.makeMarker(station.station_lat, station.station_lon);
                     marker.addListener("click", () => {
                         this.$store.dispatch('home/selectMarker',station);
+                        this.$store.dispatch('home/getStationInfo',{name: station.station_name});
                     });
                     lineMarkerArray.push(marker);
                 })
@@ -175,7 +180,7 @@ export default Vue.extend({
                 path:path.polygon,
                 strokeColor: path.color,
                 strokeOpacity: 0.9,
-                strokeWeight: 3
+                strokeWeight: 4
             });
             const latLngBounds = new google.maps.LatLngBounds();
             polyline.getPath().forEach((latLng) => {

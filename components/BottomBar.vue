@@ -1,9 +1,23 @@
 <template>
     <div>
         <nav class="bottom-bar">
-            <div>
-                <!-- <v-btn color="orange" @click="onClickMakePolyline">makepolyline</v-btn> -->
-            </div>
+            <v-btn-toggle v-model="toggle_exclusive" color="indigo" background-color="indigo">
+                <v-btn>
+                    <v-icon>mdi-train</v-icon>
+                </v-btn>
+                <v-btn>
+                    <v-icon>mdi-information-outline</v-icon>
+                </v-btn>
+                <v-btn>
+                    <v-icon>mdi-format-align-right</v-icon>
+                </v-btn>
+                <v-btn>
+                    <v-icon>mdi-format-align-justify</v-icon>
+                </v-btn>
+                <v-btn>
+                    <v-icon>mdi-format-align-justify</v-icon>
+                </v-btn>
+            </v-btn-toggle>
         </nav>
     </div>
 </template>
@@ -11,9 +25,24 @@
 <script lang="ts">
 import Vue from 'vue'
 export default Vue.extend({
+    // data() {
+    //     return {
+    //         toggle_exclusive: 0
+    //     }
+    // },
+    computed:{
+        toggle_exclusive:{
+            get(){
+                return this.$store.getters['home/selectedList']
+            },
+            set(newValue){
+                this.$store.dispatch('home/changeList',newValue)
+            }
+        }
+    },
     methods:{
-        onClickMakePolyline(){
-            this.$parent.$emit('makePolyline')
+        onClickChangeList(){
+            this.$store.dispatch('home/changeList')
         }
     }
 })

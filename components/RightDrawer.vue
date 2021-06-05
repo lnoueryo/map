@@ -39,7 +39,7 @@ export default Vue.extend({
                 'open': false
             },
             markerSwitch: true,
-            lineSwitch: false,
+            lineSwitch: true,
         }
     },
     watch:{

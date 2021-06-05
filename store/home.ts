@@ -6,9 +6,12 @@ interface State {
     currentBounds: Bounds,
     markerSwitch: boolean,
     lineSwitch: boolean,
-    selectedMarker: Station
+    selectedMarker: Station,
+    searchWord: string,
+    stationInfo: null|string,
+    selectedList: number
   }
-interface Line {id: number, company_name: string, line_name: string, polygon: Polygon, color: string};
+interface Line {id: number, company_name: string, line_name: string, polygon: Polygon, color: string,stations: Station[]};
 interface Polygon {lat: number, lng: number}[]
 interface Bounds {north: number, south: number, west: number, east: number};
 interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,station_lat:number,station_lon:number,station_name:string}
@@ -21,6 +24,9 @@ const state = {
     markerSwitch: false,
     lineSwitch: false,
     selectedMarker: {},
+    searchWord: null,
+    stationInfo: null,
+    selectedList: 0,
 };
 
 const getters = {
@@ -44,6 +50,36 @@ const getters = {
     markerSwitch: (state: State) =>{return state.markerSwitch;},
     lineSwitch: (state: State) =>{return state.lineSwitch;},
     selectedMarker: (state: State) =>{return state.selectedMarker;},
+    showNumberOfMarkers: (state: State, getters: any) =>{
+        return getters.lines.reduce(function(sum:any, line:any){
+            return sum + (getters.boundsFilter(line.stations)).length;
+        }, 0);
+    },
+    boundsFilter: (state:State) =>(stations: Station[]) =>{
+        const filteredStations = stations.filter((station)=>{
+            const verticalCondition = state.currentBounds.west < station.station_lon && state.currentBounds.east > station.station_lon;
+            const horizontalCondition = state.currentBounds.south < station.station_lat && state.currentBounds.north > station.station_lat;
+            return verticalCondition && horizontalCondition;
+        });
+        return filteredStations;
+    },
+    searchStations: (state: State, getters: any) =>{
+        const stations: Station[] = [];
+        getters.lines.forEach((line: Line) => {
+            line.stations.forEach(station => {
+                if (station.station_name.indexOf(state.searchWord) > -1) {
+                    stations.push(station)
+                }
+            });
+        });
+        return state.searchWord?getters.removeOverlap(stations):[];
+    },
+    removeOverlap: (state:State) =>(stations: Station[]) =>{
+        let map = new Map(stations.map(station => [station.station_name, station]));
+        return Array.from(map.values());
+    },
+    stationInfo(state: State){return state.stationInfo},
+    selectedList(state: State){return state.selectedList},
 }
 
 const mutations = {
@@ -74,6 +110,15 @@ const mutations = {
     selectMarker(state: State, payload: Station){
         state.selectedMarker = Object.assign({},state.selectedMarker,payload);
     },
+    searchWord(state: State, payload: string){
+        state.searchWord = payload;
+    },
+    stationInfo(state: State, payload: string){
+        state.stationInfo = payload;
+    },
+    changeList(state: State, payload: number){
+        state.selectedList = payload;
+    }
 };
 
 const actions = {
@@ -110,7 +155,17 @@ const actions = {
     },
     selectMarker(context: any, payload: Station){
         context.commit('selectMarker',payload)
-    }
+    },
+    searchWord(context: any, payload: string){
+        context.commit('searchWord',payload)
+    },
+    async getStationInfo(context: any, payload: string){
+        const response = await $axios.$post('/api/map/station/line/wiki/',payload);
+        context.commit('stationInfo', response)
+    },
+    async changeList(context: any, payload: number){
+        context.commit('changeList', payload)
+    },
 };
 
 export default {

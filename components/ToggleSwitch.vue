@@ -12,14 +12,6 @@
 <script>
 export default {
   props:['id', 'backgroundColor', 'value'],
-    // model: {
-    //     event: "change"//このコンポーネントのv-model用
-    // },
-    // data() {
-    //   return {
-    //     checked: false
-    //   }
-    // },
     computed:{
       checked:{
         get(){
