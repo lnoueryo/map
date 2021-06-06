@@ -10,7 +10,7 @@
             </div>
             <div class="view" @click.stop="">
                 <form :class="menuClass">
-                    <label class="item" v-ripple="ripple" v-for="(item, i) in items" :key="i" :for="item.name"><input type="checkbox" :value="item" v-model="selectedItems" :id="item.name"><label :for="item.name">{{item.text}}</label></label>
+                    <label class="item" v-ripple="ripple" v-for="(item, i) in items" :key="i" :for="item.company_name"><input type="checkbox" :value="item" v-model="selectedItems" :id="item.company_name"><label :for="item.company_name">{{item.company_name}}</label></label>
                     <label class="item" v-ripple="ripple" @click="openMenu">決定</label>
                     <label class="item" v-ripple="ripple" for="reset"><input type="reset" id="reset" value=""><label for="reset" @click="reset">リセット</label></label>
                 </form>
@@ -20,7 +20,7 @@
 </template>
 
 <script lang="ts">
-import Vue from 'vue'
+import Vue from 'vue';
 export default Vue.extend({
     props:{
         placeholder: String || null,
@@ -28,25 +28,25 @@ export default Vue.extend({
         color: String || null,
         backgroundColor: String || null,
         ripple: String || null,
+        items: Array
     },
     data() {
         return {
-            items: [
-                {name: 'JR', text:'JR'},
-                {name: 'Keio', text:'京王電鉄'},
-                {name: 'TokyoMetropolitanBureauofTransportation', text:'東京交通局'},
-                {name: 'TokyoMetro', text:'東京メトロ'},
-                {name: 'Seibu', text:'西武鉄道'},
-                {name: 'Tobu', text:'東武鉄道'},
-                {name: 'OdakyuDentetsu', text:'小田急電鉄'},
-                {name: 'Tokyu', text:'東急電鉄'},
-                {name: 'KeihinKyuko', text:'京浜急行電鉄'},
-                {name: 'Rinkai', text:'東京臨海高速鉄道'},
-                {name: 'Yurikamome', text:'ゆりかもめ'},
-                {name: 'TokyoMonorail', text:'東京モノレール'},
-                {name: 'MetropolitanIntercity', text:'首都圏新都市鉄道'},
-            ],
-            // items: ['JR', '京王電鉄', '都営地下鉄', '東京メトロ'],
+            // items: [
+            //     {name: 'JR', text:'JR'},
+            //     {name: 'Keio', text:'京王電鉄'},
+            //     {name: 'TokyoMetropolitanBureauofTransportation', text:'東京交通局'},
+            //     {name: 'TokyoMetro', text:'東京メトロ'},
+            //     {name: 'Seibu', text:'西武鉄道'},
+            //     {name: 'Tobu', text:'東武鉄道'},
+            //     {name: 'OdakyuDentetsu', text:'小田急電鉄'},
+            //     {name: 'Tokyu', text:'東急電鉄'},
+            //     {name: 'KeihinKyuko', text:'京浜急行電鉄'},
+            //     {name: 'Rinkai', text:'東京臨海高速鉄道'},
+            //     {name: 'Yurikamome', text:'ゆりかもめ'},
+            //     {name: 'TokyoMonorail', text:'東京モノレール'},
+            //     {name: 'MetropolitanIntercity', text:'首都圏新都市鉄道'},
+            // ],
             value: '',
             isSelect: false,
             menuClass: {

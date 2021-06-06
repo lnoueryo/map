@@ -3,7 +3,8 @@
         <nav :class="drawerClass">
             <div class="display-height">
                 <div class="top-menu">
-                    <item-select placeholder="鉄道会社名で絞り込む" background-color="white" ripple="true"></item-select>
+                    <item-select :items="$store.state.home.lines" placeholder="鉄道会社名で絞り込む" background-color="white" ripple="true"></item-select>
+                    <!-- <item-select id="b" placeholder="鉄道会社名で絞り込む" background-color="white" ripple="true"></item-select> -->
                 </div>
                 <div class="list-bottom">
                     <div class="d-flex mb-2 px-2" style="font-size:14px;">

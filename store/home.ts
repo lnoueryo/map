@@ -10,7 +10,7 @@ interface State {
     searchWord: string,
     stationInfo: null|string,
   }
-interface Line {id: number, company_name: string, line_name: string, polygon: Polygon, color: string,stations: Station[]};
+interface Line {id: number, company_name: string, name: string, polygon: Polygon, color: string,stations: Station[]};
 interface Polygon {lat: number, lng: number}[]
 interface Bounds {north: number, south: number, west: number, east: number};
 interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,station_lat:number,station_lon:number,station_name:string}
@@ -119,6 +119,8 @@ const actions = {
     async getLines(context: any){
         const response = await $axios.$get('/api/map/station/polygon/');
         context.commit('setLines', response);
+        const response2 = await $axios.$get('/api/map/');
+        console.log(response2)
     },
     resetPolyline(context: any, payload: google.maps.Polyline[]){
         payload.forEach(polyline => {

@@ -42,7 +42,7 @@
 
 <script lang="ts">
 interface LinePolyline {lat: number, lng: number}
-interface Line {id: number, company_name: string, line_name: string, polygon: LinePolyline[], color: string, stations: Station[]}
+interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
 interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,station_lat:number,station_lon:number,station_name:string}
 interface DataType {componentTypes:string[],countMarkers: number,searchWord:string|null,changeList:number,width:number};
 interface DomEvent extends Event {clientX: number,clientY: number}

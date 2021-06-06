@@ -20,7 +20,7 @@ interface Polygons {"code":string,"city":string,"polygons":Polygon[][]}
 interface Polygon {"lat":number,"lng":number}
 interface Station {id: number, pref_name: string, station_name: string, station_lat: number, station_lon: number, line_name: string, order: number, company_name: string}
 interface LinePolyline {lat: number, lng: number}
-interface Line {id: number, company_name: string, line_name: string, polygon: LinePolyline[], color: string}
+interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string}
 interface DataType {
     open: boolean,
     addMarker: LinePolyline[]
@@ -62,7 +62,7 @@ export default Vue.extend({
             return this.$store.getters['home/lines'];
         },
     },
-    async created(){
+    async beforeCreate(){
         this.$store.dispatch('home/getLines').then(()=>{(this as any).ready=true;});
     },
     mounted(){

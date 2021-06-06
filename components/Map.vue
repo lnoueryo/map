@@ -18,7 +18,7 @@ interface Polygons {"code":string,"city":string,"polygons":Polygon[][]}
 interface Polygon {"lat":number,"lng":number}
 interface Station {id: number, pref_name: string, station_name: string, station_lat: number, station_lon: number, line_name: string, order: number, company_name: string}
 interface LinePolyline {lat: number, lng: number}
-interface Line {id: number, company_name: string, line_name: string, polygon: LinePolyline[], color: string,stations: Station[]}
+interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string,stations: Station[]}
 interface DataType {map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},mapOptions: {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean,}, zoom: number,},markers: google.maps.Marker[][],polylines: google.maps.Polyline[]}
 export default Vue.extend({
     data(): DataType {
@@ -161,31 +161,42 @@ export default Vue.extend({
         },
         makeLineArray(lines: Line[]){
             this.$store.dispatch('home/resetPolyline',this.polylines)
-            let paths: {color: string, polygon: google.maps.LatLng[]}[] = [];
+            let paths: {name: string, color: string, polygon: google.maps.LatLng[]}[] = [];
             lines.forEach((line: Line)=>{
                 let polygon: google.maps.LatLng[] = [];
                 line.polygon.forEach((coordinate: LinePolyline)=>{
                     polygon.push(new google.maps.LatLng(coordinate.lat, coordinate.lng));
                 });
-                paths.push({color: line.color, polygon: polygon});
+                paths.push({name: line.name, color: line.color, polygon: polygon});
             });
+            const that = this;
             paths.forEach((path)=>{
-                (this as any).makePolyline(path)
+                const polyline = (this as any).makePolyline(path);
+                polyline.addListener("click", () => {
+                    const latLngBounds = new google.maps.LatLngBounds();
+                    polyline.getPath().forEach((latLng: google.maps.LatLng) => {
+                        latLngBounds.extend(latLng);
+                    });
+                    (that as any).map.fitBounds( latLngBounds ) ;
+                    // this.$store.dispatch('home/selectMarker',station);
+                    // this.$store.dispatch('home/getStationInfo',{name: station.station_name});
+                });
             });
         },
         makePolyline(path: {color: string, polygon: google.maps.LatLng[]}){
-            const polyline = new google.maps.Polyline( {
+            const polyline = new google.maps.Polyline({
                 map: this.map,
                 path:path.polygon,
                 strokeColor: path.color,
                 strokeOpacity: 0.9,
                 strokeWeight: 4
             });
-            const latLngBounds = new google.maps.LatLngBounds();
-            polyline.getPath().forEach((latLng) => {
-                latLngBounds.extend(latLng);
-            });
-            (this as any).polylines.push(polyline)
+            // const latLngBounds = new google.maps.LatLngBounds();
+            // polyline.getPath().forEach((latLng) => {
+            //     latLngBounds.extend(latLng);
+            // });
+            (this as any).polylines.push(polyline);
+            return polyline;
         },
     }
 })
