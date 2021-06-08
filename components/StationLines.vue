@@ -1,15 +1,20 @@
 <template>
     <div>
         <div class="middle-list">
-            <div v-for="(line, i) in lines" :key="i" style="color:black">
+            <div v-for="(company, i) in companies" :key="i" style="position:relative">
                 <transition name="list">
-                    <div v-if="boundsFilter(line.stations).length!==0" style="padding:10px;text-align:center;border-radius:5px;color:white;" :style="{backgroundColor: line.color}">{{line.line_name}}</div>
+                    <div v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
                 </transition>
-                <transition-group name="list" tag="div">
-                    <div v-for="(station,j) in boundsFilter(line.stations)" :key="j" @click="onClickList(station)" :style="selectedMarker.station_name==station.station_name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}">
-                        <div style="padding:10px;background-color:white;">{{station.station_name}}</div>
-                    </div>
-                </transition-group>
+                <div v-for="(line, j) in filteredLines(company.lines)" :key="j" style="color:black">
+                    <transition name="list">
+                        <div v-if="boundsFilter(line.stations).length!==0" style="padding:10px;text-align:center;border-radius:5px;color:white;width:100%;" :style="{backgroundColor: line.color}">{{line.name}}</div>
+                    </transition>
+                    <transition-group name="list" tag="div">
+                        <div style="width:100%" v-for="(station,k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)" :style="selectedMarker.name==station.name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}">
+                            <div style="padding:10px;background-color:white;width:100%">{{station.name}}</div>
+                        </div>
+                    </transition-group>
+                </div>
             </div>
         </div>
     </div>
@@ -18,9 +23,11 @@
 
 <script lang="ts">
 interface LinePolyline {lat: number, lng: number}
-interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
-interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,station_lat:number,station_lon:number,station_name:string}
+interface Line {id: number, company_id: number, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
+interface Station {company_id: number,id:number,line_id:number,order:number,pref_name:string,lat:number,lng:number,name:string}
 interface DataType {countMarkers: number,searchWord:string|null};
+interface Company {id: number, name: string, address: string, founded: string, lines: Line[]};
+
 import Vue from 'vue';
 import SearchBar from '~/components/SearchBar.vue';
 import { mapGetters } from 'vuex';
@@ -34,33 +41,51 @@ export default Vue.extend({
             searchWord: null,
         }
     },
+    //  @click="selectedItems(company)"
     computed:{
-        filteredSearchStations(){
-            return this.searchStations.filter((_: any,index: number)=>{
-                return index < 5;
-            });
-        },
         ...mapGetters('home', [
             'lines',
+            'filteredLines',
             'bounds',
             'markerSwitch',
             'lineSwitch',
             'selectedMarker',
-            'showNumberOfMarkers',
             'boundsFilter',
-            'searchStations',
             'stationInfo',
+            'companies',
+            'selectedItems'
         ]),
+        selectCompany:{
+            get(){
+                return this.$store.getters['home/selectedItems']
+            },
+            set(value){
+                this.$store.dispatch('home/selectedItems', value)
+            }
+        }
     },
     watch:{
-        showNumberOfMarkers(newValue, OldValue){
-            (this as any).count(newValue, OldValue);
-        },
         searchWord(newValue){
             this.$store.dispatch('home/searchWord',newValue)
         }
     },
     methods:{
+        makeStationArray(lines: Line[]){
+            const stations: Station[] = []
+            lines.filter((line)=>{
+                this.boundsFilter(line.stations).forEach((station: Station) => {
+                    stations.push(station)
+                });
+            })
+            return stations
+        },
+        isCheck(id: number,lines: Line[]){
+            const filterLine: Line[] = this.filteredLines(lines);
+            const stations = (this as any).makeStationArray(filterLine);
+            return stations.some((station: Station)=>{
+                return station.company_id==id;
+            })
+        },
         select(searchStation: Station){
             (this.$refs.searchBar as any).blur = false;
             (this.$refs.searchBar as any).$refs.input.blur();
@@ -86,7 +111,7 @@ export default Vue.extend({
             }, 1)
         },
         onClickList(station: Station){
-            this.$store.dispatch('home/getStationInfo',{name: station.station_name})
+            this.$store.dispatch('home/getStationInfo',{name: station.name})
             this.$store.dispatch('home/selectMarker', station);
         }
     }
@@ -99,12 +124,32 @@ export default Vue.extend({
         overflow-x:hidden;
         height:100vh;
         max-height:calc(100vh - 213px);
-    }
-    .list-enter-active, .list-leave-active {
-        transition: all 1s;
-    }
-    .list-enter, .list-leave-to /* .list-leave-active for below version 2.1.8 */ {
-        opacity: 0;
-        transform: translateX(256px);
+        .company-name{
+            text-align:center;
+            border-radius:5px;
+            color:white;
+            background-color:black;
+            width:100%;
+            display: block;
+            padding:10px;
+        }
+        .list-move{
+            transition: transform 1s;
+        }
+        .list-enter {
+            opacity: 0;
+            transform: translateX(256px);
+        }
+        .list-enter-active {
+            transition: all 1s;
+        }
+        .list-leave-active {
+            transition: all 1s;
+            position:absolute;
+        }
+        .list-leave-to /* .list-leave-active for below version 2.1.8 */ {
+            opacity: 0;
+            transform: translateX(256px);
+        }
     }
 </style>

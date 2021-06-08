@@ -1,5 +1,6 @@
 <template>
     <div>
+        
         <v-btn @click="index-=1">back</v-btn>
         <v-btn @click="index+=1">next</v-btn>
         {{deleteLines[index]}}
@@ -11,10 +12,10 @@
         <!-- <div v-for="(line,i) in deleteLines" :key="i">{{line}}</div> -->
         <!-- {{deleteLines}} -->
         <div><textarea name="" id="" cols="30" rows="20" v-model="text" style="background-color:white;width:100%;"></textarea></div>
-        <!-- <div><textarea name="" id="" cols="30" rows="20" v-model="json4" style="background-color:white;width:100%;"></textarea></div>
+        <div><textarea name="" id="" cols="30" rows="20" v-model="json4" style="background-color:white;width:100%;"></textarea></div>
         <div><textarea name="" id="" cols="30" rows="20" v-model="json" style="background-color:white;width:100%;"></textarea></div>
         <div><textarea name="" id="" cols="30" rows="20" v-model="json2" style="background-color:white;width:100%;"></textarea></div>
-        <div><textarea name="" id="" cols="30" rows="20" v-model="json3" style="background-color:white;width:100%;"></textarea></div> -->
+        <div><textarea name="" id="" cols="30" rows="20" v-model="json3" style="background-color:white;width:100%;"></textarea></div>
     </div>
 </template>
 
@@ -49,9 +50,9 @@ export default {
         // json3(){
         //     return this.text.replace(/\'/g, '')
         // },
-        // json4(){
-        //     return this.text.replace(/\\|\'|^("{)(.+?)(}")/g, '')
-        // },
+        json4(){
+            return this.text.replace(/\\|\'|^("{)(.+?)(}")/g, '').replace(/\"{/g,'{').replace(/\}"/g,'}')
+        },
     },
     async created(){
         const response = await this.$axios.$get('/api/map/station/polygon/');

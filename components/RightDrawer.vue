@@ -3,8 +3,8 @@
         <nav :class="drawerClass">
             <div class="display-height">
                 <div class="top-menu">
-                    <item-select :items="$store.state.home.lines" placeholder="鉄道会社名で絞り込む" background-color="white" ripple="true"></item-select>
-                    <!-- <item-select id="b" placeholder="鉄道会社名で絞り込む" background-color="white" ripple="true"></item-select> -->
+                    <item-select v-model="selectedCompanyItems" :items="$store.getters['home/companies']" placeholder="鉄道会社名を絞り込む" background-color="white" ripple="true"></item-select>
+                    <item-select v-model="selectedLineItems" :items="$store.getters['home/lineItems']" placeholder="路線を絞り込む" background-color="white" ripple="true" v-if="selectedCompanyItems.length!==0"></item-select>
                 </div>
                 <div class="list-bottom">
                     <div class="d-flex mb-2 px-2" style="font-size:14px;">
@@ -27,6 +27,7 @@ import ToggleSwitch from '../components/ToggleSwitch.vue';
 import ItemSelect from '../components/ItemSelect.vue';
 import CircleButton from '../components/CircleButton.vue';
 interface DataType {drawerClass: {drawer: boolean,open: boolean},markerSwitch:boolean,lineSwitch:boolean}
+interface Station {name: string,id:number,line_id:number,order:number,prefecture:string,lat:number,lng:number,company_id:number}
 export default Vue.extend({
     components:{
         ItemSelect,
@@ -55,6 +56,34 @@ export default Vue.extend({
                 this.$store.dispatch('home/changeLineSwitch',v);
             },
             immediate:true,
+        },
+        selectedCompanyItems:{
+            handler(newValues, oldValues){
+                if (newValues.length < oldValues.length) {
+                    const uncheck = oldValues.filter((oldValue: Station)=>{//resetで一気にチェックが外れるので、findを使わない
+                        return newValues.filter((newValue: Station)=>{return oldValue.id == newValue.id}).length==0;
+                    })
+                    this.$store.dispatch('home/uncheck',uncheck)
+                }
+            }
+        }
+    },
+    computed:{
+        selectedCompanyItems: {
+            get(){
+                return this.$store.getters['home/selectedCompanyItems'];
+            },
+            set(value){
+                this.$store.dispatch('home/selectedCompanyItems', value);
+            }
+        },
+        selectedLineItems: {
+            get(){
+                return this.$store.getters['home/selectedLineItems'];
+            },
+            set(value){
+                this.$store.dispatch('home/selectedLineItems', value);
+            }
         },
     },
     methods:{

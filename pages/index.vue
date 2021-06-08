@@ -62,9 +62,9 @@ export default Vue.extend({
             return this.$store.getters['home/lines'];
         },
     },
-    async beforeCreate(){
-        this.$store.dispatch('home/getLines').then(()=>{(this as any).ready=true;});
-    },
+    // async beforeCreate(){
+    //     this.$store.dispatch('home/getCompanies').then(()=>{(this as any).ready=true;});
+    // },
     mounted(){
         this.$on('open', (this as any).drawer);
     },

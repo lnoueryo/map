@@ -1,23 +1,27 @@
 import { $axios } from '~/utils/api';
+import companies from '~/assets/json/company.json'
 interface State {
-    lines: Line[],
-    selectedItems: {name: string, text: string}[],
-    map: any,
-    currentBounds: Bounds,
-    markerSwitch: boolean,
-    lineSwitch: boolean,
-    selectedMarker: Station,
-    searchWord: string,
-    stationInfo: null|string,
-  }
-interface Line {id: number, company_name: string, name: string, polygon: Polygon, color: string,stations: Station[]};
+        companies: Company[]
+        selectedCompanyItems: Company[],
+        selectedLineItems: Line[],
+        map: any,
+        currentBounds: Bounds,
+        markerSwitch: boolean,
+        lineSwitch: boolean,
+        selectedMarker: Station,
+        searchWord: string,
+        stationInfo: null|string,
+    }
 interface Polygon {lat: number, lng: number}[]
 interface Bounds {north: number, south: number, west: number, east: number};
-interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,station_lat:number,station_lon:number,station_name:string}
+interface Company {id: number, name: string, address: string, founded: string, lines: Line[]};
+interface Line {id: number, company_id: number, name: string, polygon: Polygon, color: string,stations: Station[]};
+interface Station {name: string,id:number,line_id:number,order:number,prefecture:string,lat:number,lng:number,company_id:number}
 
 const state = {
-    lines: [],
-    selectedItems: [],
+    companies: [],
+    selectedCompanyItems: [],
+    selectedLineItems: [],
     map: null,
     currentBounds: {south: 0, north: 0,east: 0, west: 0},
     markerSwitch: false,
@@ -28,22 +32,62 @@ const state = {
 };
 
 const getters = {
-    lines:(state: State)=>{
-        const items: string[] = [];
-        state.selectedItems.forEach((item)=>{
-            items.push(item.name);
+    companies:(state: State)=>{return companies;},
+    lineItems:(state: State, getters: any)=>{
+        const lines: Line[] = [];
+        getters.companies.forEach((company: Company)=>{
+            company.lines.forEach(line => {
+                lines.push(line);
+            });
+        })
+        return getters.companyFilter(lines);
+    },
+    lines:(state: State, getters: any)=>{
+        const lines: Line[] = [];
+        getters.companies.forEach((company: Company)=>{
+            company.lines.forEach(line => {
+                lines.push(line);
+            });
+        })
+        return getters.filteredLines(lines);
+    },
+    filteredLines:(state: State, getters: any)=>(lines: Line[]) =>{
+        let filteredLines = getters.companyFilter(lines);
+        filteredLines = getters.lineFilter(filteredLines);
+        return filteredLines;
+    },
+    companyFilter: (state: State) => (lines: Line[]) => {
+        const companyIds: number[] = [];
+        state.selectedCompanyItems.forEach((item)=>{
+            companyIds.push(item.id);
         })
         let selectedLines;
-        if (state.selectedItems.length!==0) {
-            selectedLines = state.lines.filter((line)=>{
-                return items.includes(line.company_name);
+        if (state.selectedCompanyItems.length!==0) {
+            selectedLines = lines.filter((line)=>{
+                return companyIds.includes(line.company_id);
             });
         } else {
-            selectedLines = state.lines;
+            selectedLines = lines;
         }
         return selectedLines;
     },
-    selectedItems: (state: State) => {return state.selectedItems;},
+    lineFilter: (state: State) => (lines: Line[], items: number[]) => {
+        const lineIds: number[] = [];
+        state.selectedLineItems.forEach((item)=>{
+            lineIds.push(item.id);
+        })
+        let selectedLines;
+        if (state.selectedLineItems.length!==0) {
+            selectedLines = lines.filter((line)=>{
+                return lineIds.includes(line.id);
+            });
+        } else {
+            selectedLines = lines;
+        }
+        return selectedLines;
+    },
+    selectedCompanyItems: (state: State) => {return state.selectedCompanyItems;},
+    selectedLineItems: (state: State) => {return state.selectedLineItems;},
     bounds: (state: State) =>{return state.currentBounds;},
     markerSwitch: (state: State) =>{return state.markerSwitch;},
     lineSwitch: (state: State) =>{return state.lineSwitch;},
@@ -55,8 +99,8 @@ const getters = {
     },
     boundsFilter: (state:State) =>(stations: Station[]) =>{
         const filteredStations = stations.filter((station)=>{
-            const verticalCondition = state.currentBounds.west < station.station_lon && state.currentBounds.east > station.station_lon;
-            const horizontalCondition = state.currentBounds.south < station.station_lat && state.currentBounds.north > station.station_lat;
+            const verticalCondition = state.currentBounds.west < station.lng && state.currentBounds.east > station.lng;
+            const horizontalCondition = state.currentBounds.south < station.lat && state.currentBounds.north > station.lat;
             return verticalCondition && horizontalCondition;
         });
         return filteredStations;
@@ -65,7 +109,7 @@ const getters = {
         const stations: Station[] = [];
         getters.lines.forEach((line: Line) => {
             line.stations.forEach(station => {
-                if (station.station_name.indexOf(state.searchWord) > -1) {
+                if (station.name.indexOf(state.searchWord) > -1) {
                     stations.push(station)
                 }
             });
@@ -73,26 +117,28 @@ const getters = {
         return state.searchWord?getters.removeOverlap(stations):[];
     },
     removeOverlap: (state:State) =>(stations: Station[]) =>{
-        let map = new Map(stations.map(station => [station.station_name, station]));
+        let map = new Map(stations.map(station => [station.name, station]));
         return Array.from(map.values());
     },
     stationInfo(state: State){return state.stationInfo},
 }
 
 const mutations = {
-    setLines(state: State, payload: Line[]){
-        payload.forEach(line => {
-            state.lines.push(line);
-        });
+    setCompanies(state: State, payload: Company[]){
+        // payload.forEach(company => {
+        //     state.companies.push(company);
+        // });
     },
-    selectedItems(state: State, payload: {name: string, text: string}[]){
-        state.selectedItems = payload;
+    selectedCompanyItems(state: State, payload: Company[]){
+        state.selectedCompanyItems = payload;
+    },
+    selectedLineItems(state: State, payload: Line[]){
+        state.selectedLineItems = payload;
     },
     clearItem(state: State, payload: number){
-        state.selectedItems.splice(payload,1);
+        state.selectedCompanyItems.splice(payload,1);
     },
     map(state: State, payload: any){
-        console.log(payload)
         state.map = payload
     },
     currentBounds(state: State, payload: Bounds){
@@ -113,14 +159,21 @@ const mutations = {
     stationInfo(state: State, payload: string){
         state.stationInfo = payload;
     },
+    uncheck(state: State, payload: Line[]){
+        if(payload.length == 1){
+            state.selectedLineItems = state.selectedLineItems.filter((item)=>{
+                return item.company_id !== payload[0].id;
+            })
+        } else {
+            state.selectedLineItems = [];
+        }
+    }
 };
 
 const actions = {
-    async getLines(context: any){
-        const response = await $axios.$get('/api/map/station/polygon/');
-        context.commit('setLines', response);
-        const response2 = await $axios.$get('/api/map/');
-        console.log(response2)
+    async getCompanies(context: any){
+        // const response = await $axios.$get('/api/map/');
+        // context.commit('setCompanies', response);
     },
     resetPolyline(context: any, payload: google.maps.Polyline[]){
         payload.forEach(polyline => {
@@ -134,8 +187,11 @@ const actions = {
             })
         })
     },
-    selectedItems(context: any, payload: {name: string, text: string}[]){
-        context.commit('selectedItems', payload)
+    selectedCompanyItems(context: any, payload: {name: string, text: string}[]){
+        context.commit('selectedCompanyItems', payload)
+    },
+    selectedLineItems(context: any, payload: {name: string, text: string}[]){
+        context.commit('selectedLineItems', payload)
     },
     clearItem(context: any, payload: number){
         context.commit('clearItem', payload);
@@ -158,6 +214,9 @@ const actions = {
     async getStationInfo(context: any, payload: string){
         const response = await $axios.$post('/api/map/station/line/wiki/',payload);
         context.commit('stationInfo', response)
+    },
+    uncheck(context: any, payload: string){
+        context.commit('uncheck', payload)
     },
 };
 

@@ -1,5 +1,6 @@
 <template>
     <div style="position:relative;width:100%;height:100vh;max-height:calc(100vh - 64px)">
+    {{addMarker}}
         <div id="map" ref="map"></div>
         <div id="overview-wrapper">
             <div id="overview-container">
@@ -16,10 +17,10 @@ const tokyoBounds = {north: 35.860687,south: 35.530351, west: 138.9403931, east:
 interface Bounds {north: number, south: number, west: number, east: number};
 interface Polygons {"code":string,"city":string,"polygons":Polygon[][]}
 interface Polygon {"lat":number,"lng":number}
-interface Station {id: number, pref_name: string, station_name: string, station_lat: number, station_lon: number, line_name: string, order: number, company_name: string}
+interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number}
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string,stations: Station[]}
-interface DataType {map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},mapOptions: {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean,}, zoom: number,},markers: google.maps.Marker[][],polylines: google.maps.Polyline[]}
+interface DataType {addMarker: { lat: number; lng: number; }[],map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},mapOptions: {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean,}, zoom: number,},markers: google.maps.Marker[][],polylines: google.maps.Polyline[]}
 export default Vue.extend({
     data(): DataType {
         return {
@@ -29,6 +30,7 @@ export default Vue.extend({
             mapOptions: {center: new google.maps.LatLng( 35.6729712, 139.7585771 ), restriction: {latLngBounds: tokyoBounds, strictBounds: false,}, zoom: 14,},
             markers: [],
             polylines: [],
+            addMarker: []
         }
     },
     watch:{
@@ -70,22 +72,24 @@ export default Vue.extend({
     },
     computed:{
         ...mapGetters('home', [
+            'companies',
             'lines',
+            'filteredLines',
             'bounds',
             'markerSwitch',
             'lineSwitch',
             'selectedMarker',
             'stationInfo',
-            'searchStations',
             'removeOverlap'
         ])
     },
     mounted(){
-        // this.map?.addListener('click', (e: any)=>{this.addMarker.push({"lat": Math.round(e.latLng.lat()*1000000)/1000000, "lng": Math.round(e.latLng.lng()*1000000)/1000000})})
-        this.$parent.$parent.$on('makePolyline',this.makeLineArray);
+        // this.addMarker.push({"lat": Math.round(e.latLng.lat()*1000000)/1000000, "lng": Math.round(e.latLng.lng()*1000000)/1000000});console.log({"lat": Math.round(e.latLng.lat()*1000000)/1000000, "lng": Math.round(e.latLng.lng()*1000000)/1000000})
+        // this.$parent.$parent.$on('makePolyline',this.makeLineArray);
         const mapEl = this.$refs.map;
         let that = this;
         (this as any).map = new google.maps.Map(mapEl as HTMLElement, this.mapOptions);
+        this.map?.addListener('click', (e: any)=>{console.log({"lat": Math.round(e.latLng.lat()*1000000)/1000000, "lng": Math.round(e.latLng.lng()*1000000)/1000000})})
         const overview = this.$refs.overview as HTMLElement;
         this.overview = new google.maps.Map(
              overview,
@@ -120,7 +124,7 @@ export default Vue.extend({
     methods:{
         focusMarker(station: Station){
             (this as any).map.setZoom(16);
-            const latLng = new google.maps.LatLng(station.station_lat, station.station_lon);
+            const latLng = new google.maps.LatLng(station.lat, station.lng);
             (this as any).map.panTo(latLng);
         },
         culcCurrentBounds(map: google.maps.Map){
@@ -137,20 +141,31 @@ export default Vue.extend({
         onClickResetPolyline(){
             this.$store.dispatch('resetPolyline', (this as any).polylines);
         },
-        makeLineMarker(lines: Line[]){
-            this.$store.dispatch('home/resetMarkers',this.markers)
-            lines.forEach((line: any,i: number)=>{
+        async makeLineMarker(lines: Line[]){
+            var a = [];
+            const markers: google.maps.Marker[][] = [];
+            await lines.forEach((line: any,i: number)=>{
                 const lineMarkerArray: google.maps.Marker[] = [];
                 line.stations.forEach((station: Station)=>{
-                    let marker = this.makeMarker(station.station_lat, station.station_lon);
+                    let marker = this.makeMarker(station.lat, station.lng);
                     marker.addListener("click", () => {
                         this.$store.dispatch('home/selectMarker',station);
-                        this.$store.dispatch('home/getStationInfo',{name: station.station_name});
+                        this.$store.dispatch('home/getStationInfo',{name: station.name});
                     });
                     lineMarkerArray.push(marker);
-                })
-                this.markers.push(lineMarkerArray);
+                    a.push(marker)
+                });
+                markers.push(lineMarkerArray)
             });
+            const that = this;
+            setTimeout(function(){
+                that.$store.dispatch('home/resetMarkers',that.markers)
+                .then(()=>{that.markers = markers;})
+            },1)
+            // new MarkerClusterer(this.map, a, {
+            //     imagePath:
+            //     "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
+            // });
         },
         makeMarker(lat: number, lng: number){
             const marker = new google.maps.Marker({

@@ -1,6 +1,5 @@
 <template>
-    <div class="w100" style="max-height: calc(100vh - 500px)" :style="{width: `${width}px`, margin: 'auto'}">
-        <div class="bar">
+    <div class="w100" style="max-height: calc(100vh - 500px)" :style="{width: `${width}px`, margin: 'auto'}">        <div class="bar">
             <div class="text-box" @click.stop="openMenu" :style="indexChange">
                 <div class="placeholder" v-if="selectedItems.length==0">
                     <div style="margin-left: 5px;" :style="{color: color}">{{ placeholder }}</div>
@@ -12,7 +11,7 @@
             </div>
             <div class="view" @click.stop="">
                 <form :class="menuClass">
-                    <label class="item" v-ripple="ripple" v-for="(item, i) in items" :key="i" :for="item.company_name"><input type="checkbox" :value="item" v-model="selectedItems" :id="item.name"><label :for="item.name">{{item.name}}</label></label>
+                    <label class="item" v-ripple="ripple" v-for="(item, i) in items" :key="i" :for="item.name"><input type="checkbox" :value="item" v-model="selectedItems" :id="item.name"><label :for="item.name">{{item.name}}</label></label>
                     <label class="item" v-ripple="ripple" @click="openMenu">決定</label>
                     <label class="item" v-ripple="ripple" for="reset"><input type="reset" id="reset" value=""><label for="reset" @click="reset">リセット</label></label>
                 </form>
@@ -31,11 +30,11 @@ export default Vue.extend({
         color: String || null,
         backgroundColor: String || null,
         ripple: String || null,
-        items: Array
+        items: Array,
+        value: Array
     },
     data() {
         return {
-            value: '',
             isSelect: false,
             menuClass: {
                 'active': false,
@@ -53,13 +52,20 @@ export default Vue.extend({
         },
         selectedItems: {
             get(){
-                return this.$store.getters['home/selectedItems']
+                return this.value;
             },
             set(value){
-                console.log(value)
-                this.$store.dispatch('home/selectedItems', value)
+                this.$emit("input", value);
             }
         }
+        // selectedItems: {
+        //     get(){
+        //         return this.$store.getters['home/selectedItems']
+        //     },
+        //     set(value){
+        //         this.$store.dispatch('home/selectedItems', value)
+        //     }
+        // }
     },
     methods:{
         openMenu(){

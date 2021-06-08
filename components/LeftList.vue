@@ -25,7 +25,7 @@
                 <div class="d-flex">
                     <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord" @select="select(filteredSearchStations[0])">
                         <div class="menu" v-if="searchStations.length!==0" style="background-color:orange">
-                            <div @mouseup.stop.prevent="select(searchStation)" v-for="(searchStation, i) in filteredSearchStations" :key="i" class="list">{{searchStation.station_name}}</div>
+                            <div @mouseup.stop.prevent="select(searchStation)" v-for="(searchStation, i) in filteredSearchStations" :key="i" class="list">{{searchStation.name}}</div>
                         </div>
                     </search-bar>
                     <v-btn class="ml-1" icon color="indigo" @click="width=315"><v-icon>mdi-arrow-collapse-horizontal</v-icon></v-btn>
@@ -43,7 +43,7 @@
 <script lang="ts">
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
-interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,station_lat:number,station_lon:number,station_name:string}
+interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,lat:number,lng:number,name:string}
 interface DataType {componentTypes:string[],countMarkers: number,searchWord:string|null,changeList:number,width:number};
 interface DomEvent extends Event {clientX: number,clientY: number}
 import Vue from 'vue';
@@ -110,8 +110,13 @@ export default Vue.extend({
         select(searchStation: Station){
             (this.$refs.searchBar as any).blur = false;
             (this.$refs.searchBar as any).$refs.input.blur();
-            this.$store.dispatch('home/selectMarker',searchStation);
-            this.$store.dispatch('home/getStationInfo', {name: searchStation.station_name})
+            console.log(searchStation)
+            if(searchStation){
+                this.$store.dispatch('home/selectMarker',searchStation);
+                this.$store.dispatch('home/getStationInfo', {name: searchStation.name});
+            } else {
+                alert('見つかりませんでした')
+            }
         },
         count(newValue: number, OldValue: number){
             const DURATION = 600
@@ -132,7 +137,7 @@ export default Vue.extend({
             }, 1)
         },
         onClickList(station: Station){
-            this.$store.dispatch('home/getStationInfo',{name: station.station_name})
+            this.$store.dispatch('home/getStationInfo',{name: station.name})
             this.$store.dispatch('home/selectMarker', station);
         }
     }
