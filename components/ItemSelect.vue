@@ -1,16 +1,18 @@
 <template>
-    <div class="w100" :style="{width: `${width}px`,margin: 'auto'}">
+    <div class="w100" style="max-height: calc(100vh - 500px)" :style="{width: `${width}px`, margin: 'auto'}">
         <div class="bar">
             <div class="text-box" @click.stop="openMenu" :style="indexChange">
                 <div class="placeholder" v-if="selectedItems.length==0">
                     <div style="margin-left: 5px;" :style="{color: color}">{{ placeholder }}</div>
                     <div style="position:relative"><div :class="iconClass"></div></div>
                 </div>
-                <div class="flex-wrap" v-else><span class="chip" v-for="(selectedItem, i) in selectedItems" :key="i">{{selectedItem.text}}<span style="margin-left:5px;font-size:15px" @click.stop="clear(i)">×</span></span></div>
+                <div class="flex-wrap" v-else>
+                    <span class="chip" v-for="(selectedItem, i) in selectedItems" :key="i">{{selectedItem.name}}<span style="margin-left:5px;font-size:15px" @click.stop="clear(i)">×</span></span>
+                </div>
             </div>
             <div class="view" @click.stop="">
                 <form :class="menuClass">
-                    <label class="item" v-ripple="ripple" v-for="(item, i) in items" :key="i" :for="item.company_name"><input type="checkbox" :value="item" v-model="selectedItems" :id="item.company_name"><label :for="item.company_name">{{item.company_name}}</label></label>
+                    <label class="item" v-ripple="ripple" v-for="(item, i) in items" :key="i" :for="item.company_name"><input type="checkbox" :value="item" v-model="selectedItems" :id="item.name"><label :for="item.name">{{item.name}}</label></label>
                     <label class="item" v-ripple="ripple" @click="openMenu">決定</label>
                     <label class="item" v-ripple="ripple" for="reset"><input type="reset" id="reset" value=""><label for="reset" @click="reset">リセット</label></label>
                 </form>
@@ -25,6 +27,7 @@ export default Vue.extend({
     props:{
         placeholder: String || null,
         width: Number || null,
+        height: Number || null,
         color: String || null,
         backgroundColor: String || null,
         ripple: String || null,
@@ -32,21 +35,6 @@ export default Vue.extend({
     },
     data() {
         return {
-            // items: [
-            //     {name: 'JR', text:'JR'},
-            //     {name: 'Keio', text:'京王電鉄'},
-            //     {name: 'TokyoMetropolitanBureauofTransportation', text:'東京交通局'},
-            //     {name: 'TokyoMetro', text:'東京メトロ'},
-            //     {name: 'Seibu', text:'西武鉄道'},
-            //     {name: 'Tobu', text:'東武鉄道'},
-            //     {name: 'OdakyuDentetsu', text:'小田急電鉄'},
-            //     {name: 'Tokyu', text:'東急電鉄'},
-            //     {name: 'KeihinKyuko', text:'京浜急行電鉄'},
-            //     {name: 'Rinkai', text:'東京臨海高速鉄道'},
-            //     {name: 'Yurikamome', text:'ゆりかもめ'},
-            //     {name: 'TokyoMonorail', text:'東京モノレール'},
-            //     {name: 'MetropolitanIntercity', text:'首都圏新都市鉄道'},
-            // ],
             value: '',
             isSelect: false,
             menuClass: {
@@ -68,6 +56,7 @@ export default Vue.extend({
                 return this.$store.getters['home/selectedItems']
             },
             set(value){
+                console.log(value)
                 this.$store.dispatch('home/selectedItems', value)
             }
         }
@@ -88,7 +77,7 @@ export default Vue.extend({
             this.menuClass.active=false;
         },
         reset(){
-            this.selectedItems.length = 0;
+            this.selectedItems = [];
             this.menuActive();
         },
         async clear(index: number){
@@ -145,6 +134,9 @@ export default Vue.extend({
             transform:rotateZ(-135deg);
             transition: all .3s;
         }
+    }
+    ::-webkit-scrollbar {
+        display: none;
     }
     .view {
         transform-style:preserve-3d;
@@ -251,6 +243,9 @@ export default Vue.extend({
             transition-delay: .1s;
             transition-timing-function: ease-out;
             z-index:3;
+            height: 100vh;
+            max-height: calc(100vh - 70px);
+            overflow-y: scroll;
         }
     }
 }
