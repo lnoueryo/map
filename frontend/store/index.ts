@@ -1,27 +1,18 @@
 import { $axios } from '~/utils/api';
 
-// import { $nuxt } from '~/utils/api'
-// import { $nuxt } from 'nuxt'
-
 interface State {
     token: null | string,
-    // cropImage: null | string[],
-    // message: null | string,
-    // listItem: {icons: string[], titles: string[]},
-    // btnValidation: {next1: boolean, next2: boolean, send: boolean}
-    // croppingBtn: {icons: [{name: string, leftValue: null, rightValue: string, left: boolean, right: boolean}], color: string[]}
+    windowSize: WindowSize,
+    map: any
   }
-  interface Token {
+interface Token {
     access: string, refresh: string
-  }
+}
+interface WindowSize {x: number, y: number};
 
 const state = {
     token: null,
-    // cropImage: [],
-    // message: '',
-    // btnValidation: {'next1': false, 'next2': true, 'send': true},
-    // submitBtn: {'color': 'pink', 'text': true, 'value': '投稿する'},
-    // croppingBtn: {icons: [{name: 'mdi-menu-right', leftValue: '', rightValue: 'Next', left: false, right: true}], color: ['primary']},
+    windowSize: {x: 0,y: 0},
 };
 
 const getters = {
@@ -31,6 +22,9 @@ const getters = {
 const mutations = {
     login(state: State, token: string) {
         state.token = token;
+    },
+    windowSize(state: State, payload: WindowSize){
+        state.windowSize = Object.assign({}, state.windowSize, payload);
     },
 };
 
@@ -52,40 +46,16 @@ const actions = {
                 (this as any).$router.push('/')
             }
         }
-
-    }
+    },
+    windowSize(context: any, payload: WindowSize){
+        context.commit('windowSize', payload)
+    },
 };
 
 export default {
+    namespace: true,
     state,
     getters,
     mutations,
     actions,
 }
-// NuxtのVuex内で$routerを使うことになった。
-// Nuxtでは
-
-// ```javascript
-// $nuxt.$router.push('/')
-// ```
-
-// のように使うのだが、storeが現在index.tsのため$nuxtにエラーが発生してしまう。
-// なので$axiosと同じ手法で$nuxtを定義した。
-
-// ```typescript:utils/api.ts
-// import { NuxtAxiosInstance } from '@nuxtjs/axios';
-// import { NuxtApp } from '@nuxt/types/app'
-// let $axios: NuxtAxiosInstance;
-// let $nuxt: NuxtApp
-// export function initializeAxios(axiosInstance: NuxtAxiosInstance): void {
-//   $axios = axiosInstance;
-// }
-
-// export { $axios, $nuxt };
-// ```
-
-// ```store/index.ts
-// import { $axios, $nuxt } from '~/utils/api';
-// ```
-
-// これでエラーが消えた。

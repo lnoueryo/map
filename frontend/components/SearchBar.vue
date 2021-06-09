@@ -1,0 +1,115 @@
+<template>
+    <div class="w100 search-box">
+        <div class="cp_iptxt" @click="focus" @mouseover="blur=false">
+			<div class="d-flex">
+				<input ref="input" type="text" :placeholder="placeholder" v-model="searchWord" @blur="check" @keyup.enter="onEnter">
+				<v-icon style="position:absolute;top:0;bottom:0;right:5px;left:initial;color:#aaaaaa;" @click="searchWord=null">mdi-close</v-icon>
+			</div>
+            <v-icon id="magnify">mdi-magnify</v-icon>
+        </div>
+		<div class="w100" @mouseenter="blur=true" @mouseleave="blur=false"><slot></slot></div>
+    </div>
+</template>
+
+<script>
+export default {
+	props:['placeholder', 'backgroundColor'],
+	data() {
+		return {
+			value: null,
+			blur: false
+		}
+	},
+	computed:{
+		searchWord: {
+			get(){
+				return this.value;
+			},
+			set(newValue) {
+				this.value = newValue;
+				this.$emit("input", newValue);
+			},
+		},
+	},
+    methods:{
+        focus(){
+            this.$refs.input.focus();
+        },
+		check(){
+			if(this.blur){
+				this.$refs.input.focus();
+			}
+		},
+		onEnter(){
+			this.$emit('select')
+		}
+    }
+}
+</script>
+
+<style lang="scss" scoped>
+.cp_iptxt {
+	position: relative;
+	input[type=text] {
+		font: 15px/24px sans-serif;
+		box-sizing: border-box;
+		width: 100%;
+		padding: 0.3em;
+		transition: 0.5s;
+		border: 1px solid #1b2538;
+		border-radius: 4px;
+		outline: none;
+	}
+	input[type=text]:focus {
+		border-color: #da3c41;
+		transition: 0.5s;
+	}
+	input[type=text] {
+		padding-left: 40px;
+	}
+	i {
+		position: absolute;
+		top: 0px;
+		bottom: 0px;
+		left: 0;
+		padding: 0px 8px;
+		transition: 0.5s;
+		color: #aaaaaa;
+	}
+	input[type=text]:focus + i {
+		color: #da3c41;
+	}
+
+}
+.w100{
+    width:100%;
+}
+.menu{
+	position: absolute;
+	height:0;
+	visibility: hidden;
+	opacity: 0;
+	width:100%;
+	transform: translateY(-25px) rotateX(30deg);
+	transition: all .2s;
+	transition-timing-function: ease-in;
+	border-radius:5px;
+}
+.search-box{
+	position:relative;
+}
+
+.search-box:focus-within{
+	.menu{
+		visibility: visible;
+		opacity: 1;
+		height:auto;
+		transform: translateY(0) rotateX(0deg);
+		transition: all .2s;
+		transition-delay: .1s;
+		transition-timing-function: ease-out;
+		z-index:3;
+		box-shadow: 0 0 0 1px rgb(208, 208, 208);
+	}
+}
+</style>
