@@ -160,6 +160,7 @@ const mutations = {
         state.stationInfo = payload;
     },
     uncheck(state: State, payload: Line[]){
+        console.log(payload)
         if(payload.length == 1){
             state.selectedLineItems = state.selectedLineItems.filter((item)=>{
                 return item.company_id !== payload[0].id;
@@ -220,6 +221,7 @@ const actions = {
         context.commit('stationInfo', response)
     },
     uncheck(context: any, payload: string){
+        console.log(payload)
         context.commit('uncheck', payload)
     },
 };

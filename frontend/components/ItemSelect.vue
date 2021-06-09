@@ -6,7 +6,12 @@
                     <div style="position:relative"><div :class="iconClass"></div></div>
                 </div>
                 <div class="flex-wrap" v-else>
-                    <span class="chip" v-for="(selectedItem, i) in selectedItems" :key="i">{{selectedItem.name}}<span style="margin-left:5px;font-size:15px" @click.stop="clear(i)">×</span></span>
+                    <span class="chip" v-for="(selectedItem, i) in selectedItems" :key="i">{{selectedItem.name}}
+                        <span style="margin-left:5px;font-size:15px">
+                            <input type="checkbox" :value="selectedItem" v-model="selectedItems" :id="selectedItem.name"><label :for="selectedItem.name">×</label>
+                        </span>
+                    </span>
+                    <!-- <span class="chip" v-for="(selectedItem, i) in selectedItems" :key="i">{{selectedItem.name}}<span style="margin-left:5px;font-size:15px" @click.stop="clear(i)">×</span></span> -->
                 </div>
             </div>
             <div class="view" @click.stop="">
@@ -143,6 +148,11 @@ export default Vue.extend({
     }
     ::-webkit-scrollbar {
         display: none;
+    }
+    .chip{
+        input[type="checkbox"]{
+            display: none;
+        }
     }
     .view {
         transform-style:preserve-3d;

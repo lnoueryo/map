@@ -82,6 +82,7 @@ export default Vue.extend({
                 return this.$store.getters['home/selectedLineItems'];
             },
             set(value){
+                console.log(value)
                 this.$store.dispatch('home/selectedLineItems', value);
             }
         },
