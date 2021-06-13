@@ -3,7 +3,7 @@
         <div class="middle-list">
             <div v-for="(company, i) in companies" :key="i" style="position:relative">
                 <transition name="list">
-                    <div v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
+                    <div :style="selectCompany.length!==0?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}" v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
                 </transition>
                 <div v-for="(line, j) in filteredLines(company.lines)" :key="j" style="color:black">
                     <transition name="list">

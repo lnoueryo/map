@@ -1,5 +1,14 @@
 from django.urls import path
-from map.api.views import GeocodeAPI, ReverseGeocodeAPI, StationAPI, StationDetailAPI, LineAPI, WikiAPI, CompanyAPI
+from map.api.views import (
+    GeocodeAPI,
+    ReverseGeocodeAPI,
+    StationAPI,
+    StationDetailAPI,
+    LineAPI,
+    WikiAPI,
+    CompanyAPI,
+    CSVCompanyAPI
+)
 from . import views
 urlpatterns = [
     path('search-by-geocode', GeocodeAPI.as_view(), name="geocode"),
@@ -11,4 +20,5 @@ urlpatterns = [
     path("station/line/wiki/",WikiAPI.as_view(), name="wiki"),
     path("download/<str:filename>",views.download),
     path("practice/",views.practice),
+    path("csv/",CSVCompanyAPI.as_view()),
 ]

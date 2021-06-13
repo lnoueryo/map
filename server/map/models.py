@@ -18,11 +18,13 @@ class Price(models.Model):
         return self.district_name
 
 class Company(models.Model):
-    id = models.IntegerField(primary_key=True)
+    # id = models.IntegerField(primary_key=True)
     name = models.TextField()
     address = models.TextField()
     founded = models.TextField()
-
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
     class Meta:
         managed = False
         db_table = 'company'
@@ -46,7 +48,7 @@ class Line(models.Model):
         return f'{self.name}'
 
 class Station(models.Model):
-    id = models.IntegerField(primary_key=True)
+    # id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=50)
     prefecture = models.CharField(max_length=50)
     lat = models.FloatField()

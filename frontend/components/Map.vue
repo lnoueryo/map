@@ -13,6 +13,7 @@
 <script lang="ts">
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
+import practice from '~/assets/json/line/practice.json'
 const tokyoBounds = {north: 35.860687,south: 35.530351, west: 138.9403931, east: 139.9368243}
 interface Bounds {north: number, south: number, west: number, east: number};
 interface Polygons {"code":string,"city":string,"polygons":Polygon[][]}
@@ -84,12 +85,12 @@ export default Vue.extend({
         ])
     },
     mounted(){
-        // this.addMarker.push({"lat": Math.round(e.latLng.lat()*1000000)/1000000, "lng": Math.round(e.latLng.lng()*1000000)/1000000});console.log({"lat": Math.round(e.latLng.lat()*1000000)/1000000, "lng": Math.round(e.latLng.lng()*1000000)/1000000})
+        console.log(practice)
         // this.$parent.$parent.$on('makePolyline',this.makeLineArray);
         const mapEl = this.$refs.map;
         let that = this;
         (this as any).map = new google.maps.Map(mapEl as HTMLElement, this.mapOptions);
-        this.map?.addListener('click', (e: any)=>{console.log({"lat": Math.round(e.latLng.lat()*1000000)/1000000, "lng": Math.round(e.latLng.lng()*1000000)/1000000})})
+        this.map?.addListener('click', (e: any)=>{this.addMarker.push({"lat": Math.round(e.latLng.lat()*1000000)/1000000, "lng": Math.round(e.latLng.lng()*1000000)/1000000});console.log({"lat": Math.round(e.latLng.lat()*1000000)/1000000, "lng": Math.round(e.latLng.lng()*1000000)/1000000});})
         const overview = this.$refs.overview as HTMLElement;
         this.overview = new google.maps.Map(
              overview,

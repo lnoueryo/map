@@ -75,21 +75,21 @@ export default Vue.extend({
     methods:{
         openMenu(){
             const that = this;
-            if (this.menuClass.active) {
-                this.$root.$el.removeEventListener('click',that.menuActive);
-                this.menuActive();
+            if ((this as any).menuClass.active) {
+                this.$root.$el.removeEventListener('click',(that as any).menuActive);
+                (this as any).menuActive();
             } else {
-                this.menuClass.active = true;
-                this.iconClass.rotate = true;
-                this.$root.$el.addEventListener('click',that.menuActive,{once:true});
+                (this as any).menuClass.active = true;
+                (this as any).iconClass.rotate = true;
+                this.$root.$el.addEventListener('click',(that as any).menuActive,{once:true});
             }
         },
         menuActive(){
-            this.menuClass.active=false;
+            (this as any).menuClass.active=false;
         },
         reset(){
-            this.selectedItems = [];
-            this.menuActive();
+            (this as any).selectedItems = [];
+            (this as any).menuActive();
         },
         async clear(index: number){
             await this.$store.dispatch('home/clearItem', index);

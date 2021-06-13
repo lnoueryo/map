@@ -45,6 +45,11 @@ export default Vue.extend({
                     title: 'Login',
                     to: '/login',
                 },
+                {
+                    icon: 'mdi-chart-bubble',
+                    title: 'csv',
+                    to: '/csv',
+                },
             ],
             miniVariant: false,
             right: true,

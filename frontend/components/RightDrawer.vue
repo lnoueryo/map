@@ -3,7 +3,11 @@
         <nav :class="drawerClass">
             <div class="display-height">
                 <div class="top-menu">
-                    <item-select style="position:relative;z-index:2" v-model="selectedCompanyItems" :items="$store.getters['home/companies']" placeholder="鉄道会社名を絞り込む" background-color="white" ripple="true"></item-select>
+                    <div>
+                        <label>鉄道会社</label>
+                        <item-select style="position:relative;z-index:2" v-model="selectedCompanyItems" :items="$store.getters['home/companies']" placeholder="鉄道会社名を絞り込む" background-color="white" ripple="true"></item-select>
+                    </div>
+                    <label>路線</label>
                     <item-select style="position:relative;z-index:1" v-model="selectedLineItems" :items="$store.getters['home/lineItems']" placeholder="路線を絞り込む" background-color="white" ripple="true" v-if="selectedCompanyItems.length!==0"></item-select>
                 </div>
                 <div class="list-bottom">

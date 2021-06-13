@@ -12,6 +12,7 @@ from .views import LogoutView
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/map/', include('map.api.urls')),
+    path('api/management/', include('management.api.urls')),
     path('api/users/', include('users.urls', namespace='users')),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),

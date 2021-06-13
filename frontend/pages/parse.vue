@@ -25,7 +25,7 @@ export default {
         return {
             text: 'null',
             lines: [],
-            index: 0
+            index: 72
         }
     },
     computed:{
