@@ -16,7 +16,6 @@ export default {
 	props:['placeholder', 'backgroundColor'],
 	data() {
 		return {
-			value: null,
 			blur: false
 		}
 	},
@@ -26,7 +25,6 @@ export default {
 				return this.value;
 			},
 			set(newValue) {
-				this.value = newValue;
 				this.$emit("input", newValue);
 			},
 		},

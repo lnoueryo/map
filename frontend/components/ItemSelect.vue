@@ -63,14 +63,6 @@ export default Vue.extend({
                 this.$emit("input", value);
             }
         }
-        // selectedItems: {
-        //     get(){
-        //         return this.$store.getters['home/selectedItems']
-        //     },
-        //     set(value){
-        //         this.$store.dispatch('home/selectedItems', value)
-        //     }
-        // }
     },
     methods:{
         openMenu(){

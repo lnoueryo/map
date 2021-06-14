@@ -40,7 +40,7 @@
                         {{ key }}:
                       </v-list-item-content>
                       <v-list-item-content class="align-end" :class="{ 'blue--text': sortBy === key }">
-                        <input style="color:white" type="text" :value="omittedContent(item[key.toLowerCase()])" :disabled="editIndex!=i">
+                        {{omittedContent(item[key.toLowerCase()])}}
                       </v-list-item-content>
                     </v-list-item>
                   </v-list>
@@ -94,9 +94,8 @@
           </v-card-title>
           <v-card-text>
             <v-container>
-              <v-row>
-                <div :is="component"></div>
-              </v-row>
+                <div v-model="selectedItem" :is="component"></div>
+                <!-- <div v-model="editItem" :is="component"></div> -->
             </v-container>
             <small>*indicates required field</small>
           </v-card-text>
@@ -115,8 +114,16 @@
     </div>
 </template>
 <script>
+import Company from '~/components/management/Company.vue'
+import Line from '~/components/management/Line.vue'
 import Station from '~/components/management/Station.vue'
+import { mapGetters } from 'vuex'
   export default {
+    components:{
+      Company,
+      'train-line': Line,
+      Station
+    },
     data () {
       return {
         itemsPerPageArray: [4, 8, 12, 16, 20, 50, 100],
@@ -125,22 +132,17 @@ import Station from '~/components/management/Station.vue'
         sortDesc: false,
         page: 1,
         itemsPerPage: 4,
-        data: 'station',
-        dataKeys: [
-          'company',
-          'line',
-          'station',
-        ],
-        items: [],
-        sortBy: 'ID',
-        sortKeys: [],
-        editIndex: -1,
+        dataKeys: ['company', 'line', 'station'],
         editDialog: false,
-        componentTypes: ['station-lines', 'station-wiki', 'station-lines'],
-        changeList: 0
+        componentTypes: ['company', 'train-line', 'station'],
       }
     },
     computed: {
+      ...mapGetters('management', [
+        'changeList',
+        'sortKeys',
+        'items',
+      ]),
       numberOfPages () {
         return Math.ceil(this.items.length / this.itemsPerPage)
       },
@@ -148,19 +150,44 @@ import Station from '~/components/management/Station.vue'
         return this.sortKeys.filter(key => key !== 'ID')
       },
       component(){
-          return this..componentTypes[this.changeList];
+          return this.componentTypes[this.changeList];
       },
+      data:{
+        get(){
+          return this.$store.getters['management/data'];
+        },
+        set(value){
+          this.$store.dispatch('management/data', value);
+        }
+      },
+      sortBy:{
+        get(){
+          return this.$store.getters['management/sortBy'];
+        },
+        set(value){
+          this.$store.dispatch('management/sortBy', value);
+        }
+      },
+      selectedItem:{
+        get(){
+          return this.$store.getters['management/selectedItem'];
+        },
+        set(value){
+          this.$store.dispatch('management/selectedItem', value)
+        }
+      }
     },
     watch:{
       data:{
         async handler(){
-          const response = await this.$axios.$get(`/api/management/${this.data}/`);
-          this.items = response;
-          this.sortKeys = Object.keys(response[0]);
+          this.$store.dispatch('management/items', this.$store.getters['management/data'])
         },
         immediate: true
       }
     },
+    // created(){
+    //   this.$store.dispatch('management/items', this.$store.getters['management/data'])
+    // },
     methods: {
       nextPage () {
         if (this.page + 1 <= this.numberOfPages) this.page += 1
@@ -179,11 +206,8 @@ import Station from '~/components/management/Station.vue'
         return string;
       },
       edit(index){
-        this.editIndex = index;
         this.editDialog = true;
-        this.editData = this.items.find((_, i)=>{
-          return i === index;
-        })
+        this.$store.dispatch('management/editIndex', index)
       }
     },
   }
