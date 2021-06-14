@@ -4,7 +4,6 @@ from rest_framework import exceptions, serializers
 import json
 
 class StationSerializer(serializers.ModelSerializer):
-    
     class Meta: #　表示したり、create時のrequiredのキー
         model = Station
         fields = '__all__'

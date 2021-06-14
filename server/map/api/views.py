@@ -137,63 +137,6 @@ class WikiAPI(APIView):
         data = re.sub('<a.*?>|</a>', '', data)
         return data
 
-class CSVCompanyAPI(APIView):
-
-    def get(self, request):
-        response = self.make_csv_file()
-        header = self.make_column()
-        delimiter = (request.GET.dict())['delimiter']
-        response = self.write_csv(response, header, delimiter)
-        """
-        getの時にCSVをexportする関数。
-        """
-        return response
-
-    def post(self, request):
-        f = request.FILES['file'].read()
-        f = f.decode(encoding='utf-8')
-        f = f.split('\n')
-        csv_list = []
-        for row in f:
-            row = str(row).split(',')
-            if len(row) is 3:
-                csv_list.append(row)
-        print(csv_list[0][0])
-        if csv_list[0][0] == 'name':
-            del csv_list[0]
-        companies = []
-        for row in csv_list:
-            company = Company(name=row[0],address=row[1],founded=row[2])
-            companies.append(company)
-        company = Company.objects.bulk_create(companies)
-        serializer = CompanySerializer(company, many=True)
-        return JsonResponse(serializer.data, safe=False)
-
-    def make_csv_file(self):
-        filename = "保存ルート一覧.csv"
-        filename = filename.encode('utf-8', errors='ignore')
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename*=UTF-8\'\'{}'.format(filename)
-        return response
-
-    def make_column(self):
-        company_column = Company._meta.get_fields()
-        company_column_value = []
-        for index, row in enumerate(company_column):
-            if index > 2 and index < 6:
-                company_column_value.append(row.name)
-        return company_column_value
-
-    def write_csv(self, response, header, delimiter):
-        if delimiter == 't':
-            delimiter = '\t'
-        writer = csv.writer(response, delimiter=delimiter)
-        writer.writerow(header)
-        for company in Company.objects.all():
-            writer.writerow([company.name, company.address, company.founded])
-        
-        return response
-
     # def check_column():
 
 

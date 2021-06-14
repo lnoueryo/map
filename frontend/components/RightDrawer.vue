@@ -3,12 +3,14 @@
         <nav :class="drawerClass">
             <div class="display-height">
                 <div class="top-menu">
-                    <div>
+                    <div class="mb-2">
                         <label>鉄道会社</label>
                         <item-select style="position:relative;z-index:2" v-model="selectedCompanyItems" :items="$store.getters['home/companies']" placeholder="鉄道会社名を絞り込む" background-color="white" ripple="true"></item-select>
                     </div>
-                    <label>路線</label>
-                    <item-select style="position:relative;z-index:1" v-model="selectedLineItems" :items="$store.getters['home/lineItems']" placeholder="路線を絞り込む" background-color="white" ripple="true" v-if="selectedCompanyItems.length!==0"></item-select>
+                    <div v-if="selectedCompanyItems.length!==0">
+                        <label>路線</label>
+                        <item-select style="position:relative;z-index:1" v-model="selectedLineItems" :items="$store.getters['home/lineItems']" placeholder="路線を絞り込む" background-color="white" ripple="true"></item-select>
+                    </div>
                 </div>
                 <div class="list-bottom">
                     <div class="d-flex mb-2 px-2" style="font-size:14px;">
@@ -20,7 +22,7 @@
             </div>
         </nav>
         <div id="drawer-button-wrapper">
-            <circle-button class="animation" @click.native="onClickCircleButton" :style="drawerClass.open==true?{transform:'translate(-306px,-56px)'}:''"><div class="down-icon rotate"></div></circle-button>
+            <circle-button v-if="!drawerClass.open" class="animation" @click.native="onClickCircleButton" :style="drawerClass.open==true?{transform:'translate(-306px,-56px)'}:''"><div class="down-icon rotate"></div></circle-button>
         </div>
     </div>
 </template>
@@ -142,9 +144,12 @@ export default Vue.extend({
             top: 50%;
             left: 50%;
             margin: auto;
-            visibility: hidden;
-            opacity: 0;
-            transform: translateX(100%) translateY(-100%);
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-100%);
+            // visibility: hidden;
+            // opacity: 0;
+            // transform: translateX(100%) translateY(-100%);
             transition: all .5s;
             transition-delay: .3s;
             transition-property: all;

@@ -260,7 +260,7 @@ export default Vue.extend({
             transition-timing-function: ease-out;
             z-index:3;
             height: 100vh;
-            max-height: calc(100vh - 70px);
+            max-height: calc(100vh - 200px);
             overflow-y: scroll;
         }
     }

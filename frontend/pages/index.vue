@@ -1,6 +1,6 @@
 <template>
-    <div>
-    <!-- <div style="max-height:calc(100vh);overflow:hidden"> -->
+    <!-- <div> -->
+    <div style="max-height:calc(100vh);overflow:hidden">
         <!-- <div style="position:fixed;top:0;bottom:0;left:0;right:0;z-index:5;background-color:#00000050;transition-delay:3s;transition:all 3s" v-show="!ready"></div> -->
         <right-drawer></right-drawer>
         <div id="container" :style="open?{paddingRight:256+'px'}:''">

@@ -7,7 +7,6 @@ from map.api.views import (
     LineAPI,
     WikiAPI,
     CompanyAPI,
-    CSVCompanyAPI
 )
 from . import views
 urlpatterns = [
@@ -20,5 +19,4 @@ urlpatterns = [
     path("station/line/wiki/",WikiAPI.as_view(), name="wiki"),
     path("download/<str:filename>",views.download),
     path("practice/",views.practice),
-    path("csv/",CSVCompanyAPI.as_view()),
 ]
