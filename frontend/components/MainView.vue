@@ -13,7 +13,6 @@ import Vue from 'vue'
 import LeftList from '../components/LeftList.vue'
 import LineChart from '../components/LineChart.vue'
 import MapView from '../components/Map.vue'
-import polygonData from '~/assets/json/coordinates.json'
 import Mixin from '~/utils/mixin.ts'
 interface Polygons {"code":string,"city":string,"polygons":Polygon[][]}
 interface Polygon {"lat":number,"lng":number}

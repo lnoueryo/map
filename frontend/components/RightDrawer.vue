@@ -32,7 +32,7 @@ import Vue from 'vue'
 import ToggleSwitch from '../components/ToggleSwitch.vue';
 import ItemSelect from '../components/ItemSelect.vue';
 import CircleButton from '../components/CircleButton.vue';
-interface DataType {drawerClass: {drawer: boolean,open: boolean},markerSwitch:boolean,lineSwitch:boolean}
+interface DataType {drawerClass: {drawer: boolean,open: boolean}}
 interface Station {name: string,id:number,line_id:number,order:number,prefecture:string,lat:number,lng:number,company_id:number}
 export default Vue.extend({
     components:{
@@ -46,23 +46,9 @@ export default Vue.extend({
                 'drawer': true,
                 'open': false
             },
-            markerSwitch: true,
-            lineSwitch: true,
         }
     },
     watch:{
-        markerSwitch:{
-            handler(v){
-                this.$store.dispatch('home/changeMarkerSwitch',v);
-            },
-            immediate: true
-        },
-        lineSwitch:{
-            handler(v){
-                this.$store.dispatch('home/changeLineSwitch',v);
-            },
-            immediate:true,
-        },
         selectedCompanyItems:{
             handler(newValues, oldValues){
                 if (newValues.length < oldValues.length) {
@@ -80,7 +66,7 @@ export default Vue.extend({
                 return this.$store.getters['home/selectedCompanyItems'];
             },
             set(value){
-                this.$store.dispatch('home/selectedCompanyItems', value);
+                (this as any).$store.dispatch('home/selectedCompanyItems', value);
             }
         },
         selectedLineItems: {
@@ -88,8 +74,23 @@ export default Vue.extend({
                 return this.$store.getters['home/selectedLineItems'];
             },
             set(value){
-                console.log(value)
                 this.$store.dispatch('home/selectedLineItems', value);
+            }
+        },
+        markerSwitch:{
+            get(){
+                return this.$store.getters['home/markerSwitch']
+            },
+            set(value){
+                this.$store.dispatch('home/changeMarkerSwitch', value);
+            }
+        },
+        lineSwitch:{
+            get(){
+                return this.$store.getters['home/lineSwitch']
+            },
+            set(value){
+                this.$store.dispatch('home/changeLineSwitch', value);
             }
         },
     },

@@ -27,7 +27,6 @@
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_id: number, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
 interface Station {company_id: number,id:number,line_id:number,order:number,pref_name:string,lat:number,lng:number,name:string}
-interface DataType {countMarkers: number,searchWord:string|null};
 interface Company {id: number, name: string, address: string, founded: string, lines: Line[]};
 
 import Vue from 'vue';
@@ -37,13 +36,6 @@ export default Vue.extend({
     components:{
         SearchBar
     },
-    data(): DataType {
-        return {
-            countMarkers: 0,
-            searchWord: null,
-        }
-    },
-    //  @click="selectedItems(company)"
     computed:{
         ...mapGetters('home', [
             'lines',
@@ -75,11 +67,6 @@ export default Vue.extend({
             }
         }
     },
-    watch:{
-        searchWord(newValue){
-            this.$store.dispatch('home/searchWord',newValue)
-        }
-    },
     methods:{
         makeStationArray(lines: Line[]){
             const stations: Station[] = []
@@ -101,25 +88,6 @@ export default Vue.extend({
             (this.$refs.searchBar as any).blur = false;
             (this.$refs.searchBar as any).$refs.input.blur();
             this.$store.dispatch('home/selectMarker',searchStation)
-        },
-        count(newValue: number, OldValue: number){
-            const DURATION = 600
-
-            const from = OldValue;
-            const to = newValue;
-            const startTime = Date.now()
-            const that = this;
-            let timer = setInterval(() => {
-                const elapsedTime = Date.now() - startTime
-                const progress = elapsedTime / DURATION
-
-                if (progress < 1) {
-                    (this as any).countMarkers = Math.floor(from + progress * (to - from));
-                } else {
-                    clearInterval(timer);
-                    (this as any).countMarkers = to;
-                }
-            }, 1)
         },
         onClickList(station: Station){
             this.$store.dispatch('home/getStationInfo',{name: station.name})

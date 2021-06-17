@@ -47,8 +47,8 @@ export default Vue.extend({
                 },
                 {
                     icon: 'mdi-chart-bubble',
-                    title: 'csv',
-                    to: '/csv',
+                    title: 'admin',
+                    to: '/management',
                 },
             ],
             miniVariant: false,

@@ -18,7 +18,7 @@ export default {
     ],
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     script: [
-      { src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCLaTg7iFjqb20GWflIisy6P8VdOZUYmKA&libraries=&v=quarterly', async: true },
+      { src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCLaTg7iFjqb20GWflIisy6P8VdOZUYmKA&libraries=geometry&v=quarterly', async: true },
       { src: 'https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js', async: true },
     ]
   },

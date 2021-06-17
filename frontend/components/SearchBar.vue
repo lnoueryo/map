@@ -13,7 +13,7 @@
 
 <script>
 export default {
-	props:['placeholder', 'backgroundColor'],
+	props:['value', 'placeholder', 'backgroundColor'],
 	data() {
 		return {
 			blur: false

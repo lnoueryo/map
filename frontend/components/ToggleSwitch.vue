@@ -22,11 +22,6 @@ export default {
         },
       }
     }
-    // methods:{
-    //   onClick(){
-    //     this.$emit('change', this.checked)
-    //   }
-    // }
 }
 </script>
 

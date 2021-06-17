@@ -18,13 +18,12 @@ class Price(models.Model):
         return self.district_name
 
 class Company(models.Model):
-    # id = models.IntegerField(primary_key=True)
     name = models.TextField()
     address = models.TextField()
     founded = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         managed = False
         db_table = 'company'
@@ -38,7 +37,8 @@ class Line(models.Model):
     color = models.CharField(max_length=50, blank=True, null=True)
     line_code = models.IntegerField(unique=True)
     company_id = models.ForeignKey(Company, db_column='company_id', to_field='id', related_name='lines', on_delete=models.CASCADE)
-
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     class Meta:
         managed = False
         db_table = 'line'
@@ -48,14 +48,16 @@ class Line(models.Model):
         return f'{self.name}'
 
 class Station(models.Model):
-    # id = models.IntegerField(primary_key=True)
     name = models.CharField(max_length=50)
     prefecture = models.CharField(max_length=50)
     lat = models.FloatField()
     lng = models.FloatField()
     company_id = models.ForeignKey(Company, db_column='company_id', to_field='id', related_name='stations', on_delete=models.PROTECT)
     line_id = models.ForeignKey(Line, db_column='line_id', to_field='id', related_name='stations', on_delete=models.PROTECT)
-
+    address = models.CharField(max_length=100, blank=True, null=True)
+    city_code = models.IntegerField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     class Meta:
         managed = False
         db_table = 'station'

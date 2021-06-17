@@ -44,13 +44,14 @@
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
 interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,lat:number,lng:number,name:string}
-interface DataType {componentTypes:string[],countMarkers: number,searchWord:string|null,changeList:number,width:number};
+interface DataType {countMarkers: number,changeList:number,width:number};
 interface DomEvent extends Event {clientX: number,clientY: number}
 import Vue from 'vue';
 import {mapGetters} from 'vuex'
 import StationLines from '~/components/StationLines.vue';
 import StationWiki from '~/components/StationWiki.vue';
 import SearchBar from '~/components/SearchBar.vue';
+
 export default Vue.extend({
     components:{
         StationLines,
@@ -59,58 +60,61 @@ export default Vue.extend({
     },
     data(): DataType {
         return {
-            componentTypes: ['station-lines', 'station-wiki', 'station-lines'],
             changeList: 0,
             countMarkers: 0,
-            searchWord: null,
             width: 315,
         }
     },
     computed:{
-        component(){
-            return (this as any).componentTypes[(this as any).changeList];
-        },
-        filteredSearchStations(){
-            return this.searchStations.filter((_: any,index: number)=>{
-                return index < 5;
-            });
-        },
         ...mapGetters('home', [
             'lines',
             'bounds',
             'markerSwitch',
             'lineSwitch',
             'selectedMarker',
-            'showNumberOfMarkers',
             'boundsFilter',
             'searchStations',
             'stationInfo',
+            'showNumberOfMarkers'
         ]),
-    },
-    watch:{
-        showNumberOfMarkers(newValue, OldValue){
-            (this as any).count(newValue, OldValue);
+        component(){
+            const componentTypes = ['station-lines', 'station-wiki', 'station-lines'];
+            return componentTypes[(this as any).changeList];
         },
-        searchWord(newValue){
-            this.$store.dispatch('home/searchWord',newValue)
+        filteredSearchStations(){
+            return this.searchStations.filter((_: any,index: number)=>{
+                return index < 5;
+            });
+        },
+        searchWord:{
+            get(){
+                return this.$store.getters['home/searchWord'];
+            },
+            set(newValue){
+                this.$store.dispatch('home/searchWord',newValue);
+            }
         }
     },
+    watch:{
+        showNumberOfMarkers(newValue, OldValue){ //vuexの変化を検知
+            (this as any).count(newValue, OldValue);
+        },
+    },
     methods:{
-        hello(e: DomEvent){
+        limit(e: DomEvent){
             if (e.clientX<500&&e.clientX>100) {
                 (this as any).width = e.clientX
             }
         },
         dragStart(){
             const that = this;
-            const hello = (e: Event)=>{(that as any).hello(e)};
-            this.$root.$el.addEventListener('mousemove',hello);
-            this.$root.$el.addEventListener('mouseup',()=>{that.$root.$el.removeEventListener('mousemove',hello),{once:true}});
+            const limit = (e: Event)=>{(that as any).limit(e)};
+            this.$root.$el.addEventListener('mousemove',limit);
+            this.$root.$el.addEventListener('mouseup',()=>{that.$root.$el.removeEventListener('mousemove',limit),{once:true}});
         },
         select(searchStation: Station){
             (this.$refs.searchBar as any).blur = false;
             (this.$refs.searchBar as any).$refs.input.blur();
-            console.log(searchStation)
             if(searchStation){
                 this.$store.dispatch('home/selectMarker',searchStation);
                 this.$store.dispatch('home/getStationInfo', {name: searchStation.name});
