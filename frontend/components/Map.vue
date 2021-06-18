@@ -48,7 +48,6 @@ export default Vue.extend({
                     this.makeLineArray(v);
                 }
             },
-            deep: true
         },
         markerSwitch:{
             handler(){
@@ -77,9 +76,6 @@ export default Vue.extend({
         selectedMarker(v){
             this.focusMarker(v);
         },
-        // selectedCities(v){
-        //     console.log(v);
-        // },
     },
     computed:{
         ...mapGetters('home', [
@@ -133,7 +129,7 @@ export default Vue.extend({
         (this as any).map.addListener('click', (e: google.maps.MapMouseEvent)=>{
             this.clickMap(e);
         })
-        // this.setPolygons();
+        this.setPolygons();
     },
     methods:{
         // cityFilter() {
@@ -177,26 +173,32 @@ export default Vue.extend({
         //         });
         //     })
         // },
-        // setPolygons(){
-        //     this.polygons = this.cities.map((city: Polygons)=>{
-        //         return city.polygons.map((polygons,i)=>{return this.makePolygon(polygons, i)})
-        //     });
-        // },
-        // makePolygon(coordinates: {lat: number,lng: number}[], i: number){
-        //     const polygon = new google.maps.Polygon({
-        //         paths: coordinates,
-        //         strokeColor: "#FF0000",
-        //         strokeOpacity: 0.5,
-        //         strokeWeight: 1.5,
-        //         fillColor: "#FF0000",
-        //         fillOpacity: 0.35,
-        //     });
-        //     const that = this;
-        //     google.maps.event.addListener(polygon, 'click', function() {
-        //         that.resetPoly(i)
-        //     });
-        //     return polygon
-        // },
+        setPolygons(){
+            this.polygons = this.cities.map((city: Polygons)=>{
+                return city.polygons.map((polygons,i)=>{return this.makePolygon(polygons, i)})
+            });
+        },
+        makePolygon(coordinates: {lat: number,lng: number}[], i: number){
+            const polygon = new google.maps.Polygon({
+                paths: coordinates,
+                strokeColor: "#FF0000",
+                strokeOpacity: 0.5,
+                strokeWeight: 1.5,
+                fillColor: "#FF0000",
+                fillOpacity: 0.35,
+            });
+            const that = this;
+            google.maps.event.addListener(polygon, 'click', function() {
+                that.resetPoly(i)
+            });
+            return polygon
+        },
+        resetPoly(index: number){
+            const polygons: google.maps.Polygon[] = this.polygons[index]
+            polygons.forEach(polygon => {
+                polygon.setMap(null)
+            });
+        },
         // async clickMap(e: google.maps.MapMouseEvent){
         //     this.resetMapListeners('click')
         //     const latLng = {lat: e.latLng?.lat(), lng: e.latLng?.lng()};
@@ -227,12 +229,6 @@ export default Vue.extend({
         //             this.resetPoly(index)
         //         });
         //         polygon.setMap(this.map);
-        //     });
-        // },
-        // resetPoly(index: number){
-        //     const polygons: google.maps.Polygon[] = this.polygons[index]
-        //     polygons.forEach(polygon => {
-        //         polygon.setMap(null)
         //     });
         // },
         focusMarker(station: Station){

@@ -4,6 +4,10 @@
             <div class="display-height">
                 <div class="top-menu">
                     <div class="mb-2">
+                        <label>市町村</label>
+                        <item-select style="position:relative;z-index:3" v-model="selectedCityItems" :items="$store.getters['home/cities']" placeholder="市町村を絞り込む" background-color="white" ripple="true"></item-select>
+                    </div>
+                    <div class="mb-2">
                         <label>鉄道会社</label>
                         <item-select style="position:relative;z-index:2" v-model="selectedCompanyItems" :items="$store.getters['home/companies']" placeholder="鉄道会社名を絞り込む" background-color="white" ripple="true"></item-select>
                     </div>
@@ -34,6 +38,7 @@ import ItemSelect from '../components/ItemSelect.vue';
 import CircleButton from '../components/CircleButton.vue';
 interface DataType {drawerClass: {drawer: boolean,open: boolean}}
 interface Station {name: string,id:number,line_id:number,order:number,prefecture:string,lat:number,lng:number,company_id:number}
+interface City {name: string,city_code: string,prefecture_id: string}
 export default Vue.extend({
     components:{
         ItemSelect,
@@ -75,6 +80,14 @@ export default Vue.extend({
             },
             set(value){
                 this.$store.dispatch('home/selectedLineItems', value);
+            }
+        },
+        selectedCityItems: {
+            get(){
+                return this.$store.getters['home/selectedCityItems'];
+            },
+            set(value: City){
+                this.$store.commit('home/selectedCityItems', value);
             }
         },
         markerSwitch:{
