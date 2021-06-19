@@ -1,24 +1,26 @@
 <template>
     <div>
-        <div class="middle-list">
-            <div v-for="(company, i) in companies" :key="i" style="position:relative">
-                <transition name="list">
-                    <div :style="selectCompany.length!==0?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}" v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
-                </transition>
-                <div v-for="(line, j) in filteredLines(company.lines)" :key="j" style="color:black">
+        <transition name="fade">
+        <div class="middle-list" v-if="markerSwitch">
+                <div v-for="(company, i) in companies" :key="i" style="position:relative">
                     <transition name="list">
-                        <div v-if="boundsFilter(line.stations).length!==0">
-                            <label class="line-name" :style="{backgroundColor: line.color}" :for="line.name"><input :id="line.name" type="checkbox" :value="line" v-model="selectLine" style="display:none;">{{line.name}}</label>
-                        </div>
+                        <div :style="selectCompany.length!==0?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}" v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
                     </transition>
-                    <transition-group name="list" tag="div">
-                        <div style="width:100%" v-for="(station,k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)" :style="selectedMarker.name==station.name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}">
-                            <div style="padding:10px;background-color:white;width:100%">{{station.name}}</div>
-                        </div>
-                    </transition-group>
+                    <div v-for="(line, j) in filteredLines(company.lines)" :key="j" style="color:black">
+                        <transition name="list">
+                            <div v-if="boundsFilter(line.stations).length!==0">
+                                <label class="line-name" :style="{backgroundColor: line.color}" :for="line.name"><input :id="line.name" type="checkbox" :value="line" v-model="selectLine" style="display:none;">{{line.name}}</label>
+                            </div>
+                        </transition>
+                        <transition-group name="list" tag="div">
+                            <div style="width:100%" v-for="(station,k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)" :style="selectedMarker.name==station.name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}">
+                                <div style="padding:10px;background-color:white;width:100%">{{station.name}}</div>
+                            </div>
+                        </transition-group>
+                    </div>
                 </div>
-            </div>
         </div>
+        </transition>
     </div>
 </template>
 
@@ -30,7 +32,7 @@ interface Station {company_id: number,id:number,line_id:number,order:number,pref
 interface Company {id: number, name: string, address: string, founded: string, lines: Line[]};
 
 import Vue from 'vue';
-import SearchBar from '~/components/SearchBar.vue';
+import SearchBar from '~/components/global/SearchBar.vue';
 import { mapGetters } from 'vuex';
 export default Vue.extend({
     components:{
@@ -98,11 +100,18 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
+    .fade-enter-active, .fade-leave-active {
+        transition: opacity .5s;
+    }
+    .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+        opacity: 0;
+    }
     .middle-list{
         overflow-y:scroll;
         overflow-x:hidden;
         height:100vh;
         max-height:calc(100vh - 213px);
+        transition: all .5s;
         .company-name{
             text-align:center;
             border-radius:5px;

@@ -1,41 +1,20 @@
 <template>
     <div>
         <div class="left-list" :style="{width: width+'px'}">
-            <v-btn-toggle v-model="changeList" color="indigo" background-color="indigo">
-                <v-btn>
-                    <v-icon>mdi-train</v-icon>
-                </v-btn>
-                <v-btn>
-                    <v-icon>mdi-information-outline</v-icon>
-                </v-btn>
-                <v-btn>
-                    <v-icon>mdi-format-align-right</v-icon>
-                </v-btn>
-                <v-btn>
-                    <v-icon>mdi-format-align-justify</v-icon>
-                </v-btn>
-                <v-btn>
-                    <v-icon>mdi-format-align-justify</v-icon>
-                </v-btn>
-                <v-btn>
-                    <v-icon>mdi-format-align-justify</v-icon>
+            <v-btn-toggle mandatory v-model="changeList" color="indigo" background-color="#2f2f2f">
+                <v-btn v-for="(button,i) in buttons" :key="i">
+                    <v-icon>mdi-{{button}}</v-icon>
                 </v-btn>
             </v-btn-toggle>
             <div class="list-top">
-                <div class="d-flex">
-                    <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord" @select="select(filteredSearchStations[0])">
-                        <div class="menu" v-if="searchStations.length!==0" style="background-color:orange">
-                            <div @mouseup.stop.prevent="select(searchStation)" v-for="(searchStation, i) in filteredSearchStations" :key="i" class="list">{{searchStation.name}}</div>
-                        </div>
-                    </search-bar>
-                    <v-btn class="ml-1" icon color="indigo" @click="width=315"><v-icon>mdi-arrow-collapse-horizontal</v-icon></v-btn>
-                </div>
-                <div style="padding:10px">現在の表示件数<b>{{countMarkers}}</b>件</div>
+                <search-items ref="searchItem"></search-items>
             </div>
             <keep-alive>
-                <div :is="component"></div>
+                <transition name="fade">
+                    <div :is="component"></div>
+                </transition>
             </keep-alive>
-        <div style="position:absolute;top:0;bottom:0;right:-3px;width:6px;z-index:5;cursor:ew-resize;" @mousedown="dragStart"></div>
+        <div class="resize" @mousedown="dragStart"></div>
         </div>
     </div>
 </template>
@@ -44,25 +23,28 @@
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
 interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,lat:number,lng:number,name:string}
-interface DataType {countMarkers: number,changeList:number,width:number};
+interface DataType {countMarkers: number,changeList:number,width:number,buttons: string[]};
 interface DomEvent extends Event {clientX: number,clientY: number}
 import Vue from 'vue';
 import {mapGetters} from 'vuex'
-import StationLines from '~/components/StationLines.vue';
-import StationWiki from '~/components/StationWiki.vue';
-import SearchBar from '~/components/SearchBar.vue';
+import StationLines from '~/components/index/organisms/StationLines.vue';
+import StationWiki from '~/components/index/organisms/StationWiki.vue';
+import SearchItems from '~/components/index/organisms/SearchItems.vue';
+import SearchBar from '~/components/global/SearchBar.vue';
 
 export default Vue.extend({
     components:{
         StationLines,
         StationWiki,
-        SearchBar
+        SearchBar,
+        SearchItems
     },
     data(): DataType {
         return {
             changeList: 0,
             countMarkers: 0,
             width: 315,
+            buttons: ['train', 'information-outline', 'format-align-right', 'format-align-justify']
         }
     },
     computed:{
@@ -140,19 +122,26 @@ export default Vue.extend({
                 }
             }, 1)
         },
-        onClickList(station: Station){
-            this.$store.dispatch('home/getStationInfo',{name: station.name})
-            this.$store.dispatch('home/selectMarker', station);
-        }
     }
 })
 </script>
 
 <style lang="scss" scoped>
-    .list{
-        background-color:orange;
-        text-align:left;
-        padding: 8px 15px;
+    .fade-enter-active, .fade-leave-active {
+        transition: opacity .5s;
+    }
+    .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+        opacity: 0;
+        transition: opacity .5s;
+    }
+    .resize{
+        position:absolute;
+        top:0;
+        bottom:0;
+        right:-3px;
+        width:6px;
+        z-index:5;
+        cursor:ew-resize;
     }
     .left-list{
         height:100vh;

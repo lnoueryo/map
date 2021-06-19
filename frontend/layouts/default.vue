@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import HeaderBar from '../components/HeaderBar.vue'
+import HeaderBar from '../components/global/HeaderBar.vue'
 export default Vue.extend({
     components:{
         HeaderBar

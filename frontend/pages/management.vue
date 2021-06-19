@@ -187,7 +187,7 @@ export default Vue.extend({
             filter: {},
             sortDesc: false,
             page: 1,
-            itemsPerPage: 4,
+            itemsPerPage: 50,
             dataKeys: ['company', 'line', 'station'],
             editDialog: false,
             componentTypes: ['company', 'train-line', 'station'],

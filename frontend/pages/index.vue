@@ -1,99 +1,72 @@
 <template>
-    <!-- <div> -->
-    <div style="max-height:calc(100vh);overflow:hidden">
-        <!-- <div style="position:fixed;top:0;bottom:0;left:0;right:0;z-index:5;background-color:#00000050;transition-delay:3s;transition:all 3s" v-show="!ready"></div> -->
-        <right-drawer></right-drawer>
-        <div id="container" :style="open?{paddingRight:256+'px'}:''">
-            <main-view ref="view"></main-view>
+    <div id="wrapper">
+        <div>
+            <right-drawer></right-drawer>
         </div>
-        <!-- <bottom-bar></bottom-bar> -->
+        <div id="container" :class="{'open': open}">
+            <div class="main-view">
+                <div>
+                    <left-list></left-list>
+                </div>
+                <div class="map-container">
+                    <map-view></map-view>
+                </div>
+            </div>
+        </div>
     </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue'
-import RightDrawer from '../components/RightDrawer.vue'
-import MainView from '../components/MainView.vue'
-import BottomBar from '../components/BottomBar.vue'
-import practice from '~/assets/json/line/practice.json'
-import Mixin from '~/utils/mixin.ts'
-interface Polygons {"code":string,"city":string,"polygons":Polygon[][]}
-interface Polygon {"lat":number,"lng":number}
-interface Station {id: number, pref_name: string, station_name: string, station_lat: number, station_lon: number, line_name: string, order: number, company_name: string}
-interface LinePolyline {lat: number, lng: number}
-interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string}
-interface DataType {
-    open: boolean,
-    addMarker: LinePolyline[]
-    // map: google.maps.Map | null,
-    overview: google.maps.Map | null,
-    index: number,
-    polygon: google.maps.Polygon[] | null,
-    polygons: google.maps.Polygon[][],
-    stations: LinePolyline[],
-    markers: google.maps.Marker[],
-    // lines: Line[]
-    polylines: google.maps.Polyline[],
-    ready: boolean
-}
+import RightDrawer from '../components/index/templates/RightDrawer.vue'
+import LeftList from '../components/index/templates/LeftList.vue'
+import MapView from '../components/index/templates/Map.vue'
+interface DataType {open: boolean}
 export default Vue.extend({
-    mixins: [Mixin],
     components: {
-        MainView,
         RightDrawer,
-        BottomBar
+        LeftList,
+        MapView
     },
     data(): DataType {
         return {
             open: false,
-            addMarker: [],
-            // map: null,
-            overview: null,
-            index: 0,
-            polygon: null,
-            polygons: [],
-            stations: [],
-            markers: [],
-            polylines: [],
-            ready: false
         }
     },
-    computed:{
-        lines(){
-            return this.$store.getters['home/lines'];
-        },
-    },
-    // async beforeCreate(){
-    //     this.$store.dispatch('home/getCompanies').then(()=>{(this as any).ready=true;});
-    // },
     mounted(){
-        this.$on('open', (this as any).drawer);
+        this.$on('open', this.drawer);
     },
     methods:{
-        drawer(){
-            (this as any).open=!(this as any).open;
-        },
-        onClickResetPolyline(){
-            this.$store.dispatch('resetPolyline', (this as any).polylines);
-        },
-        makeLineMarker(){
-            practice.forEach((station: any,i: number)=>{
-                let marker = (this as InstanceType<typeof Mixin>).makeMarker(station.lat, station.lng)
-                marker.addListener("click", () => {
-                    console.log(station.lat, station.lng, i)
-                });
-            })
+        drawer(){ //right-drawerが開いた時の処理
+            this.open=!this.open;
         },
     }
 })
 </script>
 
-<style lang="scss">
-    #container {
-        height: 100%;
-        width: 100%;
-        position:relative;
-        padding-right:100px;
-        transition: all .3s;
+<style lang="scss" scoped>
+    #wrapper{
+        max-height:calc(100vh);
+        overflow:hidden;
+        #container {
+            height: 100%;
+            width: 100%;
+            position:relative;
+            padding-right:100px;
+            transition: all .3s;
+            .main-view{
+                display:flex;
+                overflow:hidden;
+                max-height:calc(100%-200px);
+                .map-container{
+                    position:relative;
+                    width:100%;
+                }
+            }
+        }
+        #container.open{
+            padding-right: 256px;
+            transition: all .3s;
+        }
     }
 </style>
