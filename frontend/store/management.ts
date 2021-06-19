@@ -1,23 +1,31 @@
 import { $axios } from '~/utils/api';
-interface Company {name: string}
-interface Line {name: string}
-interface Station {name: string}
+interface Company {name: string,created_at: string,updated_at: string}
+interface Line {name: string,created_at: string,updated_at: string}
+interface Station {name: string,created_at: string,updated_at: string}
 type Data = Company[]|Line[]|Station[]
 interface State {
     data: string,
     items: Data,
     sortBy: string,
+    itemsPerPageArray: number[],
+    itemsPerPage: number,
     editIndex: number,
-    selectedItem: Company|Line|Station
+    selectedItem: Company|Line|Station|null,
+    sortDesc: boolean,
+    search: string
 }
 
 
 const state = {
-    data: 'station',
-    items: [],
+    data: 'company',
+    items: [{id:0,name:'U'}],
     sortBy: 'id',
+    itemsPerPageArray: [4, 8, 12, 16, 20, 50, 100],
+    itemsPerPage: 50,
     editIndex: -1,
     selectedItem: null,
+    sortDesc: false,
+    search: null,
 };
 
 const getters = {
@@ -44,8 +52,80 @@ const getters = {
     selectedItem(state: State){
         return state.selectedItem;
     },
+    filterByKey(state: State, getters: any){
+        let copyItems = JSON.parse(JSON.stringify(state.items));
+        if (copyItems.length !== 0) {
+            const type = getters.checkType(copyItems[0][state.sortBy]);
+            let items;
+            if (type == 0) {
+                items = copyItems.sort((a: Company|Line|Station, b: Company|Line|Station)=>{
+                    const condition1 = (a[state.sortBy as never] as string).charCodeAt(0) - (b[state.sortBy as never] as string).charCodeAt(0);
+                    const condition2 = (b[state.sortBy as never] as string).charCodeAt(0) - (a[state.sortBy as never] as string).charCodeAt(0);
+                    return !state.sortDesc?condition1:condition2;
+                })
+            } else if(type == 1){
+                items = copyItems.sort((a: Company|Line|Station, b: Company|Line|Station)=>{
+                    const condition1 = a[state.sortBy as never] as number - b[state.sortBy as never] as number;
+                    const condition2 = b[state.sortBy as never] as number - a[state.sortBy as never] as number;
+                    return !state.sortDesc?condition1:condition2;
+                })
+            } else if(type == 2){
+                items = copyItems.sort((a: Company|Line|Station, b: Company|Line|Station)=>{
+                    const date1 = (new Date(a.created_at)).getTime();
+                    const date2 = (new Date(b.created_at)).getTime();
+                    const condition1 = date1 - date2;
+                    const condition2 = date2 - date1;
+                    return !state.sortDesc?condition1:condition2;
+                })
+            } else {
+                items = copyItems.sort((a: Company|Line|Station, b: Company|Line|Station)=>{
+                    const date1 = (new Date(a.updated_at)).getTime();
+                    const date2 = (new Date(b.updated_at)).getTime();
+                    const condition1 = date1 - date2;
+                    const condition2 = date2 - date1;
+                    return !state.sortDesc?condition1:condition2;
+                })
+            }
+            return items;
+        }
+        return;
+    },
+    checkType: (state: State)=>(data: any)=>{
+        if (state.sortBy !== 'created_at'&&state.sortBy !== 'updated_at') {
+            if (typeof data === 'string') {
+                return 0;
+            } else {
+                return 1;
+            }
+        } else {
+            if(data == 'created_at'){
+                return 2;
+            } else {
+                return 3;
+            }
+        }
+    },
+    filterByWord: (state: State, getters: any)=>{
+        return getters.search?getters.filterByKey.filter((item: Company|Line|Station)=>{
+            return Object.values(item).some((str)=>{return String(str).includes(getters.search)});
+        }):getters.filterByKey;
+    },
+    search(state: State){
+        return state.search;
+    },
+    itemsPerPage(state: State){
+        return state.itemsPerPage;
+    },
+    itemsPerPageArray(state: State){
+        return state.itemsPerPageArray;
+    },
+    editIndex(state: State){
+        return state.editIndex;
+    },
+    editDialog(state: State){
+        return state.editIndex !==-1;
+    }
 }
-
 const mutations = {
     data(state: State, payload: string){
         state.data = payload;
@@ -55,7 +135,10 @@ const mutations = {
     },
     editIndex(state: State, payload: number){
         state.editIndex = payload;
-        state.selectedItem = state.items[payload];
+        state.selectedItem = null;
+        if (payload!==-1) {
+            state.selectedItem = state.items[payload];
+        }
     },
     selectedItem(state: State, payload: Station){
         state.selectedItem = payload;
@@ -63,6 +146,15 @@ const mutations = {
     items(state: State, payload: Data){
         state.items = payload;
     },
+    sortDesc(state: State, payload: any){
+        state.sortDesc = payload;
+    },
+    search(state: State, payload: string){
+        state.search = payload;
+    },
+    itemsPerPage(state: State, payload: number){
+        state.itemsPerPage = payload;
+    }
 };
 
 const actions = {
@@ -76,12 +168,21 @@ const actions = {
         context.commit('editIndex', payload)
     },
     selectedItem(context: any, payload: string){
-        context.commit('selectedItem', payload)
+        context.commit('selectedItem', payload);
     },
     async items(context: any, payload: string){
         const response = await $axios.$get(`/api/management/${payload}/`);
         context.commit('items', response)
     },
+    sortDesc(context: any, payload: any){
+        context.commit('sortDesc', payload)
+    },
+    search(context: any, payload: string){
+        context.commit('search', payload)
+    },
+    itemsPerPage(context: any, payload: number){
+        context.commit('itemsPerPage', payload)
+    }
 };
 
 export default {
