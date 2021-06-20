@@ -6,6 +6,7 @@
                 <span class="text-h5">{{$store.data}}</span>
             </v-card-title>
             <v-card-text>
+                <!-- <v-container> -->
                 <v-container v-if="selectedItem">
                     <div v-model="selectedItem" :is="component"></div>
                 </v-container>
@@ -57,13 +58,12 @@
 <script lang="ts">
 
 import Vue from 'vue'
-import Company from '~/components/management/Company.vue'
-import Line from '~/components/management/Line.vue'
-import Station from '~/components/management/Station.vue'
+import Company from '~/components/management/organisms/Company.vue'
+import Line from '~/components/management/organisms/Line.vue'
+import Station from '~/components/management/organisms/Station.vue'
 import TopBar from '~/components/management/templates/TopBar.vue'
 interface DataType {
     page: number,
-    componentTypes: string[],
     file: null,
     delimiter: string,
     csv: {url: null|string, name: null|string},
@@ -81,7 +81,6 @@ export default Vue.extend({
     data(): DataType {
         return {
             page: 1,
-            componentTypes: ['company', 'train-line', 'station'],
             file: null,
             delimiter: ',',
             csv: {url: null, name: null},
@@ -89,26 +88,21 @@ export default Vue.extend({
         }
     },
     computed: {
-        component(){
-            return this.componentTypes[this.changeList];
-        },
-        selectedItem:{
-            get(){
-                return this.$store.getters['management/selectedItem'];
-            },
-            set(value){
-                this.$store.dispatch('management/selectedItem', value)
-            }
+        selectedItem(){
+            return this.$store.getters['management/selectedItem']
         },
         changeList(){
-            return this.$store.getters['management/changeList']
+            return this.$store.getters['management/changeList'];
         },
         editIndex(){
             return this.$store.getters['management/editIndex']
         },
         editDialog(){
             return this.$store.getters['management/editDialog'];
-        }
+        },
+        component(){
+            return this.$store.getters['management/component'];
+        },
     },
     methods: {
         getFiles(e: Event){
@@ -122,7 +116,7 @@ export default Vue.extend({
             formData.append("delimiter", (this as any).delimiter);
             this.$axios.defaults.xsrfHeaderName = "X-CSRFTOKEN";
             this.$axios.defaults.xsrfCookieName = "csrftoken";
-            this.$axios.$post(`/api/management/${(this as any).dataKeys[this.changeList]}/csv/`, formData, {
+            this.$axios.$post(`/api/management/${(this as any).dataKeys[this.$data.changeList]}/csv/`, formData, {
                 headers: {
                 'Content-Type': 'multipart/form-data'
                 }
@@ -130,12 +124,12 @@ export default Vue.extend({
             (this as any).csvDialog = false
         },
         async getCSV(){
-            let response = await this.$axios.$get(`/api/management/${(this as any).dataKeys[this.changeList]}/csv/`, {params: {delimiter: (this as any).delimiter}});
-            if((this as any).dataKeys[this.changeList]=='line'){response = response.replace(/(""lat"")/g, "\"lat\"").replace(/(""lng"")/g, "\"lng\"").replace(/\"\[/g, "\[").replace(/\]\"/g, "\]")}
-            console.log(response)
+            const changeList = this.$data.changeList;
+            let response = await this.$axios.$get(`/api/management/${(this as any).dataKeys[changeList]}/csv/`, {params: {delimiter: (this as any).delimiter}});
+            if((this as any).dataKeys[changeList]=='line'){response = response.replace(/(""lat"")/g, "\"lat\"").replace(/(""lng"")/g, "\"lng\"").replace(/\"\[/g, "\[").replace(/\]\"/g, "\]")}
             const blob = new Blob([ response ], { type: "text/plain" });
             const url =  window.webkitURL.createObjectURL(blob);
-            const name = (this as any).dataKeys[this.changeList] + (this as any).timestampToTime() + '.csv';
+            const name = (this as any).dataKeys[changeList] + (this as any).timestampToTime() + '.csv';
             this.$set((this as any).csv, 'url', url);
             await this.$set((this as any).csv, 'name', name);
             (this.$refs.download as HTMLAnchorElement).click();

@@ -37,57 +37,6 @@
                 </div>
             </div>
         </div>
-    <!-- <v-dialog v-model="editDialog" persistent max-width="600px">
-        <v-card>
-        <v-card-title>
-            <span class="text-h5">{{data}}</span>
-        </v-card-title>
-        <v-card-text>
-            <v-container>
-                <div v-model="selectedItem" :is="component"></div>
-            </v-container>
-            <small>*indicates required field</small>
-        </v-card-text>
-        <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="editDialog = false">
-            Close
-            </v-btn>
-            <v-btn color="blue darken-1" text @click="editDialog = false">
-            Save
-            </v-btn>
-        </v-card-actions>
-        </v-card>
-    </v-dialog>
-    <v-dialog v-model="csvDialog" persistent max-width="600px">
-        <v-card>
-        <v-card-title>
-            <span class="text-h5">CSVをインポート</span>
-        </v-card-title>
-        <v-card-text>
-            <v-container>
-                インポートしますか？
-            <select v-model="delimiter">
-                <option value=",">CSV</option>
-                <option value="t">TSV</option>
-                <option value="|">|</option>
-            </select>
-            </v-container>
-            <small>*indicates required field</small>
-        </v-card-text>
-        <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="csvDialog = false">
-            Close
-            </v-btn>
-            <v-btn color="blue darken-1" text @click="sendCSV">
-            Save
-            </v-btn>
-        </v-card-actions>
-        </v-card>
-    </v-dialog>
-    <a ref="download" :href="csv.url" :download="csv.name" style="display:none">CSV</a>
-    <input ref="input" type="file" style="display:none" name="" id="" @input="getFiles"> -->
     </div>
 </template>
 

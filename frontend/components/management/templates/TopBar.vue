@@ -18,7 +18,7 @@
                 </v-btn-toggle>
             </template>
             <div class="d-flex">
-                <v-btn class="ml-4" @click="$parent.open=!$parent.open">open</v-btn>
+                <v-btn class="ml-4" @click="$parent.drawer">open</v-btn>
             </div>
         </v-toolbar>
     </div>
@@ -28,7 +28,6 @@
 
 import Vue from 'vue'
 
-import { mapGetters } from 'vuex'
 export default Vue.extend({
     data(){
         return{
@@ -77,7 +76,7 @@ export default Vue.extend({
             async handler(){
                 this.$store.dispatch('management/items', this.$store.getters['management/data'])
             },
-            immediate: true
+            immediate: false
         }
     },
 })

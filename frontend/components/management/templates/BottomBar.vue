@@ -37,18 +37,12 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import TopBar from '~/components/management/templates/TopBar.vue'
-import MainView from '~/components/management/templates/MainView.vue'
 interface DataType {
     page: number,
 
 }
 import { mapGetters } from 'vuex'
 export default Vue.extend({
-    components:{
-        TopBar,
-        MainView
-    },
     data(): DataType {
         return {
             page: 1,
@@ -56,19 +50,12 @@ export default Vue.extend({
     },
     computed: {
         ...mapGetters('management', [
-            'changeList',
-            'sortKeys',
-            'sortBy',
-            'filterByKey',
             'filterByWord',
             'itemsPerPage',
             'itemsPerPageArray',
         ]),
         numberOfPages () {
-            return Math.ceil(this.filterByWord.length / this.$data.itemsPerPage)
-        },
-        filteredKeys () {
-            return this.sortKeys.filter((key: string) => key !== 'ID')
+            return Math.ceil(this.filterByWord.length / this.$store.getters['management/itemsPerPage'])
         },
         itemsPerPage:{
             get(){
@@ -81,10 +68,10 @@ export default Vue.extend({
     },
     methods: {
         nextPage () {
-            if (this.$data.page + 1 <= this.$data.numberOfPages) this.$data.page += 1
+            if (this.$data.page + 1 <= (this as any).numberOfPages) this.$data.page += 1
         },
         formerPage () {
-            if (this.$data.page - 1 >= 1) (this as any).page -= 1
+            if (this.$data.page - 1 >= 1) this.$data.page -= 1
         },
         updateItemsPerPage (number: number) {
             this.itemsPerPage = number

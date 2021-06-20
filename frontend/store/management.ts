@@ -10,22 +10,22 @@ interface State {
     itemsPerPageArray: number[],
     itemsPerPage: number,
     editIndex: number,
-    selectedItem: Company|Line|Station|null,
     sortDesc: boolean,
-    search: string
+    search: string,
+    componentTypes: ['company', 'train-line', 'station'],
 }
 
 
 const state = {
     data: 'company',
-    items: [{id:0,name:'U'}],
+    items: [],
     sortBy: 'id',
     itemsPerPageArray: [4, 8, 12, 16, 20, 50, 100],
     itemsPerPage: 50,
     editIndex: -1,
-    selectedItem: null,
     sortDesc: false,
     search: null,
+    componentTypes: ['company', 'train-line', 'station'],
 };
 
 const getters = {
@@ -50,7 +50,7 @@ const getters = {
         return state.sortBy
     },
     selectedItem(state: State){
-        return state.selectedItem;
+        return state.items[state.editIndex];
     },
     filterByKey(state: State, getters: any){
         let copyItems = JSON.parse(JSON.stringify(state.items));
@@ -88,7 +88,7 @@ const getters = {
             }
             return items;
         }
-        return;
+        return [];
     },
     checkType: (state: State)=>(data: any)=>{
         if (state.sortBy !== 'created_at'&&state.sortBy !== 'updated_at') {
@@ -107,7 +107,11 @@ const getters = {
     },
     filterByWord: (state: State, getters: any)=>{
         return getters.search?getters.filterByKey.filter((item: Company|Line|Station)=>{
-            return Object.values(item).some((str)=>{return String(str).includes(getters.search)});
+            const str = Object.values(item).join("");
+            const words = getters.search.trim().replace(/\s+/g,' ');
+            const wordArray = words.split(' ');
+            console.log(wordArray)
+            return wordArray.length==1?str.includes(words):wordArray.every((word: string)=>{return str.includes(word)});
         }):getters.filterByKey;
     },
     search(state: State){
@@ -124,6 +128,9 @@ const getters = {
     },
     editDialog(state: State){
         return state.editIndex !==-1;
+    },
+    component(state: State, getters: any){
+        return state.componentTypes[getters.changeList];
     }
 }
 const mutations = {
@@ -135,13 +142,6 @@ const mutations = {
     },
     editIndex(state: State, payload: number){
         state.editIndex = payload;
-        state.selectedItem = null;
-        if (payload!==-1) {
-            state.selectedItem = state.items[payload];
-        }
-    },
-    selectedItem(state: State, payload: Station){
-        state.selectedItem = payload;
     },
     items(state: State, payload: Data){
         state.items = payload;
@@ -158,6 +158,10 @@ const mutations = {
 };
 
 const actions = {
+    async items(context: any, payload: string){
+        const response = await $axios.$get(`/api/management/${payload}/`);
+        context.commit('items', response)
+    },
     data(context: any, payload: string){
         context.commit('data', payload)
     },
@@ -166,13 +170,6 @@ const actions = {
     },
     editIndex(context: any, payload: number){
         context.commit('editIndex', payload)
-    },
-    selectedItem(context: any, payload: string){
-        context.commit('selectedItem', payload);
-    },
-    async items(context: any, payload: string){
-        const response = await $axios.$get(`/api/management/${payload}/`);
-        context.commit('items', response)
     },
     sortDesc(context: any, payload: any){
         context.commit('sortDesc', payload)
