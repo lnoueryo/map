@@ -53,6 +53,11 @@ export default Vue.extend({
                     title: 'admin',
                     to: '/management',
                 },
+                {
+                    icon: 'mdi-chart-bubble',
+                    title: 'map',
+                    to: '/coordinate',
+                },
             ],
             miniVariant: false,
             right: true,

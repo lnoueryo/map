@@ -266,6 +266,7 @@ export default Vue.extend({
                 map: this.map,
                 position: new google.maps.LatLng(station.lat, station.lng),
                 icon: img,
+                // optimized: true,
             });
             return marker
         },

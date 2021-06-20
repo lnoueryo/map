@@ -33,6 +33,9 @@ export default Vue.extend({
             open: false,
         }
     },
+    beforeCreate(){
+        this.$store.dispatch('home/getCompanies');
+    },
     mounted(){
         this.$on('open', this.drawer);
     },

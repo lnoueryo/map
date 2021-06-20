@@ -1,5 +1,5 @@
 import { $axios } from '~/utils/api';
-import companies from '~/assets/json/company.json';
+// import companies from '~/assets/json/company.json';
 import cities from '~/assets/json/cities.json';
 
 interface State {
@@ -42,7 +42,7 @@ const getters = {
     フィルタリングされていない会社,路線図,駅データ全ての配列
     現在データベースからではなくjsonファイルから読み込んでいる
     */
-    companies:(state: State): Company[]=>{return companies;},
+    companies:(state: State): Company[]=>{return state.companies;},
     /*
     フィルタリングされていない市町村ポリゴンを返す
     */
@@ -169,9 +169,9 @@ const getters = {
 
 const mutations = {
     setCompanies(state: State, payload: Company[]){
-        // payload.forEach(company => {
-        //     state.companies.push(company);
-        // });
+        payload.forEach(company => {
+            state.companies.push(company);
+        });
     },
     selectedCompanyItems(state: State, payload: Company[]){
         state.selectedCompanyItems = payload;
@@ -229,8 +229,8 @@ const mutations = {
 
 const actions = {
     async getCompanies(context: any){
-        // const response = await $axios.$get('/api/map/');
-        // context.commit('setCompanies', response);
+        const response = await $axios.$get('/api/map/');
+        context.commit('setCompanies', response);
     },
     resetPolyline(context: any, payload: google.maps.Polyline[]){
         payload.forEach(polyline => {
