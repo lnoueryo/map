@@ -1,14 +1,11 @@
 <template>
-    <div style="position:relative;width:100%;height:100vh;max-height:calc(100vh - 64px)">
+    <div class="map-container">
         <div id="map" ref="map"></div>
         <div id="overview-wrapper">
             <div id="overview-container">
                 <div id="overview" ref="overview"></div>
             </div>
         </div>
-        <v-btn absolute bottom @click="$store.dispatch('home/searchCityCode',13101)">cityFilter</v-btn>
-        <v-btn absolute bottom style="left:120px" @click="$store.dispatch('home/searchCityCode',13102)">cityFilter</v-btn>
-        <v-btn absolute bottom style="left:240px" @click="$store.dispatch('home/searchCityCode',13103)">cityFilter</v-btn>
     </div>
 </template>
 
@@ -24,7 +21,8 @@ interface Polygon {"lat":number,"lng":number}
 interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string,stations: Station[]}
-interface DataType {addMarker: { lat: number; lng: number; }[],map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},mapOptions: {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean,}, zoom: number,},markers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][]}
+interface DataType {markerIcons: {jr: string,metro: string,toei: string, keio: string,tokyu: string},addMarker: { lat: number; lng: number; }[],map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},mapOptions: {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean,}, zoom: number,},markers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][]}
+interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
 export default Vue.extend({
     data(): DataType {
         return {
@@ -35,8 +33,24 @@ export default Vue.extend({
             markers: [],
             polylines: [],
             addMarker: [],
-            polygons: []
+            polygons: [],
+            markerIcons: {jr: require("~/assets/img/jr.png"),metro: require("~/assets/img/metro.png"),toei: require("~/assets/img/toei.png"),keio: require("~/assets/img/keio.png"),tokyu: require("~/assets/img/tokyu.png")},
         }
+    },
+    computed:{
+        ...mapGetters('home', [
+            'companies',
+            'lines',
+            'filteredLines',
+            'bounds',
+            'markerSwitch',
+            'lineSwitch',
+            'selectedMarker',
+            'stationInfo',
+            'removeOverlap',
+            'cities',
+            'selectedCityItems',
+        ])
     },
     watch:{
         lines:{
@@ -48,7 +62,11 @@ export default Vue.extend({
                     this.makeLineArray(v);
                 }
             },
-            deep: true
+        },
+        selectedCityItems:{
+            handler(v){
+                this.makeCityPolygon(v)
+            },
         },
         markerSwitch:{
             handler(){
@@ -77,25 +95,6 @@ export default Vue.extend({
         selectedMarker(v){
             this.focusMarker(v);
         },
-        // selectedCities(v){
-        //     console.log(v);
-        // },
-    },
-    computed:{
-        ...mapGetters('home', [
-            'companies',
-            'lines',
-            'filteredLines',
-            'bounds',
-            'markerSwitch',
-            'lineSwitch',
-            'selectedMarker',
-            'stationInfo',
-            'removeOverlap',
-            'cities',
-            'selectedCities',
-            // 'cityFilter',
-        ])
     },
     mounted(){
         // this.$parent.$parent.$on('makePolyline',this.makeLineArray);
@@ -133,32 +132,36 @@ export default Vue.extend({
         (this as any).map.addListener('click', (e: google.maps.MapMouseEvent)=>{
             this.clickMap(e);
         })
-        // this.setPolygons();
+        // new MarkerWithLabel({
+        //     position: new google.maps.LatLng(35.6711584,139.6605155),
+        //     map: this.map,
+        //     labelContent: "foo", // can also be HTMLElement
+        //     labelAnchor: new google.maps.Point(-21, 3),
+        //     labelClass: "labels", // the CSS class for the label
+        //     labelStyle: { opacity: 0 },
+        //     // icon: {
+        //     //     url: '',
+        //     //     scaledSize: new google.maps.Size(32, 32)
+        //     // },
+        // })
     },
     methods:{
-        // cityFilter() {
-        //     this.$store.dispatch('home/searchCityCode',13101)
-        //     // const array = [{id: 1, students: [{id: 1},{id: 2}]},{id: 2, students: [{id: 3},{id: 4}]}]
-        //     // const a = array.map((arr)=>{
-        //     //     arr.students = arr.students.filter((student)=>{
-        //     //         return student.id > 1
-        //     //     })
-        //     //     return arr;
-        //     // })
-        //     // var a = this.lines.map((line)=>{
-        //     //     var b = line.stations.filter((station)=>{
-        //     //         var c = this.selectedCities.filter((selectedCity: number)=>{
-        //     //             return selectedCity == Number(station.prefecture+station.city_code)
-        //     //         }).length !== 0;
-        //     //         return c
-        //     //     })
-        //     //     line.stations = 'a';
-        //     //     return line;
-        //     // })
-        //     // console.log(a)
-        // },
-        async clickMap(e: google.maps.MapMouseEvent){
-            this.$store.dispatch('home/searchCityCode',e)
+        makeCityPolygon(v: City[]){
+            const polygons = v.map((selectedCityItem: City, index: number)=>{
+                return selectedCityItem.polygons.map((polygon)=>{
+                    return this.makePolygon(polygon, index);
+                })
+            })
+            if (this.polygons.length !== 0) {
+                this.resetPoly(this.polygons);
+            }
+            const that = this;
+            setTimeout(function(){
+                that.polygons = polygons;
+            },100)
+        },
+        clickMap(e: google.maps.MapMouseEvent){
+            this.$store.dispatch('home/searchCityCode',e);
         },
         // isMarkerInPolygon(){//市町村毎にクラスターを作成する関数。非推奨
         //     const markers = this.markers.reduce((pre,current) => {pre.push(...current);return pre},[]);
@@ -177,62 +180,32 @@ export default Vue.extend({
         //         });
         //     })
         // },
-        // setPolygons(){
-        //     this.polygons = this.cities.map((city: Polygons)=>{
-        //         return city.polygons.map((polygons,i)=>{return this.makePolygon(polygons, i)})
-        //     });
-        // },
-        // makePolygon(coordinates: {lat: number,lng: number}[], i: number){
-        //     const polygon = new google.maps.Polygon({
-        //         paths: coordinates,
-        //         strokeColor: "#FF0000",
-        //         strokeOpacity: 0.5,
-        //         strokeWeight: 1.5,
-        //         fillColor: "#FF0000",
-        //         fillOpacity: 0.35,
-        //     });
-        //     const that = this;
-        //     google.maps.event.addListener(polygon, 'click', function() {
-        //         that.resetPoly(i)
-        //     });
-        //     return polygon
-        // },
-        // async clickMap(e: google.maps.MapMouseEvent){
-        //     this.resetMapListeners('click')
-        //     const latLng = {lat: e.latLng?.lat(), lng: e.latLng?.lng()};
-        //     const response = await this.$axios.$post('/api/map/search-by-reverse-geocode', latLng as any);
-        //     const clickedPosition = new google.maps.LatLng((e.latLng as google.maps.LatLng).lat(),(e.latLng as google.maps.LatLng).lng());
-        //     this.cities.forEach((city: Polygons, index: number) => {
-        //         if (city.city == response.Property.AddressElement[1].Name) {
-        //             this.showPolygon(index, clickedPosition);
-        //             // this.$store.dispatch('home/selectCityCode',response.Property.AddressElement[1].Code)
-        //         }
-        //     });
-        //     const that = this;
-        //     setTimeout(()=>{
-        //         (that as any).map.addListener('click', (e: google.maps.MapMouseEvent)=>{
-        //             (that as any).clickMap(e)
-        //         })
-        //     },1500)
-        // },
+        makePolygon(coordinates: {lat: number,lng: number}[], i: number){
+            const polygon = new google.maps.Polygon({
+                paths: coordinates,
+                strokeColor: "red",
+                strokeOpacity: 0.5,
+                strokeWeight: 2,
+                fillColor: "#FF9800",
+                fillOpacity: 0.1,
+            });
+            const that = this;
+            google.maps.event.addListener(polygon, 'click', function(e: google.maps.MapMouseEvent) {
+                that.clickMap(e);
+            });
+            polygon.setMap(this.map);
+            return polygon
+        },
+        resetPoly(polygons: google.maps.Polygon[][]){
+            polygons.forEach(cityPolygon => {
+                cityPolygon.forEach(polygon => {
+                    polygon.setMap(null)
+                });
+            });
+        },
         // resetMapListeners(...arg: string[]){
         //     arg.forEach(event => {
         //         google.maps.event.clearListeners((this as any).map, event);
-        //     });
-        // },
-        // showPolygon(index: number, latlng){
-        //     const polygons: google.maps.Polygon[] = this.polygons[index]
-        //     polygons.forEach((polygon) => {
-        //         polygon.addListener("click", () => {
-        //             this.resetPoly(index)
-        //         });
-        //         polygon.setMap(this.map);
-        //     });
-        // },
-        // resetPoly(index: number){
-        //     const polygons: google.maps.Polygon[] = this.polygons[index]
-        //     polygons.forEach(polygon => {
-        //         polygon.setMap(null)
         //     });
         // },
         focusMarker(station: Station){
@@ -259,7 +232,7 @@ export default Vue.extend({
             await lines.forEach((line: any,i: number)=>{
                 const lineMarkerArray: google.maps.Marker[] = [];
                 line.stations.forEach((station: Station)=>{
-                    let marker = this.makeMarker(station.lat, station.lng);
+                    let marker = this.makeMarker(station);
                     marker.addListener("click", () => {
                         this.$store.dispatch('home/selectMarker',station);
                         this.$store.dispatch('home/getStationInfo',{name: station.name});
@@ -272,16 +245,28 @@ export default Vue.extend({
             setTimeout(function(){
                 that.$store.dispatch('home/resetMarkers',that.markers)
                 .then(()=>{that.markers = markers;})
-            },1)
-            // new MarkerClusterer(this.map, a, {
-            //     imagePath:
-            //     "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
-            // });
+            },100)
         },
-        makeMarker(lat: number, lng: number){
+        makeMarker(station: Station){
+            let img;
+            if (station.company_id == 1) {
+                img = this.markerIcons.jr;
+            } else if(station.company_id == 7){
+                img = this.markerIcons.tokyu;
+            } else if(station.company_id == 8){
+                img = this.markerIcons.metro;
+            } else if(station.company_id == 9) {
+                img = this.markerIcons.toei;
+            } else if(station.company_id == 2) {
+                img = this.markerIcons.keio;
+            } else {
+                img = ''
+            }
             const marker = new google.maps.Marker({
                 map: this.map,
-                position: new google.maps.LatLng(lat, lng),
+                position: new google.maps.LatLng(station.lat, station.lng),
+                icon: img,
+                // optimized: true,
             });
             return marker
         },
@@ -304,8 +289,6 @@ export default Vue.extend({
                         latLngBounds.extend(latLng);
                     });
                     (that as any).map.fitBounds( latLngBounds ) ;
-                    // this.$store.dispatch('home/selectMarker',station);
-                    // this.$store.dispatch('home/getStationInfo',{name: station.station_name});
                 });
             });
         },
@@ -315,7 +298,7 @@ export default Vue.extend({
                 path:path.polygon,
                 strokeColor: path.color,
                 strokeOpacity: 0.9,
-                strokeWeight: 4
+                strokeWeight: 3
             });
             // const latLngBounds = new google.maps.LatLngBounds();
             // polyline.getPath().forEach((latLng) => {
@@ -329,6 +312,11 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
+.map-container{
+    position:relative;
+    width:100%;
+    height:100vh;
+    max-height:calc(100vh - 64px);
     #map {
         width: 100%;
         height: 100%;
@@ -358,4 +346,5 @@ export default Vue.extend({
             padding-top: 56.25%;
         }
     }
+}
 </style>

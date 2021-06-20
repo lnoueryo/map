@@ -17,10 +17,13 @@
             <v-toolbar-title v-text="title" />
             <v-spacer />
         </v-app-bar>
-        <header style="height:64px;background-color: #272727;padding:0 10px;position:fixed;top:0;left:0;right:0;z-index:5;align-items:center;display:flex;">
+        <header style="height:64px;background-color: #272727;padding:0 10px;position:fixed;top:0;left:0;right:0;z-index:5;align-items:center;display:flex;justify-content:space-between">
             <div style="align-items:center;display:flex;">
                 <v-btn icon class="mr-2" @click.stop="drawer = !drawer"><v-icon>mdi-menu</v-icon></v-btn>
                 <router-link to="/" style="color:white;text-decoration:none;font-size:18px;font-weight:bold;">Map Pap</router-link>
+            </div>
+            <div>
+                <v-btn @click="refresh" color="orange">refresh</v-btn>
             </div>
         </header>
     </div>
@@ -50,6 +53,11 @@ export default Vue.extend({
                     title: 'admin',
                     to: '/management',
                 },
+                {
+                    icon: 'mdi-chart-bubble',
+                    title: 'map',
+                    to: '/coordinate',
+                },
             ],
             miniVariant: false,
             right: true,
@@ -57,5 +65,13 @@ export default Vue.extend({
             title: 'Vuetify.js',
         }
     },
+    methods:{
+        async refresh(){
+            const token = localStorage.getItem('token');
+            const parsedToken = JSON.parse(token as string)
+            const response = await this.$axios.$post('/api/token/refresh/', {refresh: parsedToken.refresh});
+            this.$axios.setToken(response.access, 'Bearer')
+        },
+    }
 })
 </script>

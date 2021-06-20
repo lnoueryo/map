@@ -966,6 +966,11 @@
     minimatch "^3.0.4"
     strip-json-comments "^3.1.1"
 
+"@googlemaps/markerwithlabel@^1.2.2":
+  version "1.2.2"
+  resolved "https://registry.yarnpkg.com/@googlemaps/markerwithlabel/-/markerwithlabel-1.2.2.tgz#518fd79be279702495222539faae78ec79b1250a"
+  integrity sha512-rQuT071uoYFaxCPQSIEvWjNquwJsURz/u3RNFFT/rpruPMpXBZnvutf55jMLjEHeCKwK3VIyXWiKASjuyKyBAg==
+
 "@istanbuljs/load-nyc-config@^1.0.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@istanbuljs/load-nyc-config/-/load-nyc-config-1.1.0.tgz#fd3db1d59ecf7cf121e80650bb86712f9b55eced"
@@ -1773,10 +1778,10 @@
   dependencies:
     "@types/webpack" "^4"
 
-"@types/google.maps@^3.44.4":
-  version "3.45.1"
-  resolved "https://registry.yarnpkg.com/@types/google.maps/-/google.maps-3.45.1.tgz#7596ad904eb5961d7ec889cd3aa71b1a0cee3043"
-  integrity sha512-0zOfnLrkLQkZh3rhjdHPodcWsKHj6BFqhIOp7t/g3y6/cKImxowBpcBva+Iq9WrpHPBRAqbdu0rPnAiK66M06w==
+"@types/google.maps@^3.45.1":
+  version "3.45.3"
+  resolved "https://registry.yarnpkg.com/@types/google.maps/-/google.maps-3.45.3.tgz#4988bdb44d5665b4f518d6b0769bde09f27ff99a"
+  integrity sha512-UZHD7qch+44XFNbx/Fjf6NtdpScRWRhfCenvv/pMJfuJ4KQMzapDLqj/OOyHpB8nDp1ilNL3ujPYLY1YZHq1yQ==
 
 "@types/graceful-fs@^4.1.2":
   version "4.1.5"
