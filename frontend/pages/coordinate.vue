@@ -1,24 +1,21 @@
 <template>
     <div class="d-flex" style="width:100%">
-        <div style="width:300px">
-            <div style="padding:9px"><div><span>lat:{{currentMarker.lat}}</span></div><div><span>lng:{{currentMarker.lng}}</span></div></div>
-            <textarea v-if="index==0" name="" id="" cols="30" rows="40" v-html="replace" style="width:100%;background-color:white;font-size:12px;word-break:break-all;"></textarea>
-            <textarea v-if="index==1" @input="makePolyline(polylineJSON)" cols="30" rows="40" v-model="polylineJSON" style="width:100%;background-color:white;font-size:12px;word-break:break-all;"></textarea>
+        <div style="width:340px">
+            <div style="padding:9px"><div><span>lat:{{currentMarker.lat}}</span>　<span>lng:{{currentMarker.lng}}</span></div></div>
+            <v-btn @click="resetAll">リセット</v-btn>
+            <textarea ref="polyline" cols="30" rows="40" @input="changeText" style="width:100%;background-color:white;font-size:12px;word-break:break-all;"></textarea>
         </div>
         <div class="map-container">
-            <v-btn @click="index--" absolute top left style="z-index:1;">back</v-btn>
-            <v-btn @click="index++" absolute top style="z-index:1;left:100px">next</v-btn>
             <div id="map" ref="map"></div>
-        </div>
-        <v-dialog v-model="loading" hide-overlay width="300" style="z-index:10000">
-            <v-card color="primary" dark style="z-index:10000">
+            <div style="position:absolute;top:0;bottom:0;right:0;left:0;z-index:100;" v-if="loading">
+            <v-card color="primary" dark style="position:absolute;width:250px;height:60px;bottom:0;top:0;margin:auto;right:0;left:0;">
                 <v-card-text>
                 Please stand by
                 <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
                 </v-card-text>
             </v-card>
-        </v-dialog>
-        <!-- <div style="position:fixed;top:0;bottom:0;right:0;left:0;z-index:100;"></div> -->
+            </div>
+        </div>
     </div>
 </template>
 
@@ -31,25 +28,20 @@ export default {
             mapOptions: {center: new google.maps.LatLng( 35.6729712, 139.7585771 ), restriction: {latLngBounds: tokyoBounds, strictBounds: false,}, zoom: 14,},
             coordinates: [],
             autoIncrement: 0,
-            index: 0,
             currentMarker: {},
             markers: [],
             polyline: null,
+            polygon: [],
             polylineJSON: [],
             exponentialBackoff: 1000,
             loading: false,
         }
     },
-    computed:{
-        replace(){
-            const coordinates = JSON.parse(JSON.stringify(this.coordinates))
-            return JSON.stringify(coordinates.map((marker)=>{delete marker.index;return marker})).replace(/\s+/g,'')
-        }
-    },
     watch:{
-        polylineJSON(value){
-            if (!value) {
-                this.polylineJSON = []
+        coordinates(){
+            if(this.coordinates){
+                const coordinates = JSON.parse(JSON.stringify(this.coordinates))
+                this.$refs.polyline.value = JSON.stringify(coordinates.map((marker)=>{delete marker.index;return marker})).replace(/\s+/g,'');
             }
         }
     },
@@ -61,14 +53,123 @@ export default {
         })
     },
     methods:{
+        resetAll(){
+            if (this.markers.length !==0) {
+                this.resetMarkersPolyline();
+                this.markers = [];
+                this.polyline = null;
+                this.coordinates = [];
+                this.$refs.polyline.value = null;
+            }
+        },
+        resetMarkersPolyline(){
+            this.markers.forEach((marker)=>{
+                marker.setMap(null);
+            })
+            this.polyline.setMap(null);
+        },
+        async changeText(){
+            this.loading = true;
+            const deepCopyCoordinates = JSON.parse(JSON.stringify(this.coordinates));
+            const isJSON = await this.isValidJson(this.$refs.polyline.value);
+            if (isJSON) {
+                this.exponentialBackoff = 1000;
+                if (this.markers.length!==0) {
+                    this.resetMarkersPolyline();
+                }
+                const polylineValue = JSON.parse(this.$refs.polyline.value);
+                //this.$refs.polyline.valueにはindexがない状態で表示されているため、coordinates=valueだとindexが消えてしまいエラーが発生してしまう。なのでObject.assignでマージ
+                if(polylineValue.length == this.coordinates.length){
+                    this.coordinates = this.coordinates.map((coordinate, i)=>{
+                        return Object.assign({}, coordinate, polylineValue[i]);
+                    })
+                } else {
+                    this.coordinates = polylineValue;
+                    this.coordinates = this.coordinates.map((coordinate, i)=>{
+                        coordinate = Object.assign({}, coordinate, {index: this.autoIncrement})
+                        this.autoIncrement++;
+                        return coordinate;
+                    })
+                    for (let i = 0; i < this.coordinates.length; i++) {
+                        this.makeMarker(this.coordinates[i], this.coordinates[i].index);
+                    }
+                    this.makePolyline(this.coordinates);
+                }
+                this.loading = false;
+                this.redraw();
+            } else {
+                if (this.$refs.polyline.value=='') {
+                    if (this.markers.length!==0) {
+                        this.resetMarkersPolyline();
+                    }
+                    this.loading = false;
+                } else {
+                    const pow = 2;
+                    this.exponentialBackoff = this.exponentialBackoff*pow;
+                    const that = this;
+                    let timer = setTimeout(function(){that.changeText()},that.exponentialBackoff);
+                    if(this.exponentialBackoff>=8000){
+                        clearInterval(timer);
+                        this.exponentialBackoff = 1000;
+                        this.coordinates = deepCopyCoordinates;
+                        this.loading=false;
+                        alert('not json')
+                    }
+                }
+            }
+        },
+        redraw(){
+            this.coordinates.forEach((coordinate)=>{
+                this.makeMarker(coordinate, coordinate.index);
+            });
+            this.makePolyline(this.coordinates);
+        },
         clickMap(e){
+            const latLng = this.makeLatLng(e, this.autoIncrement)
+            this.coordinates.push(latLng);
+            this.makeMarker(latLng, this.autoIncrement);
+            this.makePolyline(this.coordinates); //this.coordinatesはlatLng[]この処理を最後にしないと処理がおかしくなる
+            this.currentMarker = Object.assign({}, this.currentMarker, latLng); //現在の緯度経度を表示
+            this.autoIncrement++;//次のindexのために+1
+        },
+        dragMarker(e, index){
+            const latLng = this.makeLatLng(e, index)
+            let selectMarkerIndex = this.coordinates.findIndex((marker)=>{
+                return marker.index === index;
+            });
+            this.coordinates[selectMarkerIndex] = Object.assign({}, this.coordinates[selectMarkerIndex], latLng);
+            this.currentMarker = Object.assign({}, this.currentMarker, latLng);
+            this.makePolyline(this.coordinates);
+            const coordinates = JSON.parse(JSON.stringify(this.coordinates));
+            this.$refs.polyline.value = JSON.stringify(coordinates.map((marker)=>{delete marker.index;return marker})).replace(/\s+/g,'');
+        },
+        makeLatLng(e, index){
             const lat = (e.latLng).lat();
             const lng = (e.latLng).lng();
-            const latLng = {"lat": Math.round(lat*1000000)/1000000, "lng": Math.round(lng*1000000)/1000000, index: this.autoIncrement};
-            this.coordinates.push(latLng);
-            this.makeMarker(lat,lng)
-            this.currentMarker = Object.assign({}, this.currentMarker, latLng)
-            this.autoIncrement++;
+            return {"lat": Math.round(lat*1000000)/1000000, "lng": Math.round(lng*1000000)/1000000, index: index};
+        },
+        makeMarker(latLng, i){ //再描画時はautoIncrementではなく元々ふってあるindexを使うため台に引数にindexを入れる
+            const marker = new google.maps.Marker({
+                map: this.map,
+                position: new google.maps.LatLng(latLng.lat, latLng.lng),
+                draggable: true
+            });
+            let index = JSON.parse(JSON.stringify(i));//deepcopy
+            //click marker
+            marker.addListener("click", async() => {
+                this.resetMarkersPolyline();
+                this.coordinates = await this.coordinates.filter((marker)=>{
+                    return marker.index !== index;
+                });
+                this.redraw();
+            });
+            //mouseup marker
+            marker.addListener("mouseup", (e) => {
+                this.dragMarker(e, index);
+            });
+            this.markers.push(marker)
+        },
+        makePolyline(){
             if (this.polyline) {
                 this.polyline.setMap(null);
             }
@@ -77,50 +178,17 @@ export default {
                 path: this.coordinates,
                 strokeWeight: 3,
             });
+            this.polygon.push(this.polyline);
         },
-        makeMarker(lat,lng){
-            const marker = new google.maps.Marker({
-                map: this.map,
-                position: new google.maps.LatLng(lat, lng),
-            });
-            let index = JSON.parse(JSON.stringify(this.autoIncrement));
-            marker.addListener("click", () => {
-                marker.setMap(null);
-                this.coordinates = this.coordinates.filter((marker)=>{
-                    return marker.index !== index;
-                })
-            });
+        deleteIndexKey(value){
+            return JSON.stringify(value.map((marker)=>{delete marker.index;return marker})).replace(/\s+/g,'')
         },
-        makePolyline(value){
-            this.loading=true;
+        isValidJson(value) {
             try {
-                if (this.polyline) {
-                    this.polyline.setMap(null)
-                }
-                if (value) {
-                    this.polyline = new google.maps.Polyline({
-                        map: this.map,
-                        path:JSON.parse(value),
-                        strokeColor: 'red',
-                        strokeOpacity: 0.9,
-                        strokeWeight: 3,
-                        geodesic: true ,
-                    });
-                }
-                this.exponentialBackoff = 1000;
-                this.loading = false;
-            } catch (error) {
-                const pow = 2;
-                this.exponentialBackoff = this.exponentialBackoff*pow;
-                const that = this;
-                let timer = setTimeout(function(){that.makePolyline(value)},that.exponentialBackoff);
-                if(this.exponentialBackoff>=16000){
-                    clearInterval(timer);
-                    alert('json形式で入れてください');
-                    this.loading=false;
-                    this.polylineJSON = [];
-                    this.exponentialBackoff = 1000;
-                }
+                JSON.parse(value)
+                return true;
+            } catch (e) {
+                return false
             }
         },
     }
