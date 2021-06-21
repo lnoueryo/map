@@ -3,7 +3,7 @@
         <div style="width:340px">
             <div style="padding:9px"><div><span>lat:{{currentMarker.lat}}</span>　<span>lng:{{currentMarker.lng}}</span></div></div>
             <v-btn @click="resetAll">リセット</v-btn>
-            <textarea ref="polyline" cols="30" rows="40" @input="changeText" style="width:100%;background-color:white;font-size:12px;word-break:break-all;"></textarea>
+            <textarea ref="polyline" cols="30" rows="40" @input="onChangeText" style="width:100%;background-color:white;font-size:12px;word-break:break-all;"></textarea>
         </div>
         <div class="map-container">
             <div id="map" ref="map"></div>
@@ -49,26 +49,31 @@ export default {
         const mapEl = this.$refs.map;
         this.map = new google.maps.Map(mapEl, this.mapOptions);
         (this).map.addListener('click', (e)=>{
-            this.clickMap(e);
+            this.onClickMap(e);
         })
     },
     methods:{
-        resetAll(){
-            if (this.markers.length !==0) {
-                this.resetMarkersPolyline();
-                this.markers = [];
-                this.polyline = null;
-                this.coordinates = [];
-                this.$refs.polyline.value = null;
-            }
+        onClickMap(e){
+            const latLng = this.makeLatLng(e, this.autoIncrement); //クリックしたところの緯度経度及びindexを算出 {lat: '', lng: '', index: ''}
+            this.coordinates.push(latLng); //{lat: '', lng: '', index: ''}をデータに格納
+            const marker = this.makeMarker(latLng, this.autoIncrement); //
+            this.markers.push(marker);
+            this.makePolylinePush(this.coordinates)//this.coordinatesはlatLng[] この処理を最後にしないと処理がおかしくなる
+            this.currentMarker = Object.assign({}, this.currentMarker, latLng); //現在の緯度経度を表示
+            this.autoIncrement++;//次のindexのために+1
         },
-        resetMarkersPolyline(){
-            this.markers.forEach((marker)=>{
-                marker.setMap(null);
-            })
-            this.polyline.setMap(null);
+        onDragMarker(e, index){
+            const latLng = this.makeLatLng(e, index)
+            let selectMarkerIndex = this.coordinates.findIndex((marker)=>{
+                return marker.index === index;
+            });
+            this.coordinates[selectMarkerIndex] = Object.assign({}, this.coordinates[selectMarkerIndex], latLng);
+            this.currentMarker = Object.assign({}, this.currentMarker, latLng);
+            this.makePolylinePush(this.coordinates)
+            const coordinates = JSON.parse(JSON.stringify(this.coordinates));
+            this.$refs.polyline.value = JSON.stringify(coordinates.map((marker)=>{delete marker.index;return marker})).replace(/\s+/g,'');
         },
-        async changeText(){
+        async onChangeText(){
             this.loading = true;
             const deepCopyCoordinates = JSON.parse(JSON.stringify(this.coordinates));
             const isJSON = await this.isValidJson(this.$refs.polyline.value);
@@ -83,20 +88,16 @@ export default {
                     this.coordinates = this.coordinates.map((coordinate, i)=>{
                         return Object.assign({}, coordinate, polylineValue[i]);
                     })
-                } else {
-                    this.coordinates = polylineValue;
-                    this.coordinates = this.coordinates.map((coordinate, i)=>{
+                } else { //新たなデータをテキストエリアに入れた時
+                    this.coordinates = polylineValue.map((coordinate)=>{　//緯度経度の値はあるが、インデックスがないので新たに作成
                         coordinate = Object.assign({}, coordinate, {index: this.autoIncrement})
                         this.autoIncrement++;
                         return coordinate;
                     })
-                    for (let i = 0; i < this.coordinates.length; i++) {
-                        this.makeMarker(this.coordinates[i], this.coordinates[i].index);
-                    }
-                    this.makePolyline(this.coordinates);
                 }
+                this.redraw(this.coordinates); //再描画
+                //インスタンスをデータで保持
                 this.loading = false;
-                this.redraw();
             } else {
                 if (this.$refs.polyline.value=='') {
                     if (this.markers.length!==0) {
@@ -107,7 +108,7 @@ export default {
                     const pow = 2;
                     this.exponentialBackoff = this.exponentialBackoff*pow;
                     const that = this;
-                    let timer = setTimeout(function(){that.changeText()},that.exponentialBackoff);
+                    let timer = setTimeout(function(){that.onChangeText()},that.exponentialBackoff);
                     if(this.exponentialBackoff>=8000){
                         clearInterval(timer);
                         this.exponentialBackoff = 1000;
@@ -118,30 +119,12 @@ export default {
                 }
             }
         },
-        redraw(){
-            this.coordinates.forEach((coordinate)=>{
-                this.makeMarker(coordinate, coordinate.index);
+        //makePolylineの返り値を作成し、resetMarkersPolyline関数の後に、マーカーとポリラインをデータに入れる
+        redraw(coordinates){
+            this.markers = coordinates.map((coordinate)=>{
+                return this.makeMarker(coordinate, coordinate.index);
             });
-            this.makePolyline(this.coordinates);
-        },
-        clickMap(e){
-            const latLng = this.makeLatLng(e, this.autoIncrement)
-            this.coordinates.push(latLng);
-            this.makeMarker(latLng, this.autoIncrement);
-            this.makePolyline(this.coordinates); //this.coordinatesはlatLng[]この処理を最後にしないと処理がおかしくなる
-            this.currentMarker = Object.assign({}, this.currentMarker, latLng); //現在の緯度経度を表示
-            this.autoIncrement++;//次のindexのために+1
-        },
-        dragMarker(e, index){
-            const latLng = this.makeLatLng(e, index)
-            let selectMarkerIndex = this.coordinates.findIndex((marker)=>{
-                return marker.index === index;
-            });
-            this.coordinates[selectMarkerIndex] = Object.assign({}, this.coordinates[selectMarkerIndex], latLng);
-            this.currentMarker = Object.assign({}, this.currentMarker, latLng);
-            this.makePolyline(this.coordinates);
-            const coordinates = JSON.parse(JSON.stringify(this.coordinates));
-            this.$refs.polyline.value = JSON.stringify(coordinates.map((marker)=>{delete marker.index;return marker})).replace(/\s+/g,'');
+            this.makePolylinePush(coordinates)
         },
         makeLatLng(e, index){
             const lat = (e.latLng).lat();
@@ -161,24 +144,42 @@ export default {
                 this.coordinates = await this.coordinates.filter((marker)=>{
                     return marker.index !== index;
                 });
-                this.redraw();
+                this.redraw(this.coordinates);
             });
             //mouseup marker
             marker.addListener("mouseup", (e) => {
-                this.dragMarker(e, index);
+                this.onDragMarker(e, index);
             });
-            this.markers.push(marker)
+            return marker;
         },
-        makePolyline(){
+        resetAll(){
+            if (this.markers.length !==0) {
+                this.resetMarkersPolyline();
+                this.markers = [];
+                this.polyline = null;
+                this.coordinates = [];
+                this.$refs.polyline.value = null;
+            }
+        },
+        resetMarkersPolyline(){
+            this.markers.forEach((marker)=>{
+                marker.setMap(null);
+            })
+            this.polyline.setMap(null);
+        },
+        makePolylinePush(coordinates){
+            const polyline = this.makePolyline(coordinates);
             if (this.polyline) {
                 this.polyline.setMap(null);
             }
-            this.polyline = new google.maps.Polyline( {
+            this.polyline = polyline;
+        },
+        makePolyline(coordinates){
+            return new google.maps.Polyline( {
                 map: this.map ,
-                path: this.coordinates,
+                path: coordinates,
                 strokeWeight: 3,
             });
-            this.polygon.push(this.polyline);
         },
         deleteIndexKey(value){
             return JSON.stringify(value.map((marker)=>{delete marker.index;return marker})).replace(/\s+/g,'')
