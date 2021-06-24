@@ -66,7 +66,8 @@ export default Vue.extend({
     },
     methods:{
         select(searchStation: Station){
-            const searchBar = this.$refs.searchBar as InstanceType<typeof SearchBar>;
+            const searchBar = this.$refs.searchBar as any;
+            // const searchBar = this.$refs.searchBar as InstanceType<typeof SearchBar>;
             searchBar.$data.blur = false;
             const input = searchBar.$refs.input as HTMLInputElement;
             input.blur();

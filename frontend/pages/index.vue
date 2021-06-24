@@ -52,7 +52,6 @@ export default Vue.extend({
         max-height:calc(100vh);
         overflow:hidden;
         #container {
-            height: 100%;
             width: 100%;
             position:relative;
             padding-right:100px;

@@ -10,7 +10,7 @@
     </div>
 </template>
 
-<script lang="ts">
+<script>
 import Vue from 'vue'
 import ToggleSwitch from '../../global/ToggleSwitch.vue';
 export default Vue.extend({
@@ -20,7 +20,7 @@ export default Vue.extend({
     computed:{
         markerSwitch:{
             get(){
-                return this.$store.getters['home/markerSwitch']
+                return this.$store.getters['home/markerSwitch'];
             },
             set(value){
                 this.$store.dispatch('home/changeMarkerSwitch', value);
@@ -28,7 +28,7 @@ export default Vue.extend({
         },
         lineSwitch:{
             get(){
-                return this.$store.getters['home/lineSwitch']
+                return this.$store.getters['home/lineSwitch'];
             },
             set(value){
                 this.$store.dispatch('home/changeLineSwitch', value);

@@ -129,7 +129,7 @@ export default Vue.extend({
             );
         });
         (this as any).map.addListener('click', (e: google.maps.MapMouseEvent)=>{
-            this.clickMap(e);
+            this.onClickMap(e);
         })
         // new MarkerWithLabel({
         //     position: new google.maps.LatLng(35.6711584,139.6605155),
@@ -159,8 +159,8 @@ export default Vue.extend({
                 that.polygons = polygons;
             },100)
         },
-        clickMap(e: google.maps.MapMouseEvent){
-            this.$store.dispatch('home/searchCityCode',e);
+        onClickMap(e: google.maps.MapMouseEvent){
+            // this.$store.dispatch('home/searchCityCode',e);
         },
         // isMarkerInPolygon(){//市町村毎にクラスターを作成する関数。非推奨
         //     const markers = this.markers.reduce((pre,current) => {pre.push(...current);return pre},[]);
@@ -190,7 +190,7 @@ export default Vue.extend({
             });
             const that = this;
             google.maps.event.addListener(polygon, 'click', function(e: google.maps.MapMouseEvent) {
-                that.clickMap(e);
+                that.onClickMap(e);
             });
             polygon.setMap(this.map);
             return polygon
@@ -234,7 +234,7 @@ export default Vue.extend({
                     let marker = this.makeMarker(station);
                     marker.addListener("click", () => {
                         this.$store.dispatch('home/selectMarker',station);
-                        this.$store.dispatch('home/getStationInfo',{name: station.name});
+                        // this.$store.dispatch('home/getStationInfo',{name: station.name});
                     });
                     lineMarkerArray.push(marker);
                 });
@@ -247,20 +247,20 @@ export default Vue.extend({
             },100)
         },
         makeMarker(station: Station){
-            let img;
-            if (station.company_id == 1) {
-                img = this.markerIcons.jr;
-            } else if(station.company_id == 7){
-                img = this.markerIcons.tokyu;
-            } else if(station.company_id == 8){
-                img = this.markerIcons.metro;
-            } else if(station.company_id == 9) {
-                img = this.markerIcons.toei;
-            } else if(station.company_id == 2) {
-                img = this.markerIcons.keio;
-            } else {
-                img = ''
-            }
+            let img = '';
+            // if (station.company_id == 1) {
+            //     img = this.markerIcons.jr;
+            // } else if(station.company_id == 7){
+            //     img = this.markerIcons.tokyu;
+            // } else if(station.company_id == 8){
+            //     img = this.markerIcons.metro;
+            // } else if(station.company_id == 9) {
+            //     img = this.markerIcons.toei;
+            // } else if(station.company_id == 2) {
+            //     img = this.markerIcons.keio;
+            // } else {
+            //     img = ''
+            // }
             const marker = new google.maps.Marker({
                 map: this.map,
                 position: new google.maps.LatLng(station.lat, station.lng),
