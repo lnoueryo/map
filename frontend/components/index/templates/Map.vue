@@ -20,7 +20,7 @@ interface Polygon {"lat":number,"lng":number}
 interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string,stations: Station[]}
-interface DataType {markerIcons: {jr: string,metro: string,toei: string, keio: string,tokyu: string},addMarker: { lat: number; lng: number; }[],map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},mapOptions: {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean,}, zoom: number,},markers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][]}
+interface DataType {markerIcons: {jr: string,metro: string,toei: string, keio: string,tokyu: string},addMarker: { lat: number; lng: number; }[],map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},mapOptions: {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean,}, zoom: number,mapTypeControl: boolean,fullscreenControl: boolean,streetViewControl: boolean,zoomControl: boolean},markers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][]}
 interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
 export default Vue.extend({
     data(): DataType {
@@ -28,7 +28,7 @@ export default Vue.extend({
             map: null,
             overview: null,
             overviewConfig: {difference: 5,maxZoom: 13, minZoom: 3},
-            mapOptions: {center: new google.maps.LatLng( 35.6729712, 139.7585771 ), restriction: {latLngBounds: tokyoBounds, strictBounds: false,}, zoom: 14,},
+            mapOptions: {center: new google.maps.LatLng( 35.6729712, 139.7585771 ), restriction: {latLngBounds: tokyoBounds, strictBounds: false,}, zoom: 14,mapTypeControl: false, fullscreenControl: false,streetViewControl: false,zoomControl: false},
             markers: [],
             polylines: [],
             addMarker: [],
@@ -234,7 +234,7 @@ export default Vue.extend({
                     let marker = this.makeMarker(station);
                     marker.addListener("click", () => {
                         this.$store.dispatch('home/selectMarker',station);
-                        // this.$store.dispatch('home/getStationInfo',{name: station.name});
+                        this.$store.dispatch('home/getStationInfo',{name: station.name});
                     });
                     lineMarkerArray.push(marker);
                 });

@@ -6,12 +6,15 @@
         <div id="container" :class="{'open': open}">
             <div class="main-view">
                 <div>
-                    <left-list></left-list>
+                    <left-list v-if="smp"></left-list>
                 </div>
                 <div class="map-container">
                     <map-view></map-view>
                 </div>
             </div>
+        </div>
+        <div>
+            <bottom-bar v-if="!smp"></bottom-bar>
         </div>
     </div>
 </template>
@@ -21,16 +24,24 @@ import Vue from 'vue'
 import RightDrawer from '../components/index/templates/RightDrawer.vue'
 import LeftList from '../components/index/templates/LeftList.vue'
 import MapView from '../components/index/templates/Map.vue'
-interface DataType {open: boolean}
+import BottomBar from '../components/global/BottomBar.vue'
+interface DataType {open: boolean, lefList: boolean}
 export default Vue.extend({
     components: {
         RightDrawer,
         LeftList,
-        MapView
+        MapView,
+        BottomBar
     },
     data(): DataType {
         return {
             open: false,
+            lefList: false,
+        }
+    },
+    computed:{
+        smp(){
+            return this.$store.getters.windowSize.x>500
         }
     },
     beforeCreate(){
@@ -69,6 +80,11 @@ export default Vue.extend({
         #container.open{
             padding-right: 256px;
             transition: all .3s;
+        }
+        @media screen and (max-width: 500px) {
+            #container {
+                padding-right:0;
+            }
         }
     }
 </style>

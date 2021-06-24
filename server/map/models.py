@@ -65,6 +65,29 @@ class Station(models.Model):
     def __str__(self):
         return f'{self.name}'
 
+# class LineStation(models.Model):
+#     id = models.IntegerField()
+#     line_id = models.IntegerField(blank=True, null=True)
+#     station_id = models.IntegerField(blank=True, null=True)
+#     created_at = models.DateTimeField(blank=True, null=True)
+#     updated_at = models.DateTimeField(blank=True, null=True)
+
+#     class Meta:
+#         managed = False
+#         db_table = 'line_station'
+
+# class CompanyStation(models.Model):
+#     id = models.IntegerField()
+#     company_id = models.IntegerField(blank=True, null=True)
+#     station_id = models.IntegerField(blank=True, null=True)
+#     created_at = models.DateTimeField(blank=True, null=True)
+#     updated_at = models.DateTimeField(blank=True, null=True)
+
+#     class Meta:
+#         managed = False
+#         db_table = 'company_station'
+
+
 # class Station(models.Model):
 #     pref_code = models.SmallIntegerField()
 #     pref_name = models.CharField(max_length=50)

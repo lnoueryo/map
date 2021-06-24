@@ -3,18 +3,17 @@ import colors from 'vuetify/es5/util/colors'
 export default {
   // Disable server-side rendering: https://go.nuxtjs.dev/ssr-mode
   ssr: false,
-  // router: {
-  //   base: '/map/'
-  //  },
-
+  router: {
+    base: process.env.baseURL
+   },
   // Target: https://go.nuxtjs.dev/config-target
   target: 'static',
 
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
-    // base: {
-    //   href: 'router.base'
-    // },
+    base: {
+      href: 'router.base'
+    },
     titleTemplate: '%s - frontend',
     title: 'frontend',
     meta: [
@@ -24,12 +23,14 @@ export default {
     ],
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     script: [
-      { src: 'https://maps.googleapis.com/maps/api/js?key=AIzaSyCLaTg7iFjqb20GWflIisy6P8VdOZUYmKA&libraries=geometry&v=quarterly', async: true },
+      { src: `https://maps.googleapis.com/maps/api/js?key=${process.env.API_KEY}&libraries=geometry&v=quarterly`, async: true },
       { src: 'https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js', async: true },
       { src: 'https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js', async: false },
     ]
   },
-
+  publicRuntimeConfig: {
+    environment: process.env.environment
+  },
   // Global CSS: https://go.nuxtjs.dev/config-css
   css: [],
 

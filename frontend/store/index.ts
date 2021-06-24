@@ -16,7 +16,7 @@ const state = {
 };
 
 const getters = {
-
+    windowSize: (state: State)=>state.windowSize,
 }
 
 const mutations = {
@@ -30,22 +30,22 @@ const mutations = {
 
 const actions = {
     async login (context: any, payload: Token) {
-        console.log('success')
-        $axios.setToken(payload.access, 'Bearer')
-        context.commit('login', payload);
-        const stringToken = JSON.stringify(payload)
-        localStorage.setItem('token', stringToken)
+        // console.log('success')
+        // $axios.setToken(payload.access, 'Bearer')
+        // context.commit('login', payload);
+        // const stringToken = JSON.stringify(payload)
+        // localStorage.setItem('token', stringToken)
     },
     isAuth(context: any, payload: string){
-        const token = localStorage.getItem('token');
-        if (token) {
-            const parsedToken = JSON.parse(token)
-            context.commit('login', parsedToken);
-            $axios.setToken(parsedToken.access, 'Bearer')
-            if(payload == 'login'){
-                (this as any).$router.push('/')
-            }
-        }
+        // const token = localStorage.getItem('token');
+        // if (token) {
+        //     const parsedToken = JSON.parse(token)
+        //     context.commit('login', parsedToken);
+        //     $axios.setToken(parsedToken.access, 'Bearer')
+        //     if(payload == 'login'){
+        //         (this as any).$router.push('/')
+        //     }
+        // }
     },
     windowSize(context: any, payload: WindowSize){
         context.commit('windowSize', payload)
