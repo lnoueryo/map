@@ -10,7 +10,6 @@
 </template>
 
 <script lang="ts">
-var latlng;
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
 // import practice from '~/assets/json/line/practice.json';

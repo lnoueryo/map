@@ -47,3 +47,9 @@ class CompanySerializer(serializers.ModelSerializer):
         if len(value)>20:
             raise serializers.ValidationError("設立日は最大15文字までとなっております")
         return value
+
+class LineStationSerializer(serializers.ModelSerializer):
+    stations = StationSerializer(many=True, read_only=True)
+    class Meta: #　表示したり、create時のrequiredのキー
+        model = Line
+        fields = '__all__'

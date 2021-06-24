@@ -56,7 +56,7 @@ export default Vue.extend({
                 {
                     icon: 'mdi-chart-bubble',
                     title: 'map',
-                    to: '/coordinate',
+                    to: '/editmap',
                 },
             ],
             miniVariant: false,

@@ -5,7 +5,9 @@ from management.api.views import (
     StationAPI,
     CSVCompanyAPI,
     CSVLineAPI,
-    CSVStationAPI
+    CSVStationAPI,
+    LineStationAPI,
+    # LineStationDetailApi
 )
 from . import views
 urlpatterns = [
@@ -14,5 +16,7 @@ urlpatterns = [
     path('line/',LineAPI.as_view(), name="line"),
     path('line/csv/',CSVLineAPI.as_view(), name="csv_line"),
     path('station/',StationAPI.as_view(), name="station"),
+    path('line/station/',LineStationAPI.as_view(), name="line_station"),
     path('station/csv/',CSVStationAPI.as_view(), name="csv_station"),
+    # path('line/station/<int:pk>/',LineStationDetailApi.as_view(), name="line_detail"),
 ]

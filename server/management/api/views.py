@@ -9,7 +9,7 @@ import urllib.request
 import json
 import requests
 from map.models import Station, Line, Company
-from .serializers import StationSerializer, LineSerializer, CompanySerializer
+from .serializers import StationSerializer, LineSerializer, CompanySerializer, LineStationSerializer
 from station_json.station import StationJson
 import re
 import csv
@@ -69,6 +69,29 @@ class StationAPI(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class LineStationAPI(APIView):
+    # permission_classes = [IsAuthenticated]
+    def get(self, request):
+        station = Line.objects.all()
+        serializer = LineStationSerializer(station, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    # def post(self, request):
+    #     serializer = StationSerializer(data=request.data)
+    #     if serializer.is_valid():
+    #         serializer.save()
+    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# class LineDetailApi(APIView):
+#     def put(self, request, pk, format=None):
+#         print(pk)
+#         return HttpResponse()
+#         snippet = self.get_object(pk)
+#         serializer = SnippetSerializer(snippet, data=request.data)
+#         if serializer.is_valid():
+#             serializer.save()
+#             return Response(serializer.data)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class CSVCompanyAPI(APIView):
 
     def get(self, request):

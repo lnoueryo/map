@@ -1,5 +1,5 @@
 import { $axios } from '~/utils/api';
-// import companies from '~/assets/json/company.json';
+import companies from '~/assets/json/company.json';
 import cities from '~/assets/json/cities.json';
 
 interface State {
@@ -24,7 +24,8 @@ interface Station {name: string,id:number,line_id:number,order:number,prefecture
 interface City {prefecture_id: string, city_code: number, city: string, polygons:Polygon[][]}
 
 const state = {
-    companies: [],
+    companies: companies,
+    cities: cities,
     selectedCompanyItems: [],
     selectedLineItems: [],
     selectedCityItems: [],
@@ -46,7 +47,7 @@ const getters = {
     /*
     フィルタリングされていない市町村ポリゴンを返す
     */
-    cities:(state: State): City[]=>{return cities;},
+    cities:(state: State): City[]=>{return state.cities;},
     /*
     company配列より路線図のみを抽出し、
     選択された会社名でフィルタリングされた配列を返す
@@ -229,8 +230,8 @@ const mutations = {
 
 const actions = {
     async getCompanies(context: any){
-        const response = await $axios.$get('/api/map/');
-        context.commit('setCompanies', response);
+        // const response = await $axios.$get('/api/map/');
+        // context.commit('setCompanies', response);
     },
     resetPolyline(context: any, payload: google.maps.Polyline[]){
         payload.forEach(polyline => {
@@ -286,7 +287,17 @@ const actions = {
             return (city.prefecture_id + city.city_code) == response.Property.AddressElement[1].Code;
         })
         context.commit('selectCityItems', city);
-    }
+    },
+    // isContain(context: any,e: google.maps.MapMouseEvent,polygons: google.maps.Polygon[]){
+    //     const latLng = new google.maps.LatLng((e.latLng as google.maps.LatLng).lat(), (e.latLng as google.maps.LatLng).lng());
+    //     const a = polygons.some((polygon: Polygon)=>{
+    //             console.log(polygon)
+    //             return google.maps.geometry.poly.containsLocation(latLng, polygon)
+    //         })
+    //     })
+    //     // console.log(a)
+    //     // const res = google.maps.geometry.poly.containsLocation(latLng, bermudaTriangle);
+    // }
 };
 
 export default {

@@ -1,9 +1,15 @@
 <template>
     <div class="d-flex" style="width:100%">
-        <div style="width:340px">
-            <div style="padding:9px"><div><span>lat:{{currentMarker.lat}}</span>　<span>lng:{{currentMarker.lng}}</span></div></div>
-            <v-btn @click="resetAll">リセット</v-btn>
-            <textarea ref="polyline" cols="30" rows="30" @input="onChangeText" style="width:100%;background-color:white;font-size:12px;word-break:break-all;"></textarea>
+        <div style="width:360px">
+            <toggle-switch key="1" class="mr-4" v-model="markerSwitch1" id="markerSwitch1" background-color="#ff9800">マーカー</toggle-switch>
+            <div>
+                <item-select maxHeight="calc(100vh - 300px)" style="position:relative;z-index:1" v-model="select" :items="$store.getters['editmap/lineStation']" placeholder="路線を選択" background-color="white" ripple="true"></item-select>
+            </div>
+            <div class="d-flex">
+                <toggle-switch key="3" class="mr-4" v-model="lineSwitch" id="line" background-color="#00E676">路線</toggle-switch>
+                <toggle-switch key="4" class="mr-4" v-model="stationSwitch" id="station" background-color="#ff9800">駅</toggle-switch>
+            </div>
+            <text-box ref="textBox1" :map="map" :switch="markerSwitch1"></text-box>
         </div>
         <div class="map-container">
             <div id="map" ref="map"></div>
@@ -16,194 +22,124 @@
             </v-card>
             </div>
         </div>
+        <div style="width:360px">
+            <toggle-switch key="1" class="mr-4" v-model="markerSwitch2" id="markerSwitch2" background-color="#ff9800">マーカー</toggle-switch>
+            <text-box ref="textBox2" :map="map" :switch="markerSwitch2"></text-box>
+        </div>
     </div>
 </template>
 
 <script>
+import TextBox from '../components/editmap/TextBox.vue'
+import ToggleSwitch from '../components/global/ToggleSwitch.vue'
+import ItemSelect from '~/components/global/ItemSelect.vue'
 const kantoBounds = {north: 35.831409,south: 35.3111639, west: 138.9403931, east: 140.9762068}
 export default {
+    components: {
+        TextBox,
+        ToggleSwitch,
+        ItemSelect
+    },
     data() {
         return {
             map: null,
             mapOptions: {center: new google.maps.LatLng( 35.6729712, 139.7585771 ), restriction: {latLngBounds: kantoBounds, strictBounds: false,}, zoom: 14,},
-            coordinates: [],
-            autoIncrement: 0,
-            currentMarker: {},
-            markers: [],
-            polyline: null,
-            polygon: [],
-            polylineJSON: [],
-            exponentialBackoff: 1000,
             loading: false,
+            value1: true,
+            value2: false,
+            line: true,
+            station: false,
+            selectedLineItem: [],
+        }
+    },
+    computed:{
+        markerSwitch1:{
+            get(){
+                return this.value1;
+            },
+            set(value){
+                google.maps.event.clearInstanceListeners(this.map);
+                this.value1 = value;
+                this.value2 = !this.value2
+            }
+        },
+        markerSwitch2:{
+            get(){
+                return this.value2;
+            },
+            set(value){
+                google.maps.event.clearInstanceListeners(this.map);
+                this.value2 = value;
+                this.value1 = !this.value1;
+            }
+        },
+        lineSwitch:{
+            get(){
+                return this.line;
+            },
+            set(value){
+                this.line = value;
+                this.station = !this.station
+            }
+        },
+        stationSwitch:{
+            get(){
+                return this.station;
+            },
+            set(value){
+                this.station = value;
+                this.line = !this.line;
+            }
+        },
+        select:{
+            get(){
+                if (Array.isArray(this.selectedLineItem)) {
+                    return this.selectedLineItem.length!==0?[this.selectedLineItem[0]]: [];
+                }
+                return [this.selectedLineItem];
+            },
+            set(value){
+                this.selectedLineItem = value[value.length-1];
+            }
         }
     },
     watch:{
-        coordinates(){
-            if(this.coordinates){
-                this.$refs.polyline.value = this.deleteIndexKey(this.coordinates)
+        selectedLineItem(value){
+            if (value) {
+                if (this.line) {
+                    this.$refs.textBox1.$refs.polyline.value = value.polygon;
+                } else {
+                    const stations = value.stations.map((station)=>{
+                        return {lat: station.lat, lng: station.lng}
+                    })
+                    this.$refs.textBox1.$refs.polyline.value = stations;
+                }
+                this.$refs.textBox1.onChangeText();
+            }
+        },
+        line(value){
+            if (this.selectedLineItem && this.selectedLineItem.length!==0) {
+                console.log(this.selectedLineItem)
+                if (this.line) {
+                    this.$refs.textBox1.$refs.polyline.value = this.selectedLineItem.polygon;
+                } else {
+                    const stations = this.selectedLineItem.stations.map((station)=>{
+                        return {lat: station.lat, lng: station.lng}
+                    })
+                    console.log(stations)
+                    this.$refs.textBox1.$refs.polyline.value = JSON.stringify(stations);
+                }
+                this.$refs.textBox1.onChangeText();
             }
         }
+    },
+    async created(){
+        this.$store.dispatch('editmap/getLineStation')
     },
     mounted(){
         const mapEl = this.$refs.map;
         this.map = new google.maps.Map(mapEl, this.mapOptions);
-        (this).map.addListener('click', (e)=>{
-            this.onClickMap(e);
-        })
     },
-    methods:{
-        onClickMap(e){
-            const index = this.autoIncrement;
-            const latLng = this.makeLatLng(e, index); //クリックしたところの緯度経度及びindexを算出 {lat: '', lng: '', index: ''}
-            this.coordinates.push(latLng); //{lat: '', lng: '', index: ''}をデータに格納
-            this.makeMarkerPush(latLng, index)
-            this.makePolylinePush(this.coordinates)//this.coordinatesはlatLng[] この処理を最後にしないと処理がおかしくなる
-            this.currentMarker = Object.assign({}, this.currentMarker, latLng); //現在の緯度経度を表示
-            this.autoIncrement++;//次のindexのために+1
-        },
-        onDragMarker(e, index){
-            const latLng = this.makeLatLng(e, index)
-            let selectMarkerIndex = this.coordinates.findIndex((marker)=>{ //coordinatesのindexを検索
-                return marker.index === index;
-            });
-            this.coordinates[selectMarkerIndex] = Object.assign({}, this.coordinates[selectMarkerIndex], latLng); //緯度経度を更新
-            this.currentMarker = Object.assign({}, this.currentMarker, latLng);
-            this.makePolylinePush(this.coordinates); //polylineを再描画
-            this.$refs.polyline.value = this.deleteIndexKey(this.coordinates);
-        },
-        //alertをスナックバーに変更
-        async onChangeText(){
-            this.loading = true;
-            if (this.$refs.polyline.value=='') {
-                this.resetAll();
-                this.loading = false;
-            } else {
-                const deepCopyCoordinates = JSON.parse(JSON.stringify(this.coordinates));
-                const isJSON = await this.isValidJson(this.$refs.polyline.value);
-                if (isJSON) {
-                    this.setCoordinates()
-                } else {
-                    const pow = 2;
-                    this.exponentialBackoff = this.exponentialBackoff*pow;
-                    const that = this;
-                    let timer = setTimeout(function(){that.onChangeText()},that.exponentialBackoff);
-                    if(this.exponentialBackoff>=8000){
-                        clearInterval(timer);
-                        this.exponentialBackoff = 1000;
-                        this.coordinates = deepCopyCoordinates;
-                        this.loading=false;
-                        alert('not json'); 
-                    }
-                }
-            }
-        },
-        setCoordinates(){
-                this.exponentialBackoff = 1000;
-                const polylineValue = JSON.parse(this.$refs.polyline.value);
-                //this.$refs.polyline.valueにはindexがない状態で表示されているため、coordinates=valueだとindexが消えてしまいエラーが発生してしまう。なのでObject.assignでマージ
-                if(polylineValue.length == this.coordinates.length){
-                    this.coordinates = this.coordinates.map((coordinate, i)=>{
-                        return Object.assign({}, coordinate, polylineValue[i]);
-                    })
-                } else { //新たなデータをテキストエリアに入れた時
-                    this.coordinates = polylineValue.map((coordinate)=>{　//緯度経度の値はあるが、インデックスがないので新たに作成
-                        coordinate = Object.assign({}, coordinate, {index: this.autoIncrement})
-                        this.autoIncrement++;
-                        return coordinate;
-                    })
-                }
-                this.redraw(this.coordinates); //再描画
-                this.loading = false;
-        },
-        //makePolylineの返り値を作成し、resetMarkersPolyline関数の後に、マーカーとポリラインをデータに入れる
-        resetAll(){
-            if (this.markers.length !==0) {
-                this.resetMarkersPolyline();
-                this.markers = [];
-                this.polyline = null;
-                this.coordinates = [];
-                this.$refs.polyline.value = null;
-            }
-        },
-        resetMarkersPolyline(){
-            if (this.markers.length!==0) {
-                this.polyline.setMap(null);
-                this.markers.forEach((marker)=>{
-                    marker.setMap(null);
-                })
-            }
-        },
-        redraw(coordinates){
-            const markers = coordinates.map((coordinate)=>{
-                return this.makeMarker(coordinate, coordinate.index);
-            });
-            const polyline = this.makePolyline(coordinates);
-            if(this.markers.length!==0)this.polyline.setMap(null);
-            setTimeout(() => {
-                if (this.markers.length!==0) {
-                    this.markers.forEach((marker)=>{
-                        marker.setMap(null);
-                    })
-                }
-                this.markers = markers;
-                this.polyline = polyline;
-            }, 100);
-        },
-        makeLatLng(e, index){
-            const lat = (e.latLng).lat();
-            const lng = (e.latLng).lng();
-            return {"lat": Math.round(lat*1000000)/1000000, "lng": Math.round(lng*1000000)/1000000, index: index};
-        },
-        makeMarkerPush(latLng, index){
-            const marker = this.makeMarker(latLng, index);
-            this.markers.push(marker);
-        },
-        makeMarker(latLng, index){ //再描画時はautoIncrementではなく元々ふってあるindexを使うため台に引数にindexを入れる
-            const marker = new google.maps.Marker({
-                map: this.map,
-                position: new google.maps.LatLng(latLng.lat, latLng.lng),
-                draggable: true
-            });
-            //click marker
-            marker.addListener("click", async() => {
-                this.coordinates = await this.coordinates.filter((marker)=>{
-                    return marker.index !== index;
-                });
-                this.redraw(this.coordinates);
-            });
-            //mouseup marker
-            marker.addListener("mouseup", (e) => {
-                this.onDragMarker(e, index);
-            });
-            return marker;
-        },
-        makePolylinePush(coordinates){
-            const polyline = this.makePolyline(coordinates);
-            if (this.polyline) {
-                this.polyline.setMap(null);
-            }
-            this.polyline = polyline;
-        },
-        makePolyline(coordinates){
-            return new google.maps.Polyline( {
-                map: this.map ,
-                path: coordinates,
-                strokeWeight: 3,
-            });
-        },
-        deleteIndexKey(value){
-            const coordinates = JSON.parse(JSON.stringify(value))
-            return JSON.stringify(coordinates.map((coordinate)=>{delete coordinate.index;return coordinate})).replace(/\s+/g,'')
-        },
-        isValidJson(value) {
-            try {
-                JSON.parse(value)
-                return true;
-            } catch (e) {
-                return false
-            }
-        },
-    }
 }
 </script>
 
