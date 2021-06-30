@@ -1,10 +1,9 @@
 <template>
     <div>
         <div class="toggle-switch">
-            <div class="mr-3"><slot></slot></div>
+            <div><slot></slot></div>
             <input :id="id" class="toggle-input" type='checkbox' v-model="checked"/>
             <label :for="id" :style="value?{backgroundColor: backgroundColor}:{backgroundColor: '#ccc'}" class="toggle-label"/>
-            <span></span>
         </div>
     </div>
 </template>
@@ -80,5 +79,7 @@ p {
   position: relative;
   display:flex;
   align-items:flex-end;
+  justify-content: space-between;
+  width: 100%;
 }
 </style>
