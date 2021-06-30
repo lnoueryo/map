@@ -1,6 +1,7 @@
 import { $axios } from '~/utils/api';
 import companies from '~/assets/json/company.json';
 import cities from '~/assets/json/cities.json';
+import population from '../assets/json/population.json'
 
 interface State {
         companies: Company[]
@@ -11,22 +12,31 @@ interface State {
         currentBounds: Bounds,
         markerSwitch: boolean,
         lineSwitch: boolean,
+        chartSwitch: boolean,
+        dotSwitch: boolean,
         selectedMarker: Station,
         searchWord: string,
         stationInfo: null|string,
         cities: City[],
-        searching: boolean
+        searching: boolean,
+        addressElement: null | AddressElement[],
+        population: {city: string, population: number[]},
+        lineChartIndex: number,
+        events: string[]
     }
-interface Polygon {lat: number, lng: number}[]
+interface Coordinate {lat: number, lng: number};
+interface Polygon {lat: number, lng: number}[];
 interface Bounds {north: number, south: number, west: number, east: number};
 interface Company {id: number, name: string, address: string, founded: string, lines: Line[]};
 interface Line {id: number, company_id: number, name: string, polygon: Polygon, color: string,stations: Station[]};
 interface Station {name: string,id:number,line_id:number,order:number,prefecture:string,lat:number,lng:number,company_id:number,city_code: string}
 interface City {prefecture_id: string, city_code: number, city: string, polygons:Polygon[][]}
+interface AddressElement {Code: string, Name: string, Kana: string, Level: string}
 
 const state = {
     companies: companies,
     cities: cities,
+    population: population,
     selectedCompanyItems: [],
     selectedLineItems: [],
     selectedCityItems: [],
@@ -34,10 +44,15 @@ const state = {
     currentBounds: {south: 0, north: 0,east: 0, west: 0},
     markerSwitch: true,
     lineSwitch: true,
+    chartSwitch: false,
+    dotSwitch: true,
     selectedMarker: {},
     searchWord: null,
     stationInfo: null,
-    searching: false
+    searching: false,
+    addressElement: null,
+    lineChartIndex: 0,
+    events: []
 };
 
 const getters = {
@@ -50,6 +65,11 @@ const getters = {
     フィルタリングされていない市町村ポリゴンを返す
     */
     cities:(state: State): City[]=>{return state.cities;},
+    /*
+    フィルタリングされていない人口情報を返す
+    */
+    population:(state: State)=>{return state.population;},
+    events:(state: State)=>{return state.events},
     /*
     company配列より路線図のみを抽出し、
     選択された会社名でフィルタリングされた配列を返す
@@ -142,6 +162,8 @@ const getters = {
     bounds: (state: State): Bounds => {return state.currentBounds;}, //現在のマップのサイズを緯度経度のオブジェクトで返す
     markerSwitch: (state: State): boolean =>{return state.markerSwitch;}, //マーカー表示のboolean
     lineSwitch: (state: State) => {return state.lineSwitch;}, //路線図表示のboolean
+    chartSwitch: (state: State) => {return state.chartSwitch;}, //グラフ表示のboolean
+    dotSwitch: (state: State) => {return state.dotSwitch;}, //ドット表示のboolean
     selectedMarker: (state: State): Station => {return state.selectedMarker;}, //クリックされたマーカー(駅)のオブジェクトを返す
     showNumberOfMarkers: (state: State, getters: any): number =>{ //現在表示されているマーカーの数を返す
         return getters.lines.reduce((sum:any, line:any): number => {
@@ -172,6 +194,19 @@ const getters = {
     stationInfo(state: State){return state.stationInfo}, //ウィキから引っ張ってきたhtmlを返す
     selectedCities(state: State){return state.selectedCityItems}, //ウィキから引っ張ってきたhtmlを返す
     searching(state: State){return state.searching}, //ウィキ検索中のloading処理
+    removeAddressElement: (state: State)=>(elements:AddressElement[], zoom: number)=>{
+        let index: number;
+        if(8<=zoom&&10>zoom)index = 1;
+        else if(10<=zoom&&14>zoom)index = 2;
+        else if(14<=zoom&&16>zoom)index = 3;
+        else if(16<=zoom&&18>zoom)index = 4;
+        else if(18<=zoom)index = 5;
+        return elements.filter((element: AddressElement, i: number)=>{
+            return i < index;
+        })
+    },
+    addressElement:(state: State)=>{return state.addressElement},
+    lineChartIndex:(state: State)=>{return state.lineChartIndex},
 }
 
 const mutations = {
@@ -204,6 +239,12 @@ const mutations = {
     lineSwitch(state: State, payload: boolean){
         state.lineSwitch = payload;
     },
+    chartSwitch(state: State, payload: boolean){
+        state.chartSwitch = payload;
+    },
+    dotSwitch(state: State, payload: boolean){
+        state.dotSwitch = payload;
+    },
     selectMarker(state: State, payload: Station){
         state.selectedMarker = Object.assign({},state.selectedMarker,payload);
     },
@@ -234,7 +275,19 @@ const mutations = {
         } else {
             state.selectedCityItems.splice(index, 1);
         }
-    }
+    },
+    addressElement(state: State, payload: AddressElement[]){
+        state.addressElement = payload;
+    },
+    lineChartIndex(state: State, payload: number){
+        state.lineChartIndex = payload;
+    },
+    changeLineChartIndex(state: State, payload: number){
+        state.lineChartIndex += payload;
+    },
+    events(state: State, payload: string[]){
+        state.events = payload;
+    },
 };
 
 const actions = {
@@ -273,6 +326,12 @@ const actions = {
     changeLineSwitch(context: any, payload: boolean){
         context.commit('lineSwitch',payload)
     },
+    changeChartSwitch(context: any, payload: boolean){
+        context.commit('chartSwitch',payload)
+    },
+    changeDotSwitch(context: any, payload: boolean){
+        context.commit('dotSwitch',payload)
+    },
     selectMarker(context: any, payload: Station){
         context.commit('selectMarker',payload)
     },
@@ -293,12 +352,38 @@ const actions = {
     },
     async searchCityCode(context: any,payload: google.maps.MapMouseEvent){
         const latLng = {lat: payload.latLng?.lat(), lng: payload.latLng?.lng()};
-        const response = await $axios.$post('/api/search-by-reverse-geocode', latLng);
+        const response = await $axios.$post('/api/search-by-reverse-geocode/', latLng);
         const city = context.getters.cities.find((city: City)=>{
             return (city.prefecture_id + city.city_code) == response.Property.AddressElement[1].Code;
         })
         context.commit('selectCityItems', city);
     },
+    async getCity(context: any, payload: {mapCenter: Coordinate, zoom: number}){
+        const response = await $axios.$post('/api/search-by-reverse-geocode/', payload.mapCenter);
+        let AddressElement;
+        if (response.Property) {
+            try {
+                AddressElement = context.getters.removeAddressElement(response.Property.AddressElement, payload.zoom);
+                context.dispatch('lineChartIndex', response);
+            } catch (error) {
+                AddressElement = [response.Property.Country];
+            }
+            context.commit('addressElement', AddressElement);
+        }
+    },
+    async lineChartIndex(context: any,payload: any){
+        const cityIndex = context.getters.population.findIndex((city: City)=>{
+            return city.city == payload.Property.AddressElement[1].Name;
+        })
+        if (cityIndex!==-1) {
+            context.commit('lineChartIndex', cityIndex);
+        }
+    },
+    async getEvents(context: any){
+        const response = await $axios.$get('/api/event/');
+        context.commit('events', response.events);
+        console.log(response.events)
+    }
     // isContain(context: any,e: google.maps.MapMouseEvent,polygons: google.maps.Polygon[]){
     //     const latLng = new google.maps.LatLng((e.latLng as google.maps.LatLng).lat(), (e.latLng as google.maps.LatLng).lng());
     //     const a = polygons.some((polygon: Polygon)=>{
