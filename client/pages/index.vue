@@ -93,6 +93,10 @@ export default Vue.extend({
             #container {
                 padding-right:0;
             }
+            #container.open{
+                padding-right: 0;
+                transition: all .3s;
+            }
         }
     }
 </style>

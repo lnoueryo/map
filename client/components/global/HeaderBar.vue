@@ -53,21 +53,21 @@ export default Vue.extend({
                     title: 'Home',
                     to: '/',
                 },
-                {
-                    icon: 'mdi-chart-bubble',
-                    title: 'Login',
-                    to: '/login',
-                },
-                {
-                    icon: 'mdi-chart-bubble',
-                    title: 'admin',
-                    to: '/management',
-                },
-                {
-                    icon: 'mdi-chart-bubble',
-                    title: 'map',
-                    to: '/editmap',
-                },
+                // {
+                //     icon: 'mdi-chart-bubble',
+                //     title: 'Login',
+                //     to: '/login',
+                // },
+                // {
+                //     icon: 'mdi-chart-bubble',
+                //     title: 'admin',
+                //     to: '/management',
+                // },
+                // {
+                //     icon: 'mdi-chart-bubble',
+                //     title: 'map',
+                //     to: '/editmap',
+                // },
             ],
             miniVariant: false,
             right: true,

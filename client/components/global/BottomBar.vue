@@ -33,7 +33,8 @@ export default {
             navStyle: {
                 height: 0,
                 transform: '',
-                transition: 'all .5s'
+                transition: 'all .5s',
+                zIndex: 0,
             },
             wikiStyle: {
                 height: 0,
@@ -78,14 +79,14 @@ export default {
     methods:{
         upWiki(){
             this.position = true;
-            this.navStyle = Object.assign({},this.navStyle, {height: this.windowSizeY+'px',transform: `translateY(-${this.windowSizeY}px)`});
+            this.navStyle = Object.assign({},this.navStyle, {height: this.windowSizeY+'px',transform: `translateY(-${this.windowSizeY}px)`, zIndex:10});
             this.wikiStyle = Object.assign({},this.wikiStyle, {height: (this.windowSizeY-40)+'px',overflowY: 'scroll'});
         },
         async downWiki(){
             this.position = false;
             const wiki = this.$refs.wiki;
             wiki.scrollTop = 0
-            this.navStyle = Object.assign({},this.navStyle, {height: 100+'px',transform: 'translateY(-100px)'});
+            this.navStyle = Object.assign({},this.navStyle, {height: 100+'px',transform: 'translateY(-100px)', zIndex:0});
             this.wikiStyle = Object.assign({},this.wikiStyle, {height: 40+'px',overflowY: 'hidden'});
         },
         fade(){
@@ -93,7 +94,7 @@ export default {
             this.position = false;
             const wiki = this.$refs.wiki;
             wiki.scrollTop = 0
-            this.navStyle = Object.assign({},this.navStyle, {height: 0+'px',transform: 'translateY(0px)'});
+            this.navStyle = Object.assign({},this.navStyle, {height: 0+'px',transform: 'translateY(0px)', zIndex:0});
             this.wikiStyle = Object.assign({},this.wikiStyle, {height: 0+'px',overflowY: 'hidden'});
         }
     }
@@ -105,7 +106,6 @@ export default {
         position:absolute;
         right:0;
         left:0;
-        z-index: 10;
         color: black;
         background-color: #ffffff;
     }
