@@ -1,12 +1,17 @@
 <template>
     <div class="map-container">
-        <div id="map" ref="map"></div>
+        <map-top class="map-top"></map-top>
+        <line-chart class="line-chart" v-if="chartSwitch"></line-chart>
+        <div id="map" ref="map" :class="{'show-line' : chartSwitch}"></div>
+        <div class="dot" v-if="dotSwitch"></div>
     </div>
 </template>
 
 <script lang="ts">
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
+import LineChart from '../organisms/LineChart.vue';
+import MapTop from '../organisms/MapTop.vue';
 // import practice from '~/assets/json/line/practice.json';
 const tokyoBounds = {north: 35.860687,south: 35.530351, west: 138.9403931, east: 139.9368243}
 interface Bounds {north: number, south: number, west: number, east: number};
@@ -18,6 +23,10 @@ interface Line {id: number, company_name: string, name: string, polygon: LinePol
 interface DataType {markerIcons: {jr: string,metro: string,toei: string, keio: string,tokyu: string},addMarker: { lat: number; lng: number; }[],map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},mapOptions: {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean,}, zoom: number,mapTypeControl: boolean,fullscreenControl: boolean,streetViewControl: boolean,zoomControl: boolean},markers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][],exponentialBackoff:number,timer: null|NodeJS.Timer}
 interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
 export default Vue.extend({
+    components: {
+        LineChart,
+        MapTop
+    },
     data(): DataType {
         return {
             map: null,
@@ -41,6 +50,8 @@ export default Vue.extend({
             'bounds',
             'markerSwitch',
             'lineSwitch',
+            'chartSwitch',
+            'dotSwitch',
             'selectedMarker',
             'stationInfo',
             'removeOverlap',
@@ -64,30 +75,30 @@ export default Vue.extend({
                 this.makeCityPolygon(v)
             },
         },
-        markerSwitch:{
-            handler(){
-                this.$store.dispatch('home/resetMarkers',this.markers)
-                .then(()=>{
-                    this.markers = [];
-                    if (this.markerSwitch) {
-                        this.makeLineMarker(this.lines);
-                    }
-                })
-            },
-            immediate: true,
-        },
-        lineSwitch:{
-            handler(){
-                this.$store.dispatch('home/resetPolyline',this.polylines)
-                .then(()=>{
-                    this.polylines = [];
-                    if (this.lineSwitch) {
-                        this.makeLineArray(this.lines);
-                    }
-                })
-            },
-            immediate: true
-        },
+        // markerSwitch:{
+        //     handler(){
+        //         this.$store.dispatch('home/resetMarkers',this.markers)
+        //         .then(()=>{
+        //             this.markers = [];
+        //             if (this.markerSwitch) {
+        //                 this.makeLineMarker(this.lines);
+        //             }
+        //         })
+        //     },
+        //     immediate: true,
+        // },
+        // lineSwitch:{
+        //     handler(){
+        //         this.$store.dispatch('home/resetPolyline',this.polylines)
+        //         .then(()=>{
+        //             this.polylines = [];
+        //             if (this.lineSwitch) {
+        //                 this.makeLineArray(this.lines);
+        //             }
+        //         })
+        //     },
+        //     immediate: true
+        // },
         selectedMarker(v){
             this.focusMarker(v);
         },
@@ -101,7 +112,13 @@ export default Vue.extend({
                 if(timer!==null){
                     clearTimeout(timer)
                 }
-                timer = setTimeout(function(){that.$store.dispatch('home/getCurrentBounds', bounds);},1000);
+                timer = setTimeout(function(){
+                    const getMapCenter = (that as any).map.getCenter();
+                    const mapCenter = {lat: getMapCenter.lat(), lng: getMapCenter.lng()};
+                    const zoom = (that as any).map.getZoom();
+                    that.$store.dispatch('home/getCity', {mapCenter:mapCenter, zoom:zoom});
+                    that.$store.dispatch('home/getCurrentBounds', bounds);
+                },750);
             });
             this.addClickMapListeners()
         })
@@ -281,11 +298,41 @@ export default Vue.extend({
     width:100%;
     height:100vh;
     max-height:calc(100vh - 64px);
+    .line-chart{
+        position: absolute;
+        top:40px;
+        bottom: 0;
+        right: 0;
+        left: 0;
+        margin: auto;
+    }
+    .map-top{
+        position:absolute;
+        z-index: 5;
+    }
+    .dot {
+        position:absolute;
+        top:0;
+        bottom:0;
+        left:0;
+        right:0;
+        margin:auto;
+        width:9px;
+        height:9px;
+        border-radius:50%;
+        background-color:red;
+        opacity:0.4;
+        transition: all 2s;
+    }
     #map {
         width: 100%;
         height: 100%;
         position: relative;
         // padding-top: 56.25%;
+        transition: all .5s
+    }
+    .show-line{
+        opacity: 0.4;
     }
     #overview-wrapper{
         position:absolute;
@@ -308,6 +355,14 @@ export default Vue.extend({
             content:"";
             display: block;
             padding-top: 56.25%;
+        }
+    }
+    @media screen and (max-width: 500px) {
+        .map-top {
+            top: 50px;
+        }
+        .line-chart{
+            top:100px;
         }
     }
 }

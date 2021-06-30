@@ -14,14 +14,14 @@ export default {
     base: {
       href: 'router.base'
     },
-    titleTemplate: '%s - frontend',
-    title: 'frontend',
+    titleTemplate: '%s - map',
+    title: 'map',
     meta: [
       { charset: 'utf-8' },
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: '' },
     ],
-    link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
+    link: [{ rel: 'icon', type: 'image/x-icon', href: '/logo.png' }],
     script: [
       { src: `https://maps.googleapis.com/maps/api/js?key=${process.env.API_KEY}&libraries=geometry&v=quarterly`, defer: true, body: true },
       { src: 'https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js', defer: true, body: true },
@@ -62,28 +62,23 @@ export default {
   // axios: {
   //   baseURL: 'https://map-ai7ganlifq-an.a.run.app',
   // },
-  //cloudrun本番
-  axios: {
-    baseURL: '/',
-  },
+  // cloudrun本番
+  // axios: {
+  //   baseURL: '/',
+  // },
 
-  // proxy: {
-  //   '/api': "https://map-ai7ganlifq-an.a.run.app",
-  //     pathRewrite: {
-  //       '^/api': ''
-  //     }
-  // },
-  // proxy: {
-  //   target:"https://camp-map-3ms63omedq-an.a.run.app/"
-  // },
-  // proxy: {
-  //   '/api': {
-  //     target: "http://localhost:8000/",
-  //     pathRewrite: {
-  //       '^/api': ''
-  //     }
-  //   },
-  // },
+  //ローカル
+  axios: {
+    baseURL: 'http://localhost:3000/api/',
+  },
+  proxy: {
+    '/api': {
+      target: "http://localhost:8000/",
+      pathRewrite: {
+        '^/api': ''
+      }
+    },
+  },
 
   // PWA module configuration: https://go.nuxtjs.dev/pwa
   pwa: {
@@ -115,5 +110,4 @@ export default {
   build: {
     publicPath: '/static/_nuxt/'
   },
-  buildDir: 'nuxt-dist'
 }

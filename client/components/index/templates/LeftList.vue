@@ -30,6 +30,7 @@ import {mapGetters} from 'vuex'
 import StationLines from '~/components/index/organisms/StationLines.vue';
 import StationWiki from '~/components/index/organisms/StationWiki.vue';
 import SearchItems from '~/components/index/organisms/SearchItems.vue';
+import Event from '~/components/index/organisms/Event.vue';
 import SearchBar from '~/components/global/SearchBar.vue';
 
 export default Vue.extend({
@@ -37,7 +38,8 @@ export default Vue.extend({
         StationLines,
         StationWiki,
         SearchBar,
-        SearchItems
+        SearchItems,
+        Event
     },
     data(): DataType {
         return {
@@ -60,7 +62,7 @@ export default Vue.extend({
             'showNumberOfMarkers'
         ]),
         component(){
-            const componentTypes = ['station-lines', 'station-wiki', 'station-lines'];
+            const componentTypes = ['station-lines', 'station-wiki', 'event'];
             return componentTypes[(this as any).changeList];
         },
         filteredSearchStations(){
