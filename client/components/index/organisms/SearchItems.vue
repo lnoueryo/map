@@ -25,8 +25,9 @@
 
 <script lang="ts">
 import Vue from 'vue';
-import {mapGetters} from 'vuex'
-import SearchBar from '~/components/global/SearchBar.vue';
+import {mapGetters} from 'vuex';
+const SearchBar = () => import('../../global/SearchBar.vue');
+// import SearchBar from '~/components/global/SearchBar.vue';
 interface DataType {countMarkers: number};
 interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,lat:number,lng:number,name:string};
 export default Vue.extend({

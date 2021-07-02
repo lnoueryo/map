@@ -24,7 +24,8 @@ interface Line {id: number, company_id: number, name: string, polygon: LinePolyl
 interface Station {company_id: number,id:number,line_id:number,order:number,pref_name:string,lat:number,lng:number,name:string}
 
 import Vue from 'vue';
-import SearchBar from '../../global/SearchBar.vue';
+const SearchBar = () => import('../../global/SearchBar.vue');
+// import SearchBar from '../../global/SearchBar.vue';
 import { mapGetters } from 'vuex';
 export default Vue.extend({
     components:{
@@ -87,7 +88,7 @@ export default Vue.extend({
             (this.$refs.searchBar as any).$refs.input.blur();
             this.$store.dispatch('home/selectMarker',searchStation)
         },
-        changeDate(date){
+        changeDate(date: string){
             const changeDateFormat = new Date(date);
             const month = changeDateFormat.getMonth() + 1;
             const day = changeDateFormat.getDate();

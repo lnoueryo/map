@@ -32,7 +32,7 @@ interface Station {company_id: number,id:number,line_id:number,order:number,pref
 interface Company {id: number, name: string, address: string, founded: string, lines: Line[]};
 
 import Vue from 'vue';
-import SearchBar from '~/components/global/SearchBar.vue';
+const SearchBar = () => import('../../global/SearchBar.vue');
 import { mapGetters } from 'vuex';
 export default Vue.extend({
     components:{

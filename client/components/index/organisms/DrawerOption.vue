@@ -15,8 +15,9 @@
 </template>
 
 <script>
-import Vue from 'vue'
-import ToggleSwitch from '../../global/ToggleSwitch.vue';
+import Vue from 'vue';
+const ToggleSwitch = () => import('../../global/ToggleSwitch.vue');
+// import ToggleSwitch from '../../global/ToggleSwitch.vue';
 export default Vue.extend({
     components:{
         ToggleSwitch,

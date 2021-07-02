@@ -24,11 +24,16 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import RightDrawer from '../components/index/templates/RightDrawer.vue'
-import LeftList from '../components/index/templates/LeftList.vue'
-import MapView from '../components/index/templates/Map.vue'
-import TopBar from '../components/global/TopBar.vue'
-import BottomBar from '../components/global/BottomBar.vue'
+const RightDrawer = () => import('../components/index/templates/RightDrawer.vue');
+const LeftList = () => import('../components/index/templates/LeftList.vue');
+const MapView = () => import('../components/index/templates/Map.vue');
+const TopBar = () => import('../components/global/TopBar.vue');
+const BottomBar = () => import('../components/global/BottomBar.vue');
+// import RightDrawer from '../components/index/templates/RightDrawer.vue'
+// import LeftList from '../components/index/templates/LeftList.vue'
+// import MapView from '../components/index/templates/Map.vue'
+// import TopBar from '../components/global/TopBar.vue'
+// import BottomBar from '../components/global/BottomBar.vue'
 interface DataType {open: boolean, lefList: boolean}
 export default Vue.extend({
     components: {

@@ -16,6 +16,7 @@ interface State {
         dotSwitch: boolean,
         selectedMarker: Station,
         searchWord: string,
+        changeList: number,
         stationInfo: null|string,
         cities: City[],
         searching: boolean,
@@ -48,6 +49,7 @@ const state = {
     dotSwitch: true,
     selectedMarker: {},
     searchWord: null,
+    changeList: 0,
     stationInfo: null,
     searching: false,
     addressElement: null,
@@ -99,7 +101,6 @@ const getters = {
         filteredLines = getters.lineFilter(filteredLines);
         filteredLines = getters.cityFilter(filteredLines);
         return filteredLines;
-        // return getters.cityFilter(lines);
     },
     /*
     選択された会社のフィルター
@@ -159,6 +160,7 @@ const getters = {
     selectedLineItems: (state: State): Line[] => {return state.selectedLineItems;},
     selectedCityItems: (state: State): City[] => {return state.selectedCityItems;},
     searchWord: (state: State): string => {return state.searchWord;},
+    changeList: (state: State): number => {return state.changeList;},
     bounds: (state: State): Bounds => {return state.currentBounds;}, //現在のマップのサイズを緯度経度のオブジェクトで返す
     markerSwitch: (state: State): boolean =>{return state.markerSwitch;}, //マーカー表示のboolean
     lineSwitch: (state: State) => {return state.lineSwitch;}, //路線図表示のboolean
@@ -251,6 +253,9 @@ const mutations = {
     searchWord(state: State, payload: string){
         state.searchWord = payload;
     },
+    changeList(state: State, payload: number){
+        state.changeList = payload;
+    },
     stationInfo(state: State, payload: string){
         state.stationInfo = payload;
     },
@@ -337,6 +342,9 @@ const actions = {
     },
     searchWord(context: any, payload: string){
         context.commit('searchWord',payload)
+    },
+    changeList(context: any, payload: number){
+        context.commit('changeList',payload)
     },
     async getStationInfo(context: any, payload: string){
         context.commit('searching', true)

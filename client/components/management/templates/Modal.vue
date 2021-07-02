@@ -57,11 +57,15 @@
 
 <script lang="ts">
 
-import Vue from 'vue'
-import Company from '~/components/management/organisms/Company.vue'
-import Line from '~/components/management/organisms/Line.vue'
-import Station from '~/components/management/organisms/Station.vue'
-import TopBar from '~/components/management/templates/TopBar.vue'
+import Vue from 'vue';
+const TopBar = () => import('../templates/TopBar.vue');
+const Company = () => import('../organisms/Company.vue');
+const Line = () => import('../organisms/Line.vue');
+const Station = () => import('../organisms/Station.vue');
+// import Company from '~/components/management/organisms/Company.vue'
+// import Line from '~/components/management/organisms/Line.vue'
+// import Station from '~/components/management/organisms/Station.vue'
+// import TopBar from '~/components/management/templates/TopBar.vue'
 interface DataType {
     page: number,
     file: null,

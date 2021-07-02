@@ -42,8 +42,9 @@
 
 <script lang="ts">
 
-import Vue from 'vue'
-import TopBar from '~/components/management/templates/TopBar.vue'
+import Vue from 'vue';
+const TopBar = () => import('../templates/TopBar.vue');
+// import TopBar from '~/components/management/templates/TopBar.vue'
 interface DataType {
     filter: {},
     page: number,

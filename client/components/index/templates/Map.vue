@@ -10,8 +10,10 @@
 <script lang="ts">
 import Vue from 'vue';
 import { mapGetters } from 'vuex';
-import LineChart from '../organisms/LineChart.vue';
-import MapTop from '../organisms/MapTop.vue';
+const LineChart = () => import('../organisms/LineChart.vue');
+const MapTop = () => import('../organisms/MapTop.vue');
+// import LineChart from '../organisms/LineChart.vue';
+// import MapTop from '../organisms/MapTop.vue';
 // import practice from '~/assets/json/line/practice.json';
 const tokyoBounds = {north: 35.860687,south: 35.530351, west: 138.9403931, east: 139.9368243}
 interface Bounds {north: number, south: number, west: number, east: number};
@@ -46,6 +48,8 @@ export default Vue.extend({
         ...mapGetters('home', [
             'companies',
             'lines',
+            'events',
+            'changeList',
             'filteredLines',
             'bounds',
             'markerSwitch',
@@ -75,30 +79,56 @@ export default Vue.extend({
                 this.makeCityPolygon(v)
             },
         },
-        // markerSwitch:{
-        //     handler(){
-        //         this.$store.dispatch('home/resetMarkers',this.markers)
-        //         .then(()=>{
-        //             this.markers = [];
-        //             if (this.markerSwitch) {
-        //                 this.makeLineMarker(this.lines);
-        //             }
-        //         })
-        //     },
-        //     immediate: true,
-        // },
-        // lineSwitch:{
-        //     handler(){
-        //         this.$store.dispatch('home/resetPolyline',this.polylines)
-        //         .then(()=>{
-        //             this.polylines = [];
-        //             if (this.lineSwitch) {
-        //                 this.makeLineArray(this.lines);
-        //             }
-        //         })
-        //     },
-        //     immediate: true
-        // },
+        markerSwitch:{
+            handler(value){
+                if (value) {
+                    const that = this;
+                    let timer = setInterval(function(){
+                        if (google) {
+                            clearInterval(timer);
+                            that.makeLineMarker(that.lines);
+                        }
+                    }, 100);
+                } else {
+                    this.$store.dispatch('home/resetMarkers', this.markers);
+                }
+            },
+            immediate: true,
+        },
+        lineSwitch:{
+            handler(value){
+                if (value) {
+                    const that = this;
+                    let timer = setInterval(function(){
+                        if (google) {
+                            clearInterval(timer);
+                            that.makeLineArray(that.lines);
+                        }
+                    }, 100);
+                } else {
+                    this.$store.dispatch('home/resetPolyline',this.polylines);
+                }
+            },
+            immediate: true
+        },
+        changeList:{
+            handler(value){
+                if (this.markerSwitch) {
+                    if (value == 2) {
+                        const that = this;
+                        let timer = setInterval(function(){
+                            if (that.events.length !== 0) {
+                                clearInterval(timer)
+                                that.makeEventMarker(that.events);
+                            }
+                        }, 100)
+                    } else {
+                        this.makeLineMarker(this.lines);
+                    }
+                }
+            },
+            immediate: true,
+        },
         selectedMarker(v){
             this.focusMarker(v);
         },
@@ -234,7 +264,26 @@ export default Vue.extend({
             setTimeout(function(){
                 that.$store.dispatch('home/resetMarkers',that.markers)
                 .then(()=>{that.markers = markers;})
-            },100)
+            },1000)
+        },
+        async makeEventMarker(events: any){
+            const eventMarkerArray: google.maps.Marker[] = [];
+            await events.forEach((event: Station)=>{
+                let marker = this.makeMarker(event);
+                marker.addListener("click", () => {
+                    this.$store.dispatch('home/selectMarker',event);
+                    // this.$store.dispatch('home/getStationInfo',{name: station.name}).then(()=>{
+                    //     this.$store.commit('home/searching', false)
+                    // });
+                });
+                eventMarkerArray.push(marker);
+            });
+            const that = this;
+            setTimeout(function(){
+                console.log('AAA')
+                that.$store.dispatch('home/resetMarkers',that.markers)
+                .then(()=>{that.markers = [eventMarkerArray];})
+            },2000)
         },
         makeMarker(station: Station){
             let img = '';

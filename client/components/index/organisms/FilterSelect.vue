@@ -19,7 +19,8 @@
 
 <script lang="ts">
 import Vue from 'vue'
-import ItemSelect from '../../global/ItemSelect.vue';
+// import ItemSelect from '../../global/ItemSelect.vue';
+const ItemSelect = () => import('../../global/ItemSelect.vue');
 interface Company {id: number, name: string, address: string, founded: string, lines: Line[]};
 interface Line {id: number, company_id: number, name: string, polygon: Polygon, color: string,stations: Station[]};
 interface Station {name: string,id:number,line_id:number,order:number,prefecture:string,lat:number,lng:number,company_id:number};

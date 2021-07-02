@@ -23,15 +23,20 @@
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
 interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,lat:number,lng:number,name:string}
-interface DataType {countMarkers: number,changeList:number,width:number,buttons: string[]};
+interface DataType {countMarkers: number,width:number,buttons: string[]};
 interface DomEvent extends Event {clientX: number,clientY: number}
 import Vue from 'vue';
-import {mapGetters} from 'vuex'
-import StationLines from '~/components/index/organisms/StationLines.vue';
-import StationWiki from '~/components/index/organisms/StationWiki.vue';
-import SearchItems from '~/components/index/organisms/SearchItems.vue';
-import Event from '~/components/index/organisms/Event.vue';
-import SearchBar from '~/components/global/SearchBar.vue';
+import {mapGetters} from 'vuex';
+const StationLines = () => import('../organisms/StationLines.vue');
+const StationWiki = () => import('../organisms/StationWiki.vue');
+const SearchItems = () => import('../organisms/SearchItems.vue');
+const Event = () => import('../organisms/Event.vue');
+const SearchBar = () => import('../../global/SearchBar.vue');
+// import StationLines from '~/components/index/organisms/StationLines.vue';
+// import StationWiki from '~/components/index/organisms/StationWiki.vue';
+// import SearchItems from '~/components/index/organisms/SearchItems.vue';
+// import Event from '~/components/index/organisms/Event.vue';
+// import SearchBar from '~/components/global/SearchBar.vue';
 
 export default Vue.extend({
     components:{
@@ -43,7 +48,6 @@ export default Vue.extend({
     },
     data(): DataType {
         return {
-            changeList: 0,
             countMarkers: 0,
             width: 315,
             buttons: ['train', 'information-outline', 'format-align-right', 'format-align-justify']
@@ -77,7 +81,15 @@ export default Vue.extend({
             set(newValue){
                 this.$store.dispatch('home/searchWord',newValue);
             }
-        }
+        },
+        changeList:{
+            get(){
+                return this.$store.getters['home/changeList'];
+            },
+            set(newValue){
+                this.$store.dispatch('home/changeList', newValue);
+            }
+        },
     },
     watch:{
         showNumberOfMarkers(newValue, OldValue){ //vuexの変化を検知
