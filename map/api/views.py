@@ -11,20 +11,22 @@ from bs4.element import Comment
 from rest_framework.views import APIView
 
 api_key = 'dj00aiZpPUhzbEhTY1dXWGZMaiZzPWNvbnN1bWVyc2VjcmV0Jng9ODk-'
-api_key = 'dj00aiZpPUhzbEhTY1dXWGZMaiZzPWNvbnN1bWVyc2VjcmV0Jng9ODk-'
 
 class WikiAPI(APIView):
 
     def get(self, request):
-        title = (request.GET.dict())['name'] + '駅'
+        title = (request.GET.dict())['name']
+        print(title)
         url = f'https://ja.wikipedia.org/w/api.php?format=json&action=query&prop=revisions&titles={title}&rvprop=content&rvparse'
         try:
             with requests.get(url) as response:
                 data = response.json()
+                # print(data)
                 data = data['query']['pages']
                 key = None
+                print(data)
                 for d in data:
-                    key=d
+                    key = d
                 data = data[key]['revisions'][0]['*']
                 data = self.disambiguation(data, request)
                 data = self.parse(data)
@@ -32,22 +34,6 @@ class WikiAPI(APIView):
         except urllib.error.URLError as e:
             error = {'status': 404}
             return HttpResponse(json.dumps(error, ensure_ascii=False))
-
-    def post(self, request):
-        title = request.data['name'] + '駅'
-        url = f'https://ja.wikipedia.org/w/api.php?format=json&action=query&prop=revisions&titles={title}&rvprop=content&rvparse'
-        try:
-            with requests.get(url) as response:
-                data = response.json()
-                data = data['query']['pages']
-                key = None
-                for d in data:
-                    key=d
-                data = data[key]['revisions'][0]['*']
-                data = self.parse(data)
-                return HttpResponse(json.dumps(data, ensure_ascii=False))
-        except urllib.error.URLError as e:
-            print(e.reason)
 
     def disambiguation(self, data, request):
         soup = BeautifulSoup(data, 'html.parser')
@@ -94,7 +80,7 @@ class WikiAPI(APIView):
         return str(soup)
 
     def search_again(self, request):
-        title = (request.GET.dict())['name'] + '駅' + '_(東京都)'
+        title = (request.GET.dict())['name'] + '_(東京都)'
         url = f'https://ja.wikipedia.org/w/api.php?format=json&action=query&prop=revisions&titles={title}&rvprop=content&rvparse'
         try:
             with requests.get(url) as response:
@@ -129,37 +115,44 @@ class ReverseGeocodeAPI(APIView):
 class EventAPI(APIView):
 
     def get(self, request):
-        urls = [
-            'https://www.walkerplus.com/event_list/today/ar0313/',
-            # 'https://www.walkerplus.com/event_list/today/ar0313/2.html',
-            # 'https://www.walkerplus.com/event_list/today/ar0313/3.html'
-        ]
+        url = 'https://www.walkerplus.com/event_list/today/ar0313/'
 
         user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
         header = {
             'User-Agent': user_agent
         }
 
-        for url in urls:
-            with requests.get(url, headers=header) as response:
-                soup = BeautifulSoup(response.content, "html.parser")
-                ul = soup.find('ul', {"class":"m-mainlist__list"})
-                lists = ul.find_all('li', {"class":"m-mainlist__item"})
-                for list in lists:
-                    new_lists = [s for s in list.contents if s != '\n']
-                    for new_list in new_lists:
-                        if type(new_list) is Comment:
-                            list.extract()
-                imgs = ul.find_all('img')
-                for img in imgs:
-                    img.extract()
-                a_tags = soup.find_all('a', href=re.compile('^/wiki/'))
-                if a_tags:
-                    for a_tag in a_tags:
-                        a_tag['href'] = 'https://www.walkerplus.com/' + a_tag['href']
-                        a_tag['target'] = '_blank'
-                print(ul)
-                time.sleep(1)
+        with requests.get(url, headers=header) as response:
+            soup = BeautifulSoup(response.content, "html.parser")
+            ul = soup.find('ul', {"class":"m-mainlist__list"})
+            lists = ul.find_all('li', {"class":"m-mainlist__item"})
+            for list in lists:
+                new_lists = [s for s in list.contents if s != '\n']
+                for new_list in new_lists:
+                    if type(new_list) is Comment:
+                        list.extract()
+            imgs = ul.find_all('img')
+            for img in imgs:
+                img.extract()
+            a_tags = soup.find_all('a')
+            if a_tags:
+                for a_tag in a_tags:
+                    a_tag['href'] = 'https://www.walkerplus.com/' + a_tag['href']
+                    a_tag['target'] = '_blank'
+
+                # query = 'サンシャイン水族館'
+                # encoded_query = urllib.parse.quote(query)
+                # url = f'https://map.yahooapis.jp/search/local/V1/localSearch?output=json&appid=dj00aiZpPUhzbEhTY1dXWGZMaiZzPWNvbnN1bWVyc2VjcmV0Jng9ODk-&query={encoded_query}'
+
+                # user_agent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36'
+                # header = {
+                #     'User-Agent': user_agent
+                # }
+
+                # with requests.get(url) as response:
+                #     data = response.json()
+                #     print(data['Feature'])
+                return HttpResponse(ul)
 
     # def get(self, request):
     #     today = date.today()

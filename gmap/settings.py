@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # SECURITY WARNING: keep the secret key used in production secret!
 env = environ.Env()
 env.read_env(os.path.join(BASE_DIR,'.env'))
-SECRET_KEY = env('SECRET_KEY')
+SECRET_KEY = env('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -148,3 +148,21 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'client/dist/static'),
 )
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+
+# API_KEY
+YAHOO = {'API_KEY': env('YAHOO_API_KEY')}
+
+TWITTER = {
+    'API_KEY': env('TWITTER_API_KEY'),
+    'API_SECRET_KEY': env('TWITTER_API_SECRET_KEY'),
+    'ACCESS_TOKEN': env('TWITTER_ACCESS_TOKEN'),
+    'ACCESS_TOKEN_SECRET': env('TWITTER_ACCESS_TOKEN_SECRET'),
+}
+
+GOOGLE = {
+    'GOOGLE_MAPS': {
+        'API_KEY': env('GOOGLE_MAPS_API_KEY')
+    }
+}
+
