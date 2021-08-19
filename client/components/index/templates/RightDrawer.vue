@@ -17,9 +17,6 @@ import Vue from 'vue'
 const CircleButton = () => import('../../global/CircleButton.vue');
 const FilterSelect = () => import('../organisms/FilterSelect.vue');
 const DrawerOption = () => import('../organisms/DrawerOption.vue');
-// import CircleButton from '../../global/CircleButton.vue';
-// import FilterSelect from '../organisms/FilterSelect.vue'
-// import DrawerOption from '../organisms/DrawerOption.vue'
 interface DataType {drawerClass: {drawer: boolean,open: boolean}}
 export default Vue.extend({
     components:{

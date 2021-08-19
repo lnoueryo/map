@@ -1,10 +1,10 @@
 <template>
     <div>
         <transition name="fade">
-        <div class="middle-list" v-if="markerSwitch">
+            <div class="middle-list" v-if="markerSwitch">
                 <div v-for="(company, i) in companies" :key="i" style="position:relative">
                     <transition name="list">
-                        <div :style="selectCompany.length!==0?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}" v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
+                        <div v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
                     </transition>
                     <div v-for="(line, j) in filteredLines(company.lines)" :key="j" style="color:black">
                         <transition name="list">
@@ -13,13 +13,14 @@
                             </div>
                         </transition>
                         <transition-group name="list" tag="div">
-                            <div style="width:100%" v-for="(station,k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)" :style="selectedMarker.name==station.name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}">
-                                <div style="padding:10px;background-color:white;width:100%">{{station.name}}</div>
+                            <div class="station-list" style="width:100%" v-for="(station, k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)">
+                            <!-- <div style="width:100%" v-for="(station,k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)" :style="selectedMarker.name==station.name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}"> -->
+                                <div style="">{{station.name}}</div>
                             </div>
                         </transition-group>
                     </div>
                 </div>
-        </div>
+            </div>
         </transition>
     </div>
 </template>
@@ -92,7 +93,7 @@ export default Vue.extend({
             this.$store.dispatch('home/selectMarker',searchStation)
         },
         onClickList(station: Station){
-            this.$store.dispatch('home/getStationInfo',{name: station.name})
+            this.$store.dispatch('home/getStationInfo',{name: station.name + '駅'})
             this.$store.dispatch('home/selectMarker', station);
         }
     }
@@ -120,14 +121,33 @@ export default Vue.extend({
             width:100%;
             display: block;
             padding:10px;
+            transition: all .5s;
+            cursor: pointer;
         }
-        .line-name{
+        .company-name:hover {
+            opacity: .7;
+            transition: all .5s;
+        }
+        .company-name:active {
+            opacity: .9;
+            transition: all .5s;
+        }
+        .line-name {
             text-align:center;
             border-radius:5px;
             color:white;
             width:100%;
             display: block;
             padding:10px;
+            transition: all .5s;
+            cursor: pointer;
+        }
+        .line-name:hover {
+            opacity: .7;
+            transition: all .5s
+        }
+        .line-name:active {
+            opacity: .9;
         }
         .list-move{
             transition: transform 1s;
@@ -147,5 +167,20 @@ export default Vue.extend({
             opacity: 0;
             transform: translateX(256px);
         }
+    }
+    .station-list {
+        padding:10px;
+        background-color:white;
+        width:100%;
+        transition: all .5s;
+        cursor: pointer;
+    }
+    .station-list:hover {
+        opacity: 0.7;
+        transition: all .5s;
+    }
+    .station-list:active {
+        opacity: 0.9;
+        transition: all .5s;
     }
 </style>

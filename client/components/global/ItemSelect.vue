@@ -19,7 +19,7 @@
                 </transition>
             </div>
             <div class="view" @click.stop="">
-                <form :class="menuClass" :style="{maxHeight: maxHeight}">
+                <form :class="menuClass" :style="{ maxHeight: maxHeight }">
                     <label class="item" v-ripple="ripple" v-for="(item, i) in items" :key="i" :for="item.name"><input type="checkbox" :value="item" v-model="selectedItems" :id="item.name" :disabled="wait"><label :for="item.name">{{item.name}}</label></label>
                     <label class="item" v-ripple="ripple" @click="menuActive">決定</label>
                     <label class="item" v-ripple="ripple" for="reset"><input type="reset" id="reset" value=""><label for="reset" @click="reset">リセット</label></label>
@@ -86,12 +86,13 @@ export default Vue.extend({
     },
     methods:{
         openMenu(){
+            const that = this;
             if (this.menuClass.active) {
-                this.$root.$el.removeEventListener('click', this.menuActive);
+                this.$root.$el.removeEventListener('click', that.menuActive);
             } else {
                 this.menuClass.active = true;
                 this.iconClass.rotate = true;
-                this.$root.$el.addEventListener('click', this.menuActive,{once:true});
+                this.$root.$el.addEventListener('click', that.menuActive,{once:true});
             }
         },
         menuActive(){

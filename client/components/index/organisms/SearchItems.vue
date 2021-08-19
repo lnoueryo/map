@@ -2,7 +2,7 @@
     <div>
         <div class="d-flex">
             <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord" @select="select(filteredSearchStations[0])">
-                <div class="menu" v-if="searchStations.length!==0" style="background-color:orange">
+                <div class="menu" v-if="searchStations.length !== 0" style="background-color: white">
                     <div @mouseup.stop.prevent="select(searchStation)" v-for="(searchStation, i) in filteredSearchStations" :key="i" class="list">
                         <span>{{searchStation.name}}</span>
                     </div>
@@ -73,8 +73,9 @@ export default Vue.extend({
             const input = searchBar.$refs.input as HTMLInputElement;
             input.blur();
             if(searchStation){
-                this.$store.dispatch('home/selectMarker',searchStation);
-                this.$store.dispatch('home/getStationInfo', {name: searchStation.name});
+                this.$store.dispatch('home/selectMarker', searchStation);
+                this.$store.dispatch('home/getStationInfo', {name: searchStation.name + '駅'});
+                this.$store.dispatch('home/getTwitterInfo', {name: searchStation.name + '駅'});
             } else {
                 alert('見つかりませんでした')
             }
@@ -101,9 +102,26 @@ export default Vue.extend({
 </script>
 
 <style lang="scss">
-    .list{
+    .list {
         background-color:orange;
         text-align:left;
         padding: 8px 15px;
+        cursor: pointer;
+        color: rgb(99, 61, 61);
+        transition: all .5s;
+        // border-color: black;
+        // outline: 0;
+        // box-shadow: inset 0 1px 1px rgba(0,0,0,.075), 0 0 8px rgba(102, 175, 233, .6);
+    }
+    .list:hover {
+        opacity: 0.7;
+        text-align:left;
+        padding: 8px 15px;
+        transition: all .5s;
+    }
+    .list:active {
+        color: rgb(0, 0, 0);
+        opacity: 0.8;
+        transition: all .5s;
     }
 </style>

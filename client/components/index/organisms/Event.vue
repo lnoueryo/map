@@ -2,7 +2,8 @@
     <div>
         <transition name="fade">
             <div class="middle-list" v-if="markerSwitch">
-                <transition-group name="list" tag="div">
+                <div v-html="events"></div>
+                <!-- <transition-group name="list" tag="div">
                     <div class="my-1" style="width:100%" v-for="(event,k) in boundsFilter(events)" :key="k" @click="onClickList(event)">
                         <div style="padding:10px;background-color:white;width:100%;color:black;border-radius: 5px;">
                             <div>{{changeDate(event.started_at)}}</div>
@@ -11,7 +12,7 @@
                             <div>{{event.place}}</div>
                         </div>
                     </div>
-                </transition-group>
+                </transition-group> -->
             </div>
         </transition>
     </div>
