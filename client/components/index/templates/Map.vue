@@ -111,24 +111,24 @@ export default Vue.extend({
             },
             immediate: true
         },
-        changeList:{
-            handler(value){
-                if (this.markerSwitch) {
-                    if (value == 2) {
-                        const that = this;
-                        let timer = setInterval(function(){
-                            if (that.events.length !== 0) {
-                                clearInterval(timer)
-                                that.makeEventMarker(that.events);
-                            }
-                        }, 100)
-                    } else {
-                        this.makeLineMarker(this.lines);
-                    }
-                }
-            },
-            immediate: true,
-        },
+        // changeList:{
+        //     handler(value){
+        //         if (this.markerSwitch) {
+        //             if (value == 2) {
+        //                 const that = this;
+        //                 let timer = setInterval(function(){
+        //                     if (that.events.length !== 0) {
+        //                         clearInterval(timer)
+        //                         that.makeEventMarker(that.events);
+        //                     }
+        //                 }, 100)
+        //             } else {
+        //                 this.makeLineMarker(this.lines);
+        //             }
+        //         }
+        //     },
+        //     immediate: true,
+        // },
         selectedMarker(v){
             this.focusMarker(v);
         },
@@ -252,7 +252,9 @@ export default Vue.extend({
                     let marker = this.makeMarker(station);
                     marker.addListener("click", () => {
                         this.$store.dispatch('home/selectMarker',station);
-                        this.$store.dispatch('home/getStationInfo',{name: station.name}).then(()=>{
+                        this.$store.dispatch('home/getTwitterInfo', {name: station.name + '駅'});
+                        this.$store.dispatch('home/getStationInfo', {name: station.name + '駅'})
+                        .then(() => {
                             this.$store.commit('home/searching', false)
                         });
                     });
@@ -272,9 +274,6 @@ export default Vue.extend({
                 let marker = this.makeMarker(event);
                 marker.addListener("click", () => {
                     this.$store.dispatch('home/selectMarker',event);
-                    // this.$store.dispatch('home/getStationInfo',{name: station.name}).then(()=>{
-                    //     this.$store.commit('home/searching', false)
-                    // });
                 });
                 eventMarkerArray.push(marker);
             });
@@ -357,7 +356,7 @@ export default Vue.extend({
     }
     .map-top{
         position:absolute;
-        z-index: 5;
+        z-index: 1;
     }
     .dot {
         position:absolute;

@@ -28,15 +28,13 @@ interface DomEvent extends Event {clientX: number,clientY: number}
 import Vue from 'vue';
 import {mapGetters} from 'vuex';
 const StationLines = () => import('../organisms/StationLines.vue');
+const CityWiki = () => import('../organisms/CityWiki.vue');
 const StationWiki = () => import('../organisms/StationWiki.vue');
 const SearchItems = () => import('../organisms/SearchItems.vue');
 const Event = () => import('../organisms/Event.vue');
+const Twitter = () => import('../organisms/Twitter.vue');
 const SearchBar = () => import('../../global/SearchBar.vue');
-// import StationLines from '~/components/index/organisms/StationLines.vue';
-// import StationWiki from '~/components/index/organisms/StationWiki.vue';
-// import SearchItems from '~/components/index/organisms/SearchItems.vue';
-// import Event from '~/components/index/organisms/Event.vue';
-// import SearchBar from '~/components/global/SearchBar.vue';
+
 
 export default Vue.extend({
     components:{
@@ -44,13 +42,15 @@ export default Vue.extend({
         StationWiki,
         SearchBar,
         SearchItems,
-        Event
+        Event,
+        CityWiki,
+        Twitter,
     },
     data(): DataType {
         return {
             countMarkers: 0,
             width: 315,
-            buttons: ['train', 'information-outline', 'format-align-right', 'format-align-justify']
+            buttons: ['train', 'information-outline', 'format-align-right', 'city', 'twitter']
         }
     },
     computed:{
@@ -63,10 +63,11 @@ export default Vue.extend({
             'boundsFilter',
             'searchStations',
             'stationInfo',
-            'showNumberOfMarkers'
+            'showNumberOfMarkers',
+            'cityWiki'
         ]),
         component(){
-            const componentTypes = ['station-lines', 'station-wiki', 'event'];
+            const componentTypes = ['station-lines', 'station-wiki', 'event', 'city-wiki', 'twitter'];
             return componentTypes[(this as any).changeList];
         },
         filteredSearchStations(){
@@ -113,7 +114,7 @@ export default Vue.extend({
             (this.$refs.searchBar as any).$refs.input.blur();
             if(searchStation){
                 this.$store.dispatch('home/selectMarker',searchStation);
-                this.$store.dispatch('home/getStationInfo', {name: searchStation.name});
+                this.$store.dispatch('home/getStationInfo', {name: searchStation.name + '駅'});
             } else {
                 alert('見つかりませんでした')
             }

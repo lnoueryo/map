@@ -58,8 +58,10 @@ export default Vue.extend({
             const input = searchBar.$refs.input as HTMLInputElement;
             input.blur();
             if(searchStation){
-                this.$store.dispatch('home/selectMarker',searchStation);
-                this.$store.dispatch('home/getStationInfo', {name: searchStation.name});
+                this.$store.dispatch('home/selectMarker', searchStation);
+                this.$store.dispatch('home/getStationInfo', {name: searchStation.name + '駅'}).then(() => {
+                    this.$store.commit('home/searching', false)
+                });
             } else {
                 alert('見つかりませんでした')
             }
@@ -69,7 +71,7 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
-    .top-bar{
+    .top-bar {
         position:fixed;
         bottom:0;
         right:0;
@@ -80,5 +82,12 @@ export default Vue.extend({
         // background-color: #272727;
         display: flex;
         align-items: center;
+        z-index:2
+    }
+    .list {
+        background-color: orange;
+        text-align: left;
+        padding: 8px 15px;
+        z-index:10
     }
 </style>

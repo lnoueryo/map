@@ -18,6 +18,8 @@ interface State {
         searchWord: string,
         changeList: number,
         stationInfo: null|string,
+        cityWikiInfo: null|string,
+        twitterInfo: Twitter[],
         cities: City[],
         searching: boolean,
         addressElement: null | AddressElement[],
@@ -33,7 +35,7 @@ interface Line {id: number, company_id: number, name: string, polygon: Polygon, 
 interface Station {name: string,id:number,line_id:number,order:number,prefecture:string,lat:number,lng:number,company_id:number,city_code: string}
 interface City {prefecture_id: string, city_code: number, city: string, polygons:Polygon[][]}
 interface AddressElement {Code: string, Name: string, Kana: string, Level: string}
-
+interface Twitter {id: number, 'name': string, 'profile_image_url': string, 'followers_count': number, 'friends_count': number, 'text': string, 'images': string[]}
 const state = {
     companies: companies,
     cities: cities,
@@ -51,6 +53,8 @@ const state = {
     searchWord: null,
     changeList: 0,
     stationInfo: null,
+    cityWikiInfo: null,
+    twitterInfo: [],
     searching: false,
     addressElement: null,
     lineChartIndex: 0,
@@ -194,6 +198,8 @@ const getters = {
         return Array.from(map.values());
     },
     stationInfo(state: State){return state.stationInfo}, //ウィキから引っ張ってきたhtmlを返す
+    cityWikiInfo(state: State){return state.cityWikiInfo}, //ウィキから引っ張ってきたhtmlを返す
+    twitterInfo(state: State){return state.twitterInfo}, //ツイッターから引っ張ってきたjsonを返す
     selectedCities(state: State){return state.selectedCityItems}, //ウィキから引っ張ってきたhtmlを返す
     searching(state: State){return state.searching}, //ウィキ検索中のloading処理
     removeAddressElement: (state: State)=>(elements:AddressElement[], zoom: number)=>{
@@ -258,6 +264,12 @@ const mutations = {
     },
     stationInfo(state: State, payload: string){
         state.stationInfo = payload;
+    },
+    cityWikiInfo(state: State, payload: string){
+        state.cityWikiInfo = payload;
+    },
+    twitterInfo(state: State, payload: Twitter[]){
+        state.twitterInfo = payload;
     },
     searching(state: State, payload: boolean){
         state.searching = payload;
@@ -348,12 +360,21 @@ const actions = {
     },
     async getStationInfo(context: any, payload: string){
         context.commit('searching', true)
-        let err, response = await $axios.$get('/api/station/wiki/',{params:payload});
-        if(err){
+        let err, response = await $axios.$get('/api/wiki/',{params: payload});
+        if(err) {
             console.log(err)
             context.commit('stationInfo', 'ページが見つかりませんでした')
         }
         context.commit('stationInfo', response)
+    },
+    async getTwitterInfo(context: any, payload: string) {
+        let err, response = await $axios.$get('/api/twitter/',{params: payload});
+        if(err) {
+            console.log(err)
+            context.commit('stationInfo', 'ページが見つかりませんでした')
+        }
+        console.log(response)
+        context.commit('twitterInfo', response)
     },
     uncheck(context: any, payload: string){
         context.commit('uncheck', payload)
@@ -364,6 +385,12 @@ const actions = {
         const city = context.getters.cities.find((city: City)=>{
             return (city.prefecture_id + city.city_code) == response.Property.AddressElement[1].Code;
         })
+        const index = context.state.selectedCityItems.findIndex((selectCity: City) => {
+            return (selectCity.prefecture_id + selectCity.city_code) == (city.prefecture_id + city.city_code);
+        });
+        if (index == -1) {
+            context.dispatch('getCityWikiInfo', {name: city.name})
+        }
         context.commit('selectCityItems', city);
     },
     async getCity(context: any, payload: {mapCenter: Coordinate, zoom: number}){
@@ -379,6 +406,15 @@ const actions = {
             context.commit('addressElement', AddressElement);
         }
     },
+    async getCityWikiInfo(context: any, payload: string){
+        // context.commit('searching', true)
+        let err, response = await $axios.$get('/api/wiki/', {params: payload});
+        if(err) {
+            console.log(err)
+            context.commit('stationInfo', 'ページが見つかりませんでした')
+        }
+        context.commit('cityWikiInfo', response)
+    },
     async lineChartIndex(context: any,payload: any){
         const cityIndex = context.getters.population.findIndex((city: City)=>{
             return city.city == payload.Property.AddressElement[1].Name;
@@ -389,8 +425,9 @@ const actions = {
     },
     async getEvents(context: any){
         const response = await $axios.$get('/api/event/');
-        context.commit('events', response.events);
-        console.log(response.events)
+        context.commit('events', response);
+        console.log(response)
+        // context.commit('events', response.events);
     }
     // isContain(context: any,e: google.maps.MapMouseEvent,polygons: google.maps.Polygon[]){
     //     const latLng = new google.maps.LatLng((e.latLng as google.maps.LatLng).lat(), (e.latLng as google.maps.LatLng).lng());
