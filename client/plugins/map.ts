@@ -1,4 +1,7 @@
-let map: google.maps.Map
+interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
+interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
+interface Polygon {"lat":number,"lng":number}
+
 export class MapConfig {
     private options: any
     private markerIcons = {
@@ -9,6 +12,7 @@ export class MapConfig {
         tokyu: '../assets/img/tokyu.png'
     }
     public map: any | google.maps.Map = null
+    public polygons: any | google.maps.Polygon[][] = null
     constructor(options: any) {
       this.options = options
     }
@@ -16,9 +20,54 @@ export class MapConfig {
     mapOptions(): any {
         return this.options
     }
-    makeMap(el: HTMLElement) {
+    async makeMap(el: HTMLElement) {
         this.map = new google.maps.Map(el, this.mapOptions())
-        return map
+        return this.map
+    }
+    makePolygon(coordinates: {lat: number,lng: number}[], i: number){
+        const polygon = new google.maps.Polygon({
+            paths: coordinates,
+            strokeColor: "red",
+            strokeOpacity: 0.5,
+            strokeWeight: 2,
+            fillColor: "#00bb93",
+            fillOpacity: 0.3,
+        });
+        polygon.setMap(this.map);
+        return polygon
+    }
+    makeMarker(station: Station, icon: string){
+        const marker = new google.maps.Marker({
+            map: this.map,
+            position: new google.maps.LatLng(station.lat, station.lng),
+            icon: icon,
+            // optimized: true,
+        });
+        return marker
+    }
+    makePolyline(path: {color: string, polygon: google.maps.LatLng[]}){
+        const polyline = new google.maps.Polyline({
+            map: this.map,
+            path:path.polygon,
+            strokeColor: path.color,
+            strokeOpacity: 0.9,
+            strokeWeight: 3
+        });
+        return polyline;
+    }
+    resetPolygon(polygons: google.maps.Polygon[][]){
+        polygons.forEach(cityPolygon => {
+            cityPolygon.forEach(polygon => {
+                polygon.setMap(null)
+            });
+        });
+    }
+    changeIcon(markers_obj: google.maps.Marker[][], icon: string) {
+        markers_obj.forEach((markers)=>{
+            markers.forEach((marker)=>{
+                marker.setIcon(icon);
+            })
+        })
     }
     currentBounds(map: google.maps.Map){
         const bounds = map.getBounds() as google.maps.LatLngBounds;
@@ -27,6 +76,11 @@ export class MapConfig {
         const east = bounds.getNorthEast().lng();
         const west = bounds.getSouthWest().lng();
         return {south: south, north: north,east: east, west: west};
+    }
+    focusMarker(station: Station, num: number){
+        this.map.setZoom(num);
+        const latLng = new google.maps.LatLng(station.lat, station.lng);
+        this.map.panTo(latLng);
     }
     resetPolyline(payload: google.maps.Polyline[]){
         payload.forEach(polyline => {

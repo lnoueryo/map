@@ -12,13 +12,15 @@ import Vue from 'vue';
 import { mapGetters } from 'vuex';
 const LineChart = () => import('../organisms/LineChart.vue');
 const MapTop = () => import('../organisms/MapTop.vue');
-
-interface Polygons {"code":string,"city":string,"polygons":Polygon[][]}
+ interface GMapWindow extends Window {
+   google: any;
+}
+declare const window: GMapWindow;
 interface Polygon {"lat":number,"lng":number}
 interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string,stations: Station[]}
-interface DataType {addMarker: { lat: number; lng: number; }[],map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},markers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][],exponentialBackoff:number,timer: null|NodeJS.Timer}
+interface DataType {addMarker: { lat: number; lng: number; }[], trainIcon: {small: string, big: string}, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},trainMarkers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][],timer: null|NodeJS.Timer}
 interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
 export default Vue.extend({
     components: {
@@ -27,33 +29,26 @@ export default Vue.extend({
     },
     data(): DataType {
         return {
-            map: null,
             overview: null,
+            trainIcon: {small: require('~/assets/img/train.png'), big: require('~/assets/img/station.png')},
             overviewConfig: {difference: 5,maxZoom: 13, minZoom: 3},
-            markers: [],
+            trainMarkers: [],
             polylines: [],
             addMarker: [],
             polygons: [],
-            exponentialBackoff: 1000,
             timer: null
         }
     },
     computed:{
         ...mapGetters('home', [
-            'companies',
             'lines',
             'events',
-            'changeList',
-            'filteredLines',
             'bounds',
             'markerSwitch',
             'lineSwitch',
             'chartSwitch',
             'dotSwitch',
             'selectedMarker',
-            'stationInfo',
-            'removeOverlap',
-            'cities',
             'selectedCityItems',
         ])
     },
@@ -78,13 +73,13 @@ export default Vue.extend({
                 if (value) {
                     const that = this;
                     let timer = setInterval(function(){
-                        if (google) {
+                        if (window.google) {
                             clearInterval(timer);
                             that.makeLineMarker(that.lines);
                         }
                     }, 100);
                 } else {
-                    this.$mapConfig.resetMarkers(this.markers)
+                    this.$mapConfig.resetMarkers(this.trainMarkers)
                 }
             },
             immediate: true,
@@ -94,7 +89,7 @@ export default Vue.extend({
                 if (value) {
                     const that = this;
                     let timer = setInterval(function(){
-                        if (google) {
+                        if (window.google) {
                             clearInterval(timer);
                             that.makeLineArray(that.lines);
                         }
@@ -105,194 +100,116 @@ export default Vue.extend({
             },
             immediate: true
         },
-        // changeList:{
-        //     handler(value){
-        //         if (this.markerSwitch) {
-        //             if (value == 2) {
-        //                 const that = this;
-        //                 let timer = setInterval(function(){
-        //                     if (that.events.length !== 0) {
-        //                         clearInterval(timer)
-        //                         that.makeEventMarker(that.events);
-        //                     }
-        //                 }, 100)
-        //             } else {
-        //                 this.makeLineMarker(this.lines);
-        //             }
-        //         }
-        //     },
-        //     immediate: true,
-        // },
         selectedMarker(v){
-            this.focusMarker(v);
+            const zoom = 16
+            this.$mapConfig.focusMarker(v, zoom);
         },
     },
-    mounted(){
-        console.log(this.$mapConfig.mapOptions())
-        this.setMap().then(()=>{
-            let timer: NodeJS.Timer|null;
-            this.$mapConfig.map.addListener("bounds_changed", () => {
-                const bounds = this.$mapConfig.currentBounds(this.$mapConfig.map)
-                const that = this;
-                if(timer!==null){
-                    clearTimeout(timer)
-                }
-                timer = setTimeout(function(){
-                    const getMapCenter = that.$mapConfig.map.getCenter();
-                    const mapCenter = {lat: getMapCenter.lat(), lng: getMapCenter.lng()};
-                    const zoom = that.$mapConfig.map.getZoom();
-                    that.$store.dispatch('home/getCity', {mapCenter:mapCenter, zoom:zoom});
-                    that.$store.dispatch('home/getCurrentBounds', bounds);
-                },750);
-            });
-            this.addClickMapListeners()
-        })
+    async mounted(){
+        await this.setMap()
+        let timer: NodeJS.Timer|null;
+        this.$mapConfig.map.addListener("bounds_changed", () => {
+            const bounds = this.$mapConfig.currentBounds(this.$mapConfig.map)
+            const getMapCenter = this.$mapConfig.map.getCenter();
+            const mapCenter = {lat: getMapCenter.lat(), lng: getMapCenter.lng()};
+            const zoom = this.$mapConfig.map.getZoom();
+            const that = this;
+            if(timer!==null){
+                clearTimeout(timer)
+            }
+            timer = setTimeout(function(){
+                that.$store.dispatch('home/getCity', {mapCenter: mapCenter, zoom: zoom});
+                that.$store.dispatch('home/getCurrentBounds', bounds);
+            },750);
+            console.log(zoom);
+            (zoom > 13) ? this.$mapConfig.changeIcon(this.trainMarkers, this.trainIcon.big) : this.$mapConfig.changeIcon(this.trainMarkers, this.trainIcon.small);
+        });
+        this.addClickMapListeners()
     },
     methods:{
-        async setMap(){
-            try {
-                const mapEl = this.$refs.map;
-                this.$mapConfig.makeMap(mapEl as HTMLElement)
-                this.exponentialBackoff = 1000;
-            } catch (error) {
-                const that = this;
-                this.exponentialBackoff*2
-                let timer = setTimeout(function(){that.setMap()},that.exponentialBackoff)
-                if(this.exponentialBackoff>=8000){
-                    clearInterval(timer);
-                    this.exponentialBackoff = 1000;
-                    alert('some kind of error happened');
-                }
-            }
+        async setMap() {
+            const mapEl = this.$refs.map;
+            this.$mapConfig.makeMap(mapEl as HTMLElement)
         },
-        makeCityPolygon(v: City[]){
-            const polygons = v.map((selectedCityItem: City, index: number)=>{
-                return selectedCityItem.polygons.map((polygon)=>{
-                    return this.makePolygon(polygon, index);
+        makeCityPolygon(v: City[]) {
+            const polygons = v.map((selectedCityItem: City, index: number) => {
+                return selectedCityItem.polygons.map((polygon_obj) => {
+                    const polygon = this.$mapConfig.makePolygon(polygon_obj, index);
+                    google.maps.event.addListener(polygon, 'click', function(e: google.maps.MapMouseEvent) {
+                        that.onClickMap(e);
+                    });
+                    return polygon
                 })
             })
             if (this.polygons.length !== 0) {
-                this.resetPoly(this.polygons);
+                this.$mapConfig.resetPolygon(this.polygons);
             }
             const that = this;
-            setTimeout(function(){
+            setTimeout(() => {
                 that.polygons = polygons;
             },100)
         },
-        onClickMap(e: google.maps.MapMouseEvent){
+        async onClickMap(e: google.maps.MapMouseEvent) {
             google.maps.event.clearListeners(this.$mapConfig.map, 'click');
-            this.$store.dispatch('home/searchCityCode',e).then(()=>{this.addClickMapListeners()});
+            await this.$store.dispatch('home/searchCityCode', e);
+            this.addClickMapListeners();
         },
-        makePolygon(coordinates: {lat: number,lng: number}[], i: number){
-            const polygon = new google.maps.Polygon({
-                paths: coordinates,
-                strokeColor: "red",
-                strokeOpacity: 0.5,
-                strokeWeight: 2,
-                fillColor: "#00bb93",
-                fillOpacity: 0.3,
-            });
-            const that = this;
-            google.maps.event.addListener(polygon, 'click', function(e: google.maps.MapMouseEvent) {
-                that.onClickMap(e);
-            });
-            polygon.setMap(this.$mapConfig.map);
-            return polygon
-        },
-        resetPoly(polygons: google.maps.Polygon[][]){
-            polygons.forEach(cityPolygon => {
-                cityPolygon.forEach(polygon => {
-                    polygon.setMap(null)
-                });
-            });
-        },
-        resetMapListeners(...arg: string[]){
+        resetMapListeners(...arg: string[]) {
             arg.forEach(event => {
                 google.maps.event.clearListeners(this.$mapConfig.map, event);
             });
         },
-        addClickMapListeners(){
-            this.$mapConfig.map.addListener('click', (e: google.maps.MapMouseEvent)=>{
+        addClickMapListeners() {
+            this.$mapConfig.map.addListener('click', (e: google.maps.MapMouseEvent) => {
                 this.clearTime()
                 const that = this;
-                this.timer = setTimeout(function(){
+                this.timer = setTimeout(() => {
                     that.onClickMap(e);
                 },360)
             })
         },
-        focusMarker(station: Station){
-            this.$mapConfig.map.setZoom(16);
-            const latLng = new google.maps.LatLng(station.lat, station.lng);
-            this.$mapConfig.map.panTo(latLng);
-        },
         clamp(num: number, min: number, max: number) {
             return Math.min(Math.max(num, min), max);
         },
-        onClickResetPolyline(){
+        onClickResetPolyline() {
             this.$mapConfig.resetPolyline(this.polylines);
         },
-        async makeLineMarker(lines: Line[]){
+        async makeLineMarker(lines: Line[]) {
             const markers: google.maps.Marker[][] = [];
-            await lines.forEach((line: any,i: number)=>{
+            await lines.forEach((line: any,i: number) => {
                 const lineMarkerArray: google.maps.Marker[] = [];
-                line.stations.forEach((station: Station)=>{
-                    let marker = this.makeMarker(station);
-                    marker.addListener("click", () => {
+                line.stations.forEach((station: Station) => {
+                    let marker = this.$mapConfig.makeMarker(station, this.trainIcon.big);
+                    marker.addListener("click", async () => {
                         this.$store.dispatch('home/selectMarker',station);
                         this.$store.dispatch('home/getTwitterInfo', {name: station.name + '駅'});
-                        this.$store.dispatch('home/getStationInfo', {name: station.name + '駅'})
-                        .then(() => {
-                            this.$store.commit('home/searching', false)
-                        });
+                        await this.$store.dispatch('home/getStationInfo', {name: station.name + '駅'})
+                        this.$store.commit('home/searching', false)
                     });
                     lineMarkerArray.push(marker);
                 });
                 markers.push(lineMarkerArray)
             });
             const that = this;
-            setTimeout(function(){
-                that.$mapConfig.resetMarkers(that.markers)
-                .then(()=>{that.markers = markers;})
+            setTimeout(async () => {
+                await that.$mapConfig.resetMarkers(that.trainMarkers)
+                that.trainMarkers = markers;
             },1000)
         },
-        async makeEventMarker(events: any){
-            const eventMarkerArray: google.maps.Marker[] = [];
-            await events.forEach((event: Station)=>{
-                let marker = this.makeMarker(event);
-                marker.addListener("click", () => {
-                    this.$store.dispatch('home/selectMarker',event);
-                });
-                eventMarkerArray.push(marker);
-            });
-            const that = this;
-            setTimeout(async () => {
-                await that.$mapConfig.resetMarkers(that.markers)
-                that.markers = [eventMarkerArray];
-            },2000)
-        },
-        makeMarker(station: Station){
-            let img = '';
-            const marker = new google.maps.Marker({
-                map: this.$mapConfig.map,
-                position: new google.maps.LatLng(station.lat, station.lng),
-                icon: img,
-                // optimized: true,
-            });
-            return marker
-        },
-        makeLineArray(lines: Line[]){
+        makeLineArray(lines: Line[]) {
             this.$mapConfig.resetPolyline(this.polylines)
             let paths: {name: string, color: string, polygon: google.maps.LatLng[]}[] = [];
-            lines.forEach((line: Line)=>{
+            lines.forEach((line: Line) => {
                 let polygon: google.maps.LatLng[] = [];
-                line.polygon.forEach((coordinate: LinePolyline)=>{
+                line.polygon.forEach((coordinate: LinePolyline) => {
                     polygon.push(new google.maps.LatLng(coordinate.lat, coordinate.lng));
                 });
                 paths.push({name: line.name, color: line.color, polygon: polygon});
             });
             const that = this;
-            paths.forEach((path)=>{
-                const polyline = (this as any).makePolyline(path);
+            paths.forEach((path) => {
+                const polyline = this.$mapConfig.makePolyline(path);
+                (this as any).polylines.push(polyline);
                 polyline.addListener("click", () => {
                     const latLngBounds = new google.maps.LatLngBounds();
                     polyline.getPath().forEach((latLng: google.maps.LatLng) => {
@@ -302,22 +219,7 @@ export default Vue.extend({
                 });
             });
         },
-        makePolyline(path: {color: string, polygon: google.maps.LatLng[]}){
-            const polyline = new google.maps.Polyline({
-                map: this.$mapConfig.map,
-                path:path.polygon,
-                strokeColor: path.color,
-                strokeOpacity: 0.9,
-                strokeWeight: 3
-            });
-            // const latLngBounds = new google.maps.LatLngBounds();
-            // polyline.getPath().forEach((latLng) => {
-            //     latLngBounds.extend(latLng);
-            // });
-            (this as any).polylines.push(polyline);
-            return polyline;
-        },
-        clearTime(){
+        clearTime() {
             if (this.timer) {
                 clearTimeout(this.timer)
             }
