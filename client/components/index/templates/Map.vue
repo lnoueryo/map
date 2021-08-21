@@ -12,17 +12,13 @@ import Vue from 'vue';
 import { mapGetters } from 'vuex';
 const LineChart = () => import('../organisms/LineChart.vue');
 const MapTop = () => import('../organisms/MapTop.vue');
-// import LineChart from '../organisms/LineChart.vue';
-// import MapTop from '../organisms/MapTop.vue';
-// import practice from '~/assets/json/line/practice.json';
-const tokyoBounds = {north: 35.860687,south: 35.530351, west: 138.9403931, east: 139.9368243}
-interface Bounds {north: number, south: number, west: number, east: number};
+
 interface Polygons {"code":string,"city":string,"polygons":Polygon[][]}
 interface Polygon {"lat":number,"lng":number}
 interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string,stations: Station[]}
-interface DataType {markerIcons: {jr: string,metro: string,toei: string, keio: string,tokyu: string},addMarker: { lat: number; lng: number; }[],map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},mapOptions: {center: google.maps.LatLng, restriction: {latLngBounds: Bounds, strictBounds: boolean,}, zoom: number,mapTypeControl: boolean,fullscreenControl: boolean,streetViewControl: boolean,zoomControl: boolean},markers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][],exponentialBackoff:number,timer: null|NodeJS.Timer}
+interface DataType {addMarker: { lat: number; lng: number; }[],map: google.maps.Map|null, overview: google.maps.Map|null, overviewConfig: {difference: number,maxZoom: number, minZoom: number},markers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][],exponentialBackoff:number,timer: null|NodeJS.Timer}
 interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
 export default Vue.extend({
     components: {
@@ -34,12 +30,10 @@ export default Vue.extend({
             map: null,
             overview: null,
             overviewConfig: {difference: 5,maxZoom: 13, minZoom: 3},
-            mapOptions: {center: new google.maps.LatLng( 35.6729712, 139.7585771 ), restriction: {latLngBounds: tokyoBounds, strictBounds: false,}, zoom: 14,mapTypeControl: false, fullscreenControl: false,streetViewControl: false,zoomControl: false},
             markers: [],
             polylines: [],
             addMarker: [],
             polygons: [],
-            markerIcons: {jr: require("~/assets/img/jr.png"),metro: require("~/assets/img/metro.png"),toei: require("~/assets/img/toei.png"),keio: require("~/assets/img/keio.png"),tokyu: require("~/assets/img/tokyu.png")},
             exponentialBackoff: 1000,
             timer: null
         }
@@ -90,7 +84,7 @@ export default Vue.extend({
                         }
                     }, 100);
                 } else {
-                    this.$store.dispatch('home/resetMarkers', this.markers);
+                    this.$mapConfig.resetMarkers(this.markers)
                 }
             },
             immediate: true,
@@ -106,7 +100,7 @@ export default Vue.extend({
                         }
                     }, 100);
                 } else {
-                    this.$store.dispatch('home/resetPolyline',this.polylines);
+                    this.$mapConfig.resetPolyline(this.polylines)
                 }
             },
             immediate: true
@@ -134,18 +128,19 @@ export default Vue.extend({
         },
     },
     mounted(){
+        console.log(this.$mapConfig.mapOptions())
         this.setMap().then(()=>{
             let timer: NodeJS.Timer|null;
-            (this as any).map.addListener("bounds_changed", () => {
-                const bounds = this.culcCurrentBounds((this as any).map)
+            this.$mapConfig.map.addListener("bounds_changed", () => {
+                const bounds = this.$mapConfig.currentBounds(this.$mapConfig.map)
                 const that = this;
                 if(timer!==null){
                     clearTimeout(timer)
                 }
                 timer = setTimeout(function(){
-                    const getMapCenter = (that as any).map.getCenter();
+                    const getMapCenter = that.$mapConfig.map.getCenter();
                     const mapCenter = {lat: getMapCenter.lat(), lng: getMapCenter.lng()};
-                    const zoom = (that as any).map.getZoom();
+                    const zoom = that.$mapConfig.map.getZoom();
                     that.$store.dispatch('home/getCity', {mapCenter:mapCenter, zoom:zoom});
                     that.$store.dispatch('home/getCurrentBounds', bounds);
                 },750);
@@ -157,7 +152,7 @@ export default Vue.extend({
         async setMap(){
             try {
                 const mapEl = this.$refs.map;
-                (this as any).map = new google.maps.Map(mapEl as HTMLElement, this.mapOptions);
+                this.$mapConfig.makeMap(mapEl as HTMLElement)
                 this.exponentialBackoff = 1000;
             } catch (error) {
                 const that = this;
@@ -185,7 +180,7 @@ export default Vue.extend({
             },100)
         },
         onClickMap(e: google.maps.MapMouseEvent){
-            google.maps.event.clearListeners((this as any).map, 'click');
+            google.maps.event.clearListeners(this.$mapConfig.map, 'click');
             this.$store.dispatch('home/searchCityCode',e).then(()=>{this.addClickMapListeners()});
         },
         makePolygon(coordinates: {lat: number,lng: number}[], i: number){
@@ -201,7 +196,7 @@ export default Vue.extend({
             google.maps.event.addListener(polygon, 'click', function(e: google.maps.MapMouseEvent) {
                 that.onClickMap(e);
             });
-            polygon.setMap(this.map);
+            polygon.setMap(this.$mapConfig.map);
             return polygon
         },
         resetPoly(polygons: google.maps.Polygon[][]){
@@ -213,11 +208,11 @@ export default Vue.extend({
         },
         resetMapListeners(...arg: string[]){
             arg.forEach(event => {
-                google.maps.event.clearListeners((this as any).map, event);
+                google.maps.event.clearListeners(this.$mapConfig.map, event);
             });
         },
         addClickMapListeners(){
-            (this as any).map.addListener('click', (e: google.maps.MapMouseEvent)=>{
+            this.$mapConfig.map.addListener('click', (e: google.maps.MapMouseEvent)=>{
                 this.clearTime()
                 const that = this;
                 this.timer = setTimeout(function(){
@@ -226,23 +221,15 @@ export default Vue.extend({
             })
         },
         focusMarker(station: Station){
-            (this as any).map.setZoom(16);
+            this.$mapConfig.map.setZoom(16);
             const latLng = new google.maps.LatLng(station.lat, station.lng);
-            (this as any).map.panTo(latLng);
-        },
-        culcCurrentBounds(map: google.maps.Map){
-            const bounds = map.getBounds() as google.maps.LatLngBounds;
-            const north = bounds.getNorthEast().lat();
-            const south = bounds.getSouthWest().lat();
-            const east = bounds.getNorthEast().lng();
-            const west = bounds.getSouthWest().lng();
-            return {south: south, north: north,east: east, west: west};
+            this.$mapConfig.map.panTo(latLng);
         },
         clamp(num: number, min: number, max: number) {
             return Math.min(Math.max(num, min), max);
         },
         onClickResetPolyline(){
-            this.$store.dispatch('resetPolyline', (this as any).polylines);
+            this.$mapConfig.resetPolyline(this.polylines);
         },
         async makeLineMarker(lines: Line[]){
             const markers: google.maps.Marker[][] = [];
@@ -264,7 +251,7 @@ export default Vue.extend({
             });
             const that = this;
             setTimeout(function(){
-                that.$store.dispatch('home/resetMarkers',that.markers)
+                that.$mapConfig.resetMarkers(that.markers)
                 .then(()=>{that.markers = markers;})
             },1000)
         },
@@ -278,16 +265,15 @@ export default Vue.extend({
                 eventMarkerArray.push(marker);
             });
             const that = this;
-            setTimeout(function(){
-                console.log('AAA')
-                that.$store.dispatch('home/resetMarkers',that.markers)
-                .then(()=>{that.markers = [eventMarkerArray];})
+            setTimeout(async () => {
+                await that.$mapConfig.resetMarkers(that.markers)
+                that.markers = [eventMarkerArray];
             },2000)
         },
         makeMarker(station: Station){
             let img = '';
             const marker = new google.maps.Marker({
-                map: this.map,
+                map: this.$mapConfig.map,
                 position: new google.maps.LatLng(station.lat, station.lng),
                 icon: img,
                 // optimized: true,
@@ -295,7 +281,7 @@ export default Vue.extend({
             return marker
         },
         makeLineArray(lines: Line[]){
-            this.$store.dispatch('home/resetPolyline',this.polylines)
+            this.$mapConfig.resetPolyline(this.polylines)
             let paths: {name: string, color: string, polygon: google.maps.LatLng[]}[] = [];
             lines.forEach((line: Line)=>{
                 let polygon: google.maps.LatLng[] = [];
@@ -312,13 +298,13 @@ export default Vue.extend({
                     polyline.getPath().forEach((latLng: google.maps.LatLng) => {
                         latLngBounds.extend(latLng);
                     });
-                    (that as any).map.fitBounds( latLngBounds ) ;
+                    that.$mapConfig.map.fitBounds( latLngBounds ) ;
                 });
             });
         },
         makePolyline(path: {color: string, polygon: google.maps.LatLng[]}){
             const polyline = new google.maps.Polyline({
-                map: this.map,
+                map: this.$mapConfig.map,
                 path:path.polygon,
                 strokeColor: path.color,
                 strokeOpacity: 0.9,

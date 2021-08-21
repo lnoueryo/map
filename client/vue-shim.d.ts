@@ -15,3 +15,12 @@ declare module "*.ts" {
     const value: any;
     export default value;
 }
+declare module '*.vue' {
+    import { MapConfig } from '~/plugins/map';
+  
+    module 'vue/types/vue' {
+      interface Vue {
+        $mapConfig: MapConfig;
+      }
+    }
+  }

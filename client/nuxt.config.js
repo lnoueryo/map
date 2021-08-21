@@ -35,7 +35,7 @@ export default {
   css: [],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: ['@/plugins/axios-accessor',],
+  plugins: ['@/plugins/axios-accessor','~/plugins/map'],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -58,18 +58,21 @@ export default {
   ],
 
   // Axios module configuration: https://go.nuxtjs.dev/config-axios
-  //sakura本番
+  // sakura本番
   // axios: {
   //   baseURL: 'https://map-ai7ganlifq-an.a.run.app',
+  //   retry: { retries: 5 },
   // },
   // cloudrun本番
   // axios: {
   //   baseURL: '/',
+  //   retry: { retries: 5 },
   // },
 
   //ローカル
   axios: {
     baseURL: 'http://localhost:3000/api/',
+    retry: { retries: 5 },
   },
   proxy: {
     '/api': {

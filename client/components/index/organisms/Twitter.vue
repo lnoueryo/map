@@ -64,7 +64,7 @@ export default Vue.extend({
         ]),
     },
     methods: {
-        changeTime(time) {
+        changeTime(time: string) {
             let date = new Date(time);
             const  year = date.getFullYear();
             const  month = ("0"+(date.getMonth() + 1)).slice(-2);
