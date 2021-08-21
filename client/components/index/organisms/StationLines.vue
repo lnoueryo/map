@@ -2,20 +2,38 @@
     <div>
         <transition name="fade">
             <div class="middle-list" v-if="markerSwitch">
-                <div v-for="(company, i) in companies" :key="i" style="position:relative">
-                    <transition name="list">
-                        <div v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
-                    </transition>
-                    <div v-for="(line, j) in filteredLines(company.lines)" :key="j" style="color:black">
+                <div v-if="stationSwitch">
+                    <div class="company-name">駅</div>
+                    <div v-for="(company, i) in companies" :key="i" style="position:relative">
                         <transition name="list">
-                            <div v-if="boundsFilter(line.stations).length!==0">
-                                <label class="line-name" :style="{backgroundColor: line.color}" :for="line.name"><input :id="line.name" type="checkbox" :value="line" v-model="selectLine" style="display:none;">{{line.name}}</label>
+                            <div v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
+                        </transition>
+                        <div v-for="(line, j) in filteredLines(company.lines)" :key="j" style="color:black">
+                            <transition name="list">
+                                <div v-if="boundsFilter(line.stations).length!==0">
+                                    <label class="line-name" :style="{backgroundColor: line.color}" :for="line.name"><input :id="line.name" type="checkbox" :value="line" v-model="selectLine" style="display:none;">{{line.name}}</label>
+                                </div>
+                            </transition>
+                            <transition-group name="list" tag="div">
+                                <div class="station-list" style="width:100%" v-for="(station, k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)">
+                                <!-- <div style="width:100%" v-for="(station,k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)" :style="selectedMarker.name==station.name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}"> -->
+                                    <div style="">{{station.name}}</div>
+                                </div>
+                            </transition-group>
+                        </div>
+                    </div>
+                </div>
+                <div v-if="spotSwitch">
+                    <div class="company-name">観光スポット</div>
+                    <div v-for="(word, j) in words" :key="j" style="position:relative;">
+                        <transition name="list">
+                            <div class="company-name" v-if="boundsFilter(word.spots).length !== 0">
+                                {{word.city}}
                             </div>
                         </transition>
                         <transition-group name="list" tag="div">
-                            <div class="station-list" style="width:100%" v-for="(station, k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)">
-                            <!-- <div style="width:100%" v-for="(station,k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)" :style="selectedMarker.name==station.name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}"> -->
-                                <div style="">{{station.name}}</div>
+                            <div class="station-list" style="width:100%;color:black" v-for="(spot, k) in boundsFilter(word.spots)" :key="k" @click="onClickList(spot)">
+                                <div>{{spot.name}}</div>
                             </div>
                         </transition-group>
                     </div>
@@ -52,6 +70,9 @@ export default Vue.extend({
             'companies',
             'selectedCompanyItems',
             'selectedLineItems',
+            'words',
+            'stationSwitch',
+            'spotSwitch',
         ]),
         selectCompany:{
             get(){

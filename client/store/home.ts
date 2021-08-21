@@ -2,6 +2,7 @@ import { $axios } from '~/utils/api';
 import companies from '~/assets/json/company.json';
 import cities from '~/assets/json/cities.json';
 import population from '../assets/json/population.json'
+import words from '../assets/json/words.json'
 
 interface State {
         companies: Company[]
@@ -26,7 +27,9 @@ interface State {
         population: {city: string, population: number[]},
         lineChartIndex: number,
         events: string[],
-        spots: null
+        words: Words[],
+        stationSwitch: boolean,
+        spotSwitch: boolean,
     }
 interface Coordinate {lat: number, lng: number};
 interface Polygon {lat: number, lng: number}[];
@@ -37,11 +40,12 @@ interface Station {name: string,id:number,line_id:number,order:number,prefecture
 interface City {prefecture_id: string, city_code: number, city: string, polygons:Polygon[][]}
 interface AddressElement {Code: string, Name: string, Kana: string, Level: string}
 interface Twitter {id: number, 'name': string, 'profile_image_url': string, 'followers_count': number, 'friends_count': number, 'text': string, 'images': string[]}
+interface Words   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
 const state = {
     companies: companies,
     cities: cities,
     population: population,
-    spots: '',
+    words: words,
     selectedCompanyItems: [],
     selectedLineItems: [],
     selectedCityItems: [],
@@ -60,7 +64,9 @@ const state = {
     searching: false,
     addressElement: null,
     lineChartIndex: 0,
-    events: []
+    events: [],
+    stationSwitch: true,
+    spotSwitch: true,
 };
 
 const getters = {
@@ -77,7 +83,7 @@ const getters = {
     フィルタリングされていない人口情報を返す
     */
     population: (state: State) => state.population,
-    spots: (state: State) => state.spots,
+    words: (state: State) => state.words,
     events: (state: State) => state.events,
     /*
     company配列より路線図のみを抽出し、
@@ -161,12 +167,14 @@ const getters = {
     dotSwitch: (state: State) => state.dotSwitch, //ドット表示のboolean
     selectedMarker: (state: State): Station => state.selectedMarker, //クリックされたマーカー(駅)のオブジェクトを返す
     showNumberOfMarkers: (state: State, getters: any): number => { //現在表示されているマーカーの数を返す
-        return getters.lines.reduce((sum:any, line:any): number => sum + (getters.boundsFilter(line.stations)).length, 0);
+        const stations = getters.lines.reduce((sum:any, line:any): number => sum + (getters.boundsFilter(line.stations)).length, 0)
+        const spots = getters.words.reduce((sum:any, word:any): number => sum + (getters.boundsFilter(word.spots)).length, 0)
+        return getters.stationSwitch && getters.spotSwitch ? stations + spots : getters.stationSwitch ? stations : spots;
     },
-    boundsFilter: (state:State) =>(stations: Station[]): Station[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
-        const filteredStations = stations.filter((station) => {
-            const verticalCondition = state.currentBounds.west < station.lng && state.currentBounds.east > station.lng;
-            const horizontalCondition = state.currentBounds.south < station.lat && state.currentBounds.north > station.lat;
+    boundsFilter: (state:State) =>(points: Station[]): Station[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
+        const filteredStations = points.filter((point) => {
+            const verticalCondition = state.currentBounds.west < point.lng && state.currentBounds.east > point.lng;
+            const horizontalCondition = state.currentBounds.south < point.lat && state.currentBounds.north > point.lat;
             return verticalCondition && horizontalCondition;
         });
         return filteredStations;
@@ -197,8 +205,10 @@ const getters = {
             return i < index;
         })
     },
-    addressElement:(state: State) => state.addressElement,
-    lineChartIndex:(state: State) => state.lineChartIndex,
+    addressElement: (state: State) => state.addressElement,
+    lineChartIndex: (state: State) => state.lineChartIndex,
+    stationSwitch: (state: State) => state.stationSwitch,
+    spotSwitch: (state: State) => state.spotSwitch,
 }
 
 const mutations = {
