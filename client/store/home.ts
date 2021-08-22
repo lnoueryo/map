@@ -64,7 +64,7 @@ const state = {
     lineChartIndex: 0,
     events: [],
     markerSwitch: true,
-    lineSwitch: false,
+    lineSwitch: true,
     chartSwitch: false,
     dotSwitch: true,
     stationSwitch: true,
@@ -86,15 +86,17 @@ const getters = {
     フィルタリングされていない人口情報を返す
     */
     population: (state: State) => state.population,
-    words: (state: State) => state.words,
     events: (state: State) => state.events,
     /*
     company配列より路線図のみを抽出し、
     選択された会社名でフィルタリングされた配列を返す
     */
-    lineItems: (state: State, getters: any) => {
-        const lines = [].concat(...getters.companies.map((company: Company): Line[] => company.lines));
-        return getters.companyFilter(lines);
+   lineItems: (state: State, getters: any) => {
+       const lines = [].concat(...getters.companies.map((company: Company): Line[] => company.lines));
+       return getters.companyFilter(lines);
+    },
+    words: (state: State) => {
+        return state.spotSwitch ? state.words : []
     },
     /*
     company配列より路線図のみを抽出し、

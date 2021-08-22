@@ -186,6 +186,33 @@ export class MapConfig {
         zoomControl: false,
         styles: [
             {
+                "featureType": "all",
+                "elementType": "all",
+                "stylers": [
+                    {
+                        "visibility": "on"
+                    }
+                ]
+            },
+            {
+                "featureType": "all",
+                "elementType": "labels",
+                "stylers": [
+                    {
+                        "visibility": "on"
+                    }
+                ]
+            },
+            {
+                "featureType": "all",
+                "elementType": "labels.icon",
+                "stylers": [
+                    {
+                        "visibility": "on"
+                    }
+                ]
+            },
+            {
                 "featureType": "administrative.country",
                 "elementType": "geometry",
                 "stylers": [
@@ -194,6 +221,15 @@ export class MapConfig {
                     },
                     {
                         "hue": "#ff0000"
+                    }
+                ]
+            },
+            {
+                "featureType": "landscape",
+                "elementType": "labels.icon",
+                "stylers": [
+                    {
+                        "visibility": "on"
                     }
                 ]
             },
@@ -298,6 +334,33 @@ export class MapConfig {
             },
             {
                 "featureType": "poi.place_of_worship",
+                "elementType": "geometry.fill",
+                "stylers": [
+                    {
+                        "visibility": "off"
+                    }
+                ]
+            },
+            {
+                "featureType": "poi.place_of_worship",
+                "elementType": "geometry.stroke",
+                "stylers": [
+                    {
+                        "visibility": "off"
+                    }
+                ]
+            },
+            {
+                "featureType": "poi.place_of_worship",
+                "elementType": "labels",
+                "stylers": [
+                    {
+                        "visibility": "off"
+                    }
+                ]
+            },
+            {
+                "featureType": "poi.place_of_worship",
                 "elementType": "labels.text.fill",
                 "stylers": [
                     {
@@ -311,6 +374,15 @@ export class MapConfig {
                 "stylers": [
                     {
                         "visibility": "on"
+                    },
+                    {
+                        "saturation": "-100"
+                    },
+                    {
+                        "lightness": "-100"
+                    },
+                    {
+                        "weight": "0.01"
                     }
                 ]
             },
@@ -320,6 +392,15 @@ export class MapConfig {
                 "stylers": [
                     {
                         "visibility": "off"
+                    },
+                    {
+                        "saturation": "1"
+                    },
+                    {
+                        "gamma": "10.00"
+                    },
+                    {
+                        "weight": "0.01"
                     }
                 ]
             },
@@ -374,6 +455,78 @@ export class MapConfig {
                 "stylers": [
                     {
                         "visibility": "off"
+                    }
+                ]
+            },
+            {
+                "featureType": "road",
+                "elementType": "all",
+                "stylers": [
+                    {
+                        "visibility": "simplified"
+                    }
+                ]
+            },
+            {
+                "featureType": "road",
+                "elementType": "labels",
+                "stylers": [
+                    {
+                        "visibility": "on"
+                    }
+                ]
+            },
+            {
+                "featureType": "road",
+                "elementType": "labels.icon",
+                "stylers": [
+                    {
+                        "visibility": "off"
+                    }
+                ]
+            },
+            {
+                "featureType": "road.highway",
+                "elementType": "labels.icon",
+                "stylers": [
+                    {
+                        "visibility": "off"
+                    }
+                ]
+            },
+            {
+                "featureType": "road.arterial",
+                "elementType": "labels.icon",
+                "stylers": [
+                    {
+                        "visibility": "off"
+                    }
+                ]
+            },
+            {
+                "featureType": "transit.line",
+                "elementType": "all",
+                "stylers": [
+                    {
+                        "visibility": "simplified"
+                    }
+                ]
+            },
+            {
+                "featureType": "transit.line",
+                "elementType": "labels.icon",
+                "stylers": [
+                    {
+                        "visibility": "off"
+                    }
+                ]
+            },
+            {
+                "featureType": "transit.station",
+                "elementType": "labels.icon",
+                "stylers": [
+                    {
+                        "visibility": "on"
                     }
                 ]
             }
