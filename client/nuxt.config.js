@@ -23,7 +23,7 @@ export default {
     ],
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/logo.png' }],
     script: [
-      { src: `https://maps.googleapis.com/maps/api/js?key=${process.env.API_KEY}&libraries=geometry&v=quarterly`, defer: true, body: true },
+      { src: `https://maps.googleapis.com/maps/api/js?key=${process.env.API_KEY}&libraries=geometry&v=quarterly`, defer: false, body: true },
       { src: 'https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js', defer: true, body: true },
       { src: 'https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js', defer: true, body: true },
     ]

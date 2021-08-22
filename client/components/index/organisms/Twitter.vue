@@ -52,7 +52,6 @@ export default Vue.extend({
     computed:{
         ...mapGetters('home', [
             'lines',
-            'bounds',
             'markerSwitch',
             'lineSwitch',
             'selectedMarker',

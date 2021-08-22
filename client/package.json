@@ -17,6 +17,7 @@
     "@nuxtjs/proxy": "^2.1.0",
     "@nuxtjs/pwa": "^3.3.5",
     "core-js": "^3.9.1",
+    "markerwithlabel": "^2.0.2",
     "nuxt": "^2.15.3",
     "vuex-class-component": "^2.3.5",
     "vuex-module-decorators": "^1.0.1"

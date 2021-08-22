@@ -2,6 +2,21 @@
     <div>
         <transition name="fade">
             <div class="middle-list" v-if="markerSwitch">
+                <div v-if="spotSwitch">
+                    <div class="company-name">観光スポット</div>
+                    <div v-for="(word, j) in words" :key="j" style="position:relative;">
+                        <transition name="list">
+                            <div class="company-name" v-if="boundsFilter(word.spots).length !== 0">
+                                {{word.city}}
+                            </div>
+                        </transition>
+                        <transition-group name="list" tag="div">
+                            <div class="station-list" style="width:100%;color:black" v-for="(spot, k) in boundsFilter(word.spots)" :key="k" @click="onClickList(spot)">
+                                <div>{{spot.name}}</div>
+                            </div>
+                        </transition-group>
+                    </div>
+                </div>
                 <div v-if="stationSwitch">
                     <div class="company-name">駅</div>
                     <div v-for="(company, i) in companies" :key="i" style="position:relative">
@@ -21,21 +36,6 @@
                                 </div>
                             </transition-group>
                         </div>
-                    </div>
-                </div>
-                <div v-if="spotSwitch">
-                    <div class="company-name">観光スポット</div>
-                    <div v-for="(word, j) in words" :key="j" style="position:relative;">
-                        <transition name="list">
-                            <div class="company-name" v-if="boundsFilter(word.spots).length !== 0">
-                                {{word.city}}
-                            </div>
-                        </transition>
-                        <transition-group name="list" tag="div">
-                            <div class="station-list" style="width:100%;color:black" v-for="(spot, k) in boundsFilter(word.spots)" :key="k" @click="onClickList(spot)">
-                                <div>{{spot.name}}</div>
-                            </div>
-                        </transition-group>
                     </div>
                 </div>
             </div>
@@ -61,7 +61,6 @@ export default Vue.extend({
         ...mapGetters('home', [
             'lines',
             'filteredLines',
-            'bounds',
             'markerSwitch',
             'lineSwitch',
             'selectedMarker',

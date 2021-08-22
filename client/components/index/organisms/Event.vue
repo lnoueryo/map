@@ -37,7 +37,6 @@ export default Vue.extend({
             'lines',
             'events',
             'filteredLines',
-            'bounds',
             'markerSwitch',
             'lineSwitch',
             'selectedMarker',

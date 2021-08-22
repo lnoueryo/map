@@ -20,6 +20,10 @@
             <b v-else>0</b>
             <span>件</span>
         </div>
+        <div class="d-flex my-2 px-3" style="font-size:14px;">
+            <toggle-switch class="mr-2 px-2" v-model="stationSwitch" id="stationSwitch" background-color="#ff9800" style="width:50%;">駅</toggle-switch>
+            <toggle-switch class=" px-2" v-model="spotSwitch" id="spotSwitch" background-color="#ff9800" style="width:50%;">観光地</toggle-switch>
+        </div>
     </div>
 </template>
 
@@ -27,12 +31,14 @@
 import Vue from 'vue';
 import {mapGetters} from 'vuex';
 const SearchBar = () => import('../../global/SearchBar.vue');
-// import SearchBar from '~/components/global/SearchBar.vue';
+const ToggleSwitch = () => import('../../global/ToggleSwitch.vue');
+
 interface DataType {countMarkers: number};
 interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,lat:number,lng:number,name:string};
 export default Vue.extend({
     components:{
-        SearchBar
+        SearchBar,
+        ToggleSwitch
     },
     data(): DataType {
         return {
@@ -57,6 +63,22 @@ export default Vue.extend({
             },
             set(newValue){
                 this.$store.dispatch('home/searchWord',newValue);
+            }
+        },
+        stationSwitch: {
+            get() {
+                return this.$store.getters['home/stationSwitch'];
+            },
+            set(value) {
+                this.$store.dispatch('home/changeStationSwitch', value);
+            }
+        },
+        spotSwitch: {
+            get() {
+                return this.$store.getters['home/spotSwitch'];
+            },
+            set(value) {
+                this.$store.dispatch('home/changeSpotSwitch', value);
             }
         },
     },

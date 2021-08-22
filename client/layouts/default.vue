@@ -38,3 +38,14 @@ export default Vue.extend({
     }
 })
 </script>
+
+<style lang="scss">
+.labels {
+    color: #ffffff;
+    background: #000000;
+    font-size: 14px;
+    text-align: center;
+    padding: 2px 10px;
+    border-radius: 8px;
+}
+</style>

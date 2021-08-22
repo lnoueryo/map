@@ -1,7 +1,7 @@
 interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
 interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
 interface Polygon {"lat":number,"lng":number}
-
+// import store from '~/store/home'
 export class MapConfig {
     private options: any
     private markerIcons = {
@@ -24,28 +24,52 @@ export class MapConfig {
         this.map = new google.maps.Map(el, this.mapOptions())
         return this.map
     }
-    makePolygon(coordinates: {lat: number,lng: number}[], i: number){
+    makePolygon(coordinates: {lat: number,lng: number}[], i: number) {
         const polygon = new google.maps.Polygon({
             paths: coordinates,
             strokeColor: "red",
             strokeOpacity: 0.5,
             strokeWeight: 2,
             fillColor: "#00bb93",
-            fillOpacity: 0.3,
+            fillOpacity: 0.1,
         });
         polygon.setMap(this.map);
         return polygon
     }
-    makeMarker(station: Station, icon: string){
+    makeMarker(station: Station, icon: string = '', text: string = '') {
+        // var MarkerWithLabel = require('markerwithlabel')(google.maps);
+        // const icon = {
+        //     url: url,
+        //     labelOrigin: new google.maps.Point(-100, -100),
+        //     // path: google.maps.SymbolPath.CIRCLE,//シンボル円
+        //     // scale: 22,           //サイズ
+        //     // fillColor: '#fff',  //塗り潰し色
+        //     // fillOpacity: 0.8,   //塗り潰し透過率
+        //     // strokeColor: "red", //枠線の色
+        //     // strokeWeight: 8,    //枠線の幅
+        // }
+        // const icon = {
+        //     labelOrigin: new google.maps.Point(100, 50),
+        //     url: url,
+        //     size: new google.maps.Size(100, 40),
+        //     Origin: new google.maps.Point(100, 100),
+        //     anchor: new google.maps.Point(100, 40),
+        //   }
+        // const label = text
+        //             ? {text:  text, color: '#363636', fontSize: '12px', fontWeight: '900', labelOrigin: new google.maps.Point(50, 9)}
+        //             : ''
         const marker = new google.maps.Marker({
             map: this.map,
             position: new google.maps.LatLng(station.lat, station.lng),
             icon: icon,
+            // label: label,
+            visible: false,
+            // opacity: 0.8,
             // optimized: true,
         });
         return marker
     }
-    makePolyline(path: {color: string, polygon: google.maps.LatLng[]}){
+    makePolyline(path: {color: string, polygon: google.maps.LatLng[]} ) {
         const polyline = new google.maps.Polyline({
             map: this.map,
             path:path.polygon,
@@ -55,12 +79,31 @@ export class MapConfig {
         });
         return polyline;
     }
-    resetPolygon(polygons: google.maps.Polygon[][]){
+    hideMarkers(payload: google.maps.Marker[][]) {
+        payload.forEach((markers) => {
+            markers.forEach((marker) => {
+                marker.setVisible(false);
+            })
+        })
+    }
+    resetPolygon(polygons: google.maps.Polygon[][]) {
         polygons.forEach(cityPolygon => {
             cityPolygon.forEach(polygon => {
                 polygon.setMap(null)
             });
         });
+    }
+    resetPolyline(payload: google.maps.Polyline[]) {
+        payload.forEach(polyline => {
+            polyline.setMap(null);
+        });
+    }
+    async resetMarkers(payload: google.maps.Marker[][]) {
+        payload.forEach((markers) => {
+            markers.forEach((marker) => {
+                marker.setMap(null);
+            })
+        })
     }
     changeIcon(markers_obj: google.maps.Marker[][], icon: string) {
         markers_obj.forEach((markers)=>{
@@ -69,30 +112,63 @@ export class MapConfig {
             })
         })
     }
-    currentBounds(map: google.maps.Map){
-        const bounds = map.getBounds() as google.maps.LatLngBounds;
+    currentBounds() {
+        const bounds = this.map.getBounds() as google.maps.LatLngBounds;
         const north = bounds.getNorthEast().lat();
         const south = bounds.getSouthWest().lat();
         const east = bounds.getNorthEast().lng();
         const west = bounds.getSouthWest().lng();
         return {south: south, north: north,east: east, west: west};
     }
-    focusMarker(station: Station, num: number){
+    focusMarker(station: Station, num: number) {
         this.map.setZoom(num);
         const latLng = new google.maps.LatLng(station.lat, station.lng);
         this.map.panTo(latLng);
     }
-    resetPolyline(payload: google.maps.Polyline[]){
-        payload.forEach(polyline => {
-            polyline.setMap(null);
-        });
-    }
-    async resetMarkers(payload: google.maps.Marker[][]){
-        payload.forEach((markers)=>{
-            markers.forEach((marker)=>{
-                marker.setMap(null);
+    boundsFilterForMarker(marker_obj: google.maps.Marker[][], markerSwitch: boolean) {
+        if(markerSwitch) {
+            const currentBounds = this.currentBounds()
+            const markerInFrame: google.maps.Marker[] = []
+            marker_obj.forEach((markers) => {
+                markers.forEach((marker) => {
+                    const lat = marker.getPosition()?.lat() as number;
+                    const lng = marker.getPosition()?.lng() as number;
+                    const verticalCondition = currentBounds.west < lng && currentBounds.east > lng;
+                    const horizontalCondition = currentBounds.south < lat && currentBounds.north > lat;
+                    if(verticalCondition && horizontalCondition) {
+                        markerInFrame.push(marker)
+                        marker.setVisible(true)
+                    } else {
+                        marker.setVisible(false)
+                    }
+                })
             })
-        })
+            return markerInFrame;
+        } else {
+            marker_obj.forEach((markers) => {
+                markers.forEach((marker) => {
+                    marker.setVisible(false)
+                })
+            })
+            return;
+        }
+    }
+    cityFilterForMarker(markers: google.maps.Marker[], polygonArray: google.maps.Polygon[][], selectedCityItems: any) {
+        if(markers) {
+            if(selectedCityItems.length !== 0) {
+                markers.forEach((marker) => {
+                    const latLng = marker.getPosition() as google.maps.LatLng;
+                    const isContain = polygonArray.some((polygons: any) => {
+                        return polygons.filter((polygon: google.maps.Polygon) => google.maps.geometry.poly.containsLocation(latLng, polygon)).length !== 0;
+                    })
+                    isContain ? marker.setVisible(true) : marker.setVisible(false)
+                })
+            } else {
+                markers.forEach((marker) => {
+                    marker.setVisible(true)
+                })
+            }
+        }
     }
   }
   
@@ -103,7 +179,7 @@ export class MapConfig {
     const options = {
         center: new google.maps.LatLng( 35.6729712, 139.7585771 ),
         restriction: {latLngBounds: tokyoBounds, strictBounds: false,},
-        zoom: 14,
+        zoom: 15,
         mapTypeControl: false,
         fullscreenControl: false,
         streetViewControl: false,

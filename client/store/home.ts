@@ -5,32 +5,33 @@ import population from '../assets/json/population.json'
 import words from '../assets/json/words.json'
 
 interface State {
-        companies: Company[]
-        selectedCompanyItems: Company[],
-        selectedLineItems: Line[],
-        selectedCityItems: City[],
-        map: any,
-        currentBounds: Bounds,
-        markerSwitch: boolean,
-        lineSwitch: boolean,
-        chartSwitch: boolean,
-        dotSwitch: boolean,
-        selectedMarker: Station,
-        searchWord: string,
-        changeList: number,
-        stationInfo: null|string,
-        cityWikiInfo: null|string,
-        twitterInfo: Twitter[],
-        cities: City[],
-        searching: boolean,
-        addressElement: null | AddressElement[],
-        population: {city: string, population: number[]},
-        lineChartIndex: number,
-        events: string[],
-        words: Words[],
-        stationSwitch: boolean,
-        spotSwitch: boolean,
-    }
+    companies: Company[]
+    selectedCompanyItems: Company[],
+    selectedLineItems: Line[],
+    selectedCityItems: City[],
+    map: any,
+    currentBounds: Bounds,
+    markerSwitch: boolean,
+    lineSwitch: boolean,
+    chartSwitch: boolean,
+    dotSwitch: boolean,
+    selectedMarker: Station,
+    searchWord: string,
+    changeList: number,
+    stationInfo: null|string,
+    cityWikiInfo: null|string,
+    twitterInfo: Twitter[],
+    cities: City[],
+    searching: boolean,
+    addressElement: null | AddressElement[],
+    population: {city: string, population: number[]},
+    lineChartIndex: number,
+    events: string[],
+    words: Words[],
+    stationSwitch: boolean,
+    citySwitch: boolean,
+    spotSwitch: boolean,
+}
 interface Coordinate {lat: number, lng: number};
 interface Polygon {lat: number, lng: number}[];
 interface Bounds {north: number, south: number, west: number, east: number};
@@ -41,6 +42,7 @@ interface City {prefecture_id: string, city_code: number, city: string, polygons
 interface AddressElement {Code: string, Name: string, Kana: string, Level: string}
 interface Twitter {id: number, 'name': string, 'profile_image_url': string, 'followers_count': number, 'friends_count': number, 'text': string, 'images': string[]}
 interface Words   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
+
 const state = {
     companies: companies,
     cities: cities,
@@ -51,10 +53,6 @@ const state = {
     selectedCityItems: [],
     map: null,
     currentBounds: {south: 0, north: 0,east: 0, west: 0},
-    markerSwitch: true,
-    lineSwitch: true,
-    chartSwitch: false,
-    dotSwitch: true,
     selectedMarker: {},
     searchWord: null,
     changeList: 0,
@@ -65,7 +63,12 @@ const state = {
     addressElement: null,
     lineChartIndex: 0,
     events: [],
+    markerSwitch: true,
+    lineSwitch: false,
+    chartSwitch: false,
+    dotSwitch: true,
     stationSwitch: true,
+    citySwitch: true,
     spotSwitch: true,
 };
 
@@ -160,7 +163,6 @@ const getters = {
     selectedCityItems: (state: State): City[] => state.selectedCityItems,
     searchWord: (state: State): string => state.searchWord,
     changeList: (state: State): number => state.changeList,
-    bounds: (state: State): Bounds => state.currentBounds, //現在のマップのサイズを緯度経度のオブジェクトで返す
     markerSwitch: (state: State): boolean => state.markerSwitch, //マーカー表示のboolean
     lineSwitch: (state: State) => state.lineSwitch, //路線図表示のboolean
     chartSwitch: (state: State) => state.chartSwitch, //グラフ表示のboolean
@@ -171,7 +173,7 @@ const getters = {
         const spots = getters.words.reduce((sum:any, word:any): number => sum + (getters.boundsFilter(word.spots)).length, 0)
         return getters.stationSwitch && getters.spotSwitch ? stations + spots : getters.stationSwitch ? stations : spots;
     },
-    boundsFilter: (state:State) =>(points: Station[]): Station[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
+    boundsFilter: (state: State) => (points: Coordinate[]): Coordinate[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
         const filteredStations = points.filter((point) => {
             const verticalCondition = state.currentBounds.west < point.lng && state.currentBounds.east > point.lng;
             const horizontalCondition = state.currentBounds.south < point.lat && state.currentBounds.north > point.lat;
@@ -194,20 +196,21 @@ const getters = {
     twitterInfo: (state: State) => state.twitterInfo, //ツイッターから引っ張ってきたjsonを返す
     selectedCities: (state: State) => state.selectedCityItems, //ウィキから引っ張ってきたhtmlを返す
     searching: (state: State) => state.searching, //ウィキ検索中のloading処理
-    removeAddressElement: (state: State) => (elements:AddressElement[], zoom: number) => {
+    removeAddressElement: (state: State) => (elements: AddressElement[], zoom: number) => {
         let index: number;
-        if(8<=zoom&&10>zoom)index = 1;
-        else if(10<=zoom&&14>zoom)index = 2;
-        else if(14<=zoom&&16>zoom)index = 3;
-        else if(16<=zoom&&18>zoom)index = 4;
-        else if(18<=zoom)index = 5;
-        return elements.filter((element: AddressElement, i: number)=>{
+        if(8 <= zoom && 10 > zoom) index = 1;
+        else if(10 <= zoom && 14 > zoom) index = 2;
+        else if(14 <= zoom && 16 > zoom) index = 3;
+        else if(16 <= zoom && 18 > zoom) index = 4;
+        else if(18 <= zoom) index = 5;
+        return elements.filter((element: AddressElement, i: number) => {
             return i < index;
         })
     },
     addressElement: (state: State) => state.addressElement,
     lineChartIndex: (state: State) => state.lineChartIndex,
     stationSwitch: (state: State) => state.stationSwitch,
+    citySwitch: (state: State) => state.citySwitch,
     spotSwitch: (state: State) => state.spotSwitch,
 }
 
@@ -241,6 +244,12 @@ const mutations = {
     },
     chartSwitch: (state: State, payload: boolean) => {
         state.chartSwitch = payload;
+    },
+    stationSwitch: (state: State, payload: boolean) => {
+        state.stationSwitch = payload;
+    },
+    spotSwitch: (state: State, payload: boolean) => {
+        state.spotSwitch = payload;
     },
     dotSwitch: (state: State, payload: boolean) => {
         state.dotSwitch = payload;
@@ -317,6 +326,12 @@ const actions = {
     },
     changeChartSwitch: (context: any, payload: boolean) => {
         context.commit('chartSwitch', payload)
+    },
+    changeStationSwitch: (context: any, payload: boolean) => {
+        context.commit('stationSwitch', payload)
+    },
+    changeSpotSwitch: (context: any, payload: boolean) => {
+        context.commit('spotSwitch', payload)
     },
     changeDotSwitch: (context: any, payload: boolean) => {
         context.commit('dotSwitch', payload)
@@ -396,16 +411,6 @@ const actions = {
         context.commit('events', response);
         // context.commit('events', response.events);
     }
-    // isContain(context: any,e: google.maps.MapMouseEvent,polygons: google.maps.Polygon[]){
-    //     const latLng = new google.maps.LatLng((e.latLng as google.maps.LatLng).lat(), (e.latLng as google.maps.LatLng).lng());
-    //     const a = polygons.some((polygon: Polygon)=>{
-    //             console.log(polygon)
-    //             return google.maps.geometry.poly.containsLocation(latLng, polygon)
-    //         })
-    //     })
-    //     // console.log(a)
-    //     // const res = google.maps.geometry.poly.containsLocation(latLng, bermudaTriangle);
-    // }
 };
 
 export default {
