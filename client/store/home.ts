@@ -95,8 +95,8 @@ const getters = {
        const lines = [].concat(...getters.companies.map((company: Company): Line[] => company.lines));
        return getters.companyFilter(lines);
     },
-    words: (state: State) => {
-        return state.spotSwitch ? state.words : []
+    words: (state: State, getters: any) => {
+        return state.spotSwitch ? getters.cityFilterForWords(state.words) : []
     },
     /*
     company配列より路線図のみを抽出し、
@@ -158,6 +158,16 @@ const getters = {
                 return cityCodes.includes(station.prefecture+station.city_code);
             })
             return line;
+        })
+    },
+    cityFilterForWords: (state: State, getters: any) => (words: Words[]) => {//選択された路線図のフィルター
+        const cityCodes = state.selectedCityItems.map((selectedCityItem) => { //選択された路線図のid
+            const code = selectedCityItem.prefecture_id + selectedCityItem.city_code;
+            return code;
+        })
+        let copyWords: Words[] = JSON.parse(JSON.stringify(words));
+        return getters.selectedCities.length == 0 ? copyWords : copyWords.filter((word) => {
+            return cityCodes.includes(word.code);
         })
     },
     selectedCompanyItems: (state: State): Company[] => state.selectedCompanyItems,

@@ -3,11 +3,11 @@
         <div class="top-menu">
             <div class="mb-2">
                 <label>市町村</label>
-                <item-select maxHeight="calc(100vh - 200px)" style="position:relative;z-index:3" v-model="selectedCityItems" :items="$store.getters['home/cities']" placeholder="市町村を絞り込む" background-color="white" ripple="true"></item-select>
+                <item-select maxHeight="calc(100vh - 200px)" style="position:relative;z-index:3" v-model="selectedCityItems" :items="$store.getters['home/cities']" placeholder="市区町村を絞り込む" background-color="white" ripple="true"></item-select>
             </div>
             <div class="mb-2">
                 <label>鉄道会社</label>
-                <item-select v-bind="companySettings" style="position:relative;z-index:2" v-model="selectedCompanyItems"></item-select>
+                <item-select maxHeight="calc(100vh - 300px)" style="position:relative;z-index:2" v-model="selectedCompanyItems" placeholder="鉄道会社名を絞り込む" background-color="white" ripple="true"></item-select>
             </div>
             <div v-if="selectedCompanyItems.length!==0">
                 <label>路線</label>

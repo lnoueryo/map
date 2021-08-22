@@ -111,20 +111,16 @@ export default Vue.extend({
         },
         markerSwitch:{
             handler(value){
-                if (value) {
-                    this.showMarkers()
-                } else {
-                    this.$mapConfig.hideMarkers(this.stationMarkers)
-                    this.$mapConfig.hideMarkers(this.spotMarkers)
+                value ? this.showMarkers() : () => {
+                    this.$mapConfig.hideMarkers(this.stationMarkers);
+                    this.$mapConfig.hideMarkers(this.spotMarkers);
                 }
-            },
-            immediate: false,
+            }
         },
         lineSwitch:{
             handler(value){
                 value ? this.makeLineArray(this.lines) : this.$mapConfig.resetPolyline(this.polylines)
-            },
-            immediate: false
+            }
         },
         selectedMarker: {
             handler(v) {
@@ -146,9 +142,7 @@ export default Vue.extend({
             const mapCenter = {lat: getMapCenter.lat(), lng: getMapCenter.lng()};
             const zoom = this.$mapConfig.map.getZoom();
             console.log(zoom)
-            if(timer !== null) {
-                clearTimeout(timer)
-            }
+            if(timer !== null) clearTimeout(timer)
             timer = setTimeout(() => {
                 this.showMarkers()
                 this.$store.dispatch('home/getCity', {mapCenter: mapCenter, zoom: zoom});
