@@ -20,7 +20,7 @@ interface Polygon {"lat":number,"lng":number}
 interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string,stations: Station[]}
-interface DataType {stationIcon: {small: string, big: string}, spotIcon: {small: string, big: string},stationMarkers: google.maps.Marker[][],cityMarkers: google.maps.Marker[][],spotMarkers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][],timer: null|NodeJS.Timer}
+interface DataType {markers: {[key: string]: google.maps.Marker[][]},polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][],timer: null|NodeJS.Timer}
 interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
 interface Words   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
 
@@ -31,11 +31,7 @@ export default Vue.extend({
     },
     data(): DataType {
         return {
-            stationIcon: {small: require('~/assets/img/train.png'), big: require('~/assets/img/station.png')},
-            spotIcon: {small: require('~/assets/img/spot_small.png'), big: require('~/assets/img/spot.png')},
-            stationMarkers: [],
-            cityMarkers: [],
-            spotMarkers: [],
+            markers: {},
             polylines: [],
             polygons: [],
             timer: null
@@ -43,9 +39,10 @@ export default Vue.extend({
     },
     computed:{
         ...mapGetters('home', [
+            'fields',
+            'markerSwitches',
             'lines',
             'words',
-            'events',
             'markerSwitch',
             'lineSwitch',
             'chartSwitch',
@@ -54,32 +51,33 @@ export default Vue.extend({
             'selectedCompanyItems',
             'selectedCityItems',
             'selectedLineItems',
-            'stationSwitch',
-            'citySwitch',
-            'spotSwitch',
         ])
     },
-    watch:{
-        stationSwitch: {
+    watch: {
+        markerSwitches: {
             handler(v) {
                 this.showMarkers()
-                if(!v) {
-                    this.$store.dispatch('home/selectedCompanyItems', [])
-                    this.$store.dispatch('home/selectedLineItems', []);
-                }
-            }
+            },
+            deep: true
         },
-        spotSwitch: {
-            handler() {
-                this.showMarkers()
+        'markerSwitches.stations': {
+            handler(v) {
+                if(!v) {
+                    if (this.selectedCompanyItems.length !== 0) {
+                        this.$store.dispatch('home/selectedCompanyItems', []);
+                    }
+                    if (this.selectedLineItems.length !== 0) {
+                        this.$store.dispatch('home/selectedLineItems', []);
+                    }
+                }
             }
         },
         selectedCompanyItems: {
             async handler() {
                 if (this.markerSwitch) {
-                    this.$mapConfig.resetMarkers(this.stationMarkers);
-                    this.stationMarkers = [];
-                    await this.makeStationMarker(this.lines)
+                    this.$mapConfig.resetMarkers(this.markers.stations);
+                    this.markers.stations = [];
+                    this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction)
                     this.showMarkers()
                 }
                 if (this.lineSwitch) {
@@ -92,9 +90,9 @@ export default Vue.extend({
         selectedLineItems: {
             async handler(v) {
                 if (this.markerSwitch) {
-                    this.$mapConfig.resetMarkers(this.stationMarkers);
-                    this.stationMarkers = [];
-                    await this.makeStationMarker(this.lines)
+                    this.$mapConfig.resetMarkers(this.markers.stations);
+                    this.markers.stations = [];
+                    this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction)
                     this.showMarkers()
                 }
                 if (this.lineSwitch) {
@@ -114,8 +112,8 @@ export default Vue.extend({
                 if(value) {
                     this.showMarkers()
                 } else {
-                    this.$mapConfig.hideMarkers(this.stationMarkers);
-                    this.$mapConfig.hideMarkers(this.spotMarkers);
+                    this.$mapConfig.hideMarkers(this.markers.stations);
+                    this.$mapConfig.hideMarkers(this.markers.spots);
                 }
             }
         },
@@ -131,13 +129,19 @@ export default Vue.extend({
             }
         },
     },
+    beforeCreate() {
+        this.$store.dispatch('home/makeSwitches')
+    },
+    created() {
+        this.fields.forEach((field: string) => {
+            this.markers[field] = []
+        });
+    },
     async mounted(){
         await this.setMap()
+        this.setMarkers();
         let timer: NodeJS.Timer|null;
-        this.addClickMapListeners()
-        this.makeStationMarker(this.lines)
-        this.makeCityMarkers(this.words)
-        this.makeSpotMarkers(this.words)
+
         this.$mapConfig.map.addListener("bounds_changed", () => {
             const bounds = this.$mapConfig.currentBounds()
             const getMapCenter = this.$mapConfig.map.getCenter();
@@ -149,86 +153,62 @@ export default Vue.extend({
                 this.showMarkers()
                 this.$store.dispatch('home/getCity', {mapCenter: mapCenter, zoom: zoom});
                 this.$store.dispatch('home/getCurrentBounds', bounds);
-            },500);
-            zoom > 13 ? this.$mapConfig.changeIcon(this.stationMarkers, this.stationIcon.big) : this.$mapConfig.changeIcon(this.stationMarkers, this.stationIcon.small);
-            zoom > 13 ? this.$mapConfig.changeIcon(this.spotMarkers, this.spotIcon.big) : this.$mapConfig.changeIcon(this.spotMarkers, this.spotIcon.small);
+            },1000);
+            zoom > 13 ? this.$mapConfig.changeIcon(this.markers.stations, 'stations', 'big') : this.$mapConfig.changeIcon(this.markers.stations, 'stations', 'small');
+            zoom > 13 ? this.$mapConfig.changeIcon(this.markers.spots, 'spots', 'big') : this.$mapConfig.changeIcon(this.markers.spots, 'spots', 'small');
         });
     },
     methods:{
         async setMap() {
             const mapEl = this.$refs.map;
-            this.$mapConfig.makeMap(mapEl as HTMLElement)
+            this.$mapConfig.makeMap(mapEl as HTMLElement);
+            this.addClickMapListeners();
+        },
+        async setMarkers() {
+            this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction)
+            this.markers.cities = await this.$mapConfig.makeMarkers([{cities: this.words}], 'cities', this.cityMarkerFunction)
+            this.markers.spots = await this.$mapConfig.makeMarkers(this.words, 'spots', this.spotMarkerFunction)
         },
         showMarkers() {
             if(this.markerSwitch) {
-                const stationMarkers = this.$mapConfig.boundsFilterForMarker(this.stationMarkers, this.stationSwitch) as any;
-                this.$mapConfig.cityFilterForMarker(stationMarkers, this.polygons, this.selectedCityItems);
-                const spotMarkers = this.$mapConfig.boundsFilterForMarker(this.spotMarkers, this.spotSwitch) as any;
-                this.$mapConfig.cityFilterForMarker(spotMarkers, this.polygons, this.selectedCityItems);
-                const cityMarkers = this.$mapConfig.boundsFilterForMarker(this.cityMarkers, this.citySwitch) as any;
-                this.$mapConfig.cityFilterForMarker(cityMarkers, this.polygons, this.selectedCityItems);
+                this.fields.forEach((field: string) => {
+                    const markers = this.$mapConfig.boundsFilterForMarker(this.markers[field], this.markerSwitches[field]) as any;
+                    this.$mapConfig.cityFilterForMarker(markers, this.polygons, this.selectedCityItems);
+                });
             }
         },
-        async makeStationMarker(lines: Line[]) {
-            const zoom = this.$mapConfig.map.getZoom();
-            const icon = (zoom > 13) ? this.stationIcon.big : this.stationIcon.small
-            const markers: google.maps.Marker[][] = [];
-            await lines.forEach((line: any,i: number) => {
-                const lineMarkerArray: google.maps.Marker[] = [];
-                line.stations.forEach((station: Station) => {
-                    let marker = this.$mapConfig.makeMarker(station, icon);
-                    marker.addListener("click", async () => {
-                        this.$store.dispatch('home/selectMarker',station);
-                        this.$store.commit('home/twitterInfo', []);
-                        this.$store.dispatch('home/getTwitterInfo', {name: station.name + '駅'});
-                        await this.$store.dispatch('home/getStationInfo', {name: station.name + '駅'})
-                        this.$store.commit('home/searching', false)
-                    });
-                    lineMarkerArray.push(marker);
-                });
-                markers.push(lineMarkerArray)
+        stationMarkerFunction(marker: google.maps.Marker, station: {name: string}) {
+            marker.addListener("click", async () => {
+                this.$store.dispatch('home/selectMarker',station);
+                this.$store.commit('home/twitterInfo', []);
+                this.$store.dispatch('home/getTwitterInfo', {name: station.name + '駅'});
+                await this.$store.dispatch('home/getStationInfo', {name: station.name + '駅'})
+                this.$store.commit('home/searching', false)
             });
-            this.stationMarkers = markers;
         },
-        async makeCityMarkers(words: Words[]) {
-            const markers: google.maps.Marker[][] = [];
-            await words.forEach((word: any, i: number) => {
-                let marker = this.$mapConfig.makeMarker(word, '');
+        cityMarkerFunction(marker: google.maps.Marker, city: {name: string}) {
                 marker.addListener("click", async (e: google.maps.MapMouseEvent) => {
                     await this.$store.dispatch('home/searchCityCode', e);
                     // this.$store.dispatch('home/selectMarker', word);
                     // await this.$store.dispatch('home/getTwitterInfo', {name: word.name});
                     // this.$store.commit('home/searching', false)
                 });
-                markers.push([marker]);
-            });
-            this.cityMarkers = markers
         },
-        async makeSpotMarkers(words: Words[]) {
-            const markers: google.maps.Marker[][] = [];
-            await words.forEach((word: any, i: number) => {
-                const spotMarkerArray: google.maps.Marker[] = [];
-                word.spots.forEach((spot: Station) => {
-                    let marker = this.$mapConfig.makeMarker(spot, this.spotIcon.big, spot.name);
-                    marker.addListener("click", async () => {
-                        this.$store.dispatch('home/selectMarker', spot);
-                        this.$store.dispatch('home/getTwitterInfo', {name: spot.name});
-                        await this.$store.dispatch('home/getStationInfo', {name: spot.name})
-                        // this.$store.commit('home/searching', false)
-                    });
-                    this.$mapConfig.createInfoWindow(marker, spot.name)
-                    spotMarkerArray.push(marker);
-                });
-                markers.push(spotMarkerArray)
+        spotMarkerFunction(marker: google.maps.Marker, spot: {name: string}) {
+            marker.addListener("click", async () => {
+                this.$store.dispatch('home/selectMarker', spot);
+                this.$store.dispatch('home/getTwitterInfo', {name: spot.name});
+                await this.$store.dispatch('home/getStationInfo', {name: spot.name})
+                // this.$store.commit('home/searching', false)
             });
-            this.spotMarkers = markers
+            this.$mapConfig.createInfoWindow(marker, spot.name)
         },
         makeCityPolygon(v: City[]) {
             const that = this;
             const polygons = v.map((selectedCityItem: City, index: number) => {
                 return selectedCityItem.polygons.map((polygon_obj) => {
                     const polygon = this.$mapConfig.makePolygon(polygon_obj, index);
-                    window.google.maps.event.addListener(polygon, 'click', function(e: google.maps.MapMouseEvent) {
+                    window.google.maps.event.addListener(polygon, 'click', (e: google.maps.MapMouseEvent) => {
                         that.onClickMap(e);
                     });
                     return polygon
@@ -301,12 +281,12 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
 
-.map-container{
+.map-container {
     position:relative;
     width:100%;
     height:100vh;
     max-height:calc(100vh - 64px);
-    .line-chart{
+    .line-chart {
         position: absolute;
         top:40px;
         bottom: 0;
@@ -314,7 +294,7 @@ export default Vue.extend({
         left: 0;
         margin: auto;
     }
-    .map-top{
+    .map-top {
         position:absolute;
         z-index: 1;
     }
@@ -339,10 +319,10 @@ export default Vue.extend({
         // padding-top: 56.25%;
         transition: all .5s
     }
-    .show-line{
+    .show-line {
         opacity: 0.4;
     }
-    #overview-wrapper{
+    #overview-wrapper {
         position:absolute;
         width: 30%;
         bottom: 50px;

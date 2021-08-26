@@ -5,6 +5,7 @@ import population from '../assets/json/population.json'
 import words from '../assets/json/words.json'
 
 interface State {
+    fields: string[],
     companies: Company[]
     selectedCompanyItems: Company[],
     selectedLineItems: Line[],
@@ -31,6 +32,7 @@ interface State {
     stationSwitch: boolean,
     citySwitch: boolean,
     spotSwitch: boolean,
+    markerSwitches: {[key: string]: boolean}
 }
 interface Coordinate {lat: number, lng: number};
 interface Polygon {lat: number, lng: number}[];
@@ -44,6 +46,7 @@ interface Twitter {id: number, 'name': string, 'profile_image_url': string, 'fol
 interface Words   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
 
 const state = {
+    fields: ['stations', 'cities', 'spots'],
     companies: companies,
     cities: cities,
     population: population,
@@ -70,9 +73,12 @@ const state = {
     stationSwitch: true,
     citySwitch: true,
     spotSwitch: true,
+    markerSwitches: {}
 };
 
 const getters = {
+    fields: (state: State) => state.fields,
+    markerSwitches: (state: State) => state.markerSwitches,
     /*
     フィルタリングされていない会社,路線図,駅データ全ての配列
     現在データベースからではなくjsonファイルから読み込んでいる
@@ -227,6 +233,11 @@ const getters = {
 }
 
 const mutations = {
+    makeSwitches: (state: State) => {
+        state.fields.forEach((field: string) => {
+            state.markerSwitches[field] = true
+        });
+    },
     setCompanies: (state: State, payload: Company[]) => {
         payload.forEach(company => state.companies.push(company));
     },
@@ -260,8 +271,10 @@ const mutations = {
     stationSwitch: (state: State, payload: boolean) => {
         state.stationSwitch = payload;
     },
-    spotSwitch: (state: State, payload: boolean) => {
-        state.spotSwitch = payload;
+    changeMarkerSwitches: (state: State, payload: {category: string, status: boolean}) => {
+        let obj: {[key: string]: boolean} = {}
+        obj[payload.category] = payload.status
+        state.markerSwitches = Object.assign({}, state.markerSwitches, obj)
     },
     dotSwitch: (state: State, payload: boolean) => {
         state.dotSwitch = payload;
@@ -339,11 +352,8 @@ const actions = {
     changeChartSwitch: (context: any, payload: boolean) => {
         context.commit('chartSwitch', payload)
     },
-    changeStationSwitch: (context: any, payload: boolean) => {
-        context.commit('stationSwitch', payload)
-    },
-    changeSpotSwitch: (context: any, payload: boolean) => {
-        context.commit('spotSwitch', payload)
+    changeMarkerSwitches: (context: any, payload: {category: string, status: boolean}) => {
+        context.commit('changeMarkerSwitches', payload)
     },
     changeDotSwitch: (context: any, payload: boolean) => {
         context.commit('dotSwitch', payload)
@@ -372,7 +382,6 @@ const actions = {
             console.log(err)
             context.commit('stationInfo', 'ページが見つかりませんでした')
         }
-        console.log(response)
         context.commit('twitterInfo', response)
     },
     uncheck: (context: any, payload: string) => {
@@ -422,6 +431,9 @@ const actions = {
         const response = await $axios.$get('/api/event/');
         context.commit('events', response);
         // context.commit('events', response.events);
+    },
+    makeSwitches: (context: any) => {
+        context.commit('makeSwitches')
     }
 };
 

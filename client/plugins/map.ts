@@ -4,12 +4,16 @@ interface Polygon {"lat":number,"lng":number}
 // import store from '~/store/home'
 export class MapConfig {
     private options: any
-    private markerIcons = {
-        jr: '../assets/img/jr.png',
-        metro: '../assets/img/metro.png',
-        toei: '../assets/img/toei.png',
-        keio: '../assets/img/keio.png',
-        tokyu: '../assets/img/tokyu.png'
+    // private markerIcons = {
+    //     jr: '../assets/img/jr.png',
+    //     metro: '../assets/img/metro.png',
+    //     toei: '../assets/img/toei.png',
+    //     keio: '../assets/img/keio.png',
+    //     tokyu: '../assets/img/tokyu.png'
+    // }
+    private markerIcons: any = {
+        stations: {small: require('~/assets/img/train.png'), big: require('~/assets/img/station.png')},
+        spots: {small: require('~/assets/img/spot_small.png'), big: require('~/assets/img/spot.png')},
     }
     public map: any | google.maps.Map = null
     public infoWindow: any | google.maps.InfoWindow = null
@@ -37,7 +41,7 @@ export class MapConfig {
         polygon.setMap(this.map);
         return polygon
     }
-    makeMarker(station: Station, icon: string = '', text: string = '') {
+    makeMarker(obj: {lat: number, lng: number}, icon: string = '', text: string = '') {
         // var MarkerWithLabel = require('markerwithlabel')(google.maps);
         // const icon = {
         //     url: url,
@@ -61,14 +65,33 @@ export class MapConfig {
         //             : ''
         const marker = new google.maps.Marker({
             map: this.map,
-            position: new google.maps.LatLng(station.lat, station.lng),
+            position: new google.maps.LatLng(obj.lat, obj.lng),
             icon: icon,
             // label: label,
-            visible: false,
+            visible: true,
             // opacity: 0.8,
             // optimized: true,
         });
         return marker
+    }
+    async makeMarkers(json: {}[], key: string, func: ((marker: google.maps.Marker, value: {name: string}) => void)) {
+        const zoom = this.map.getZoom();
+        let icon = ''
+        const isIcon = this.markerIcons[key] || null;
+        if(isIcon) {
+            icon = (zoom > 13) ? this.markerIcons[key].big : this.markerIcons[key].small;
+        }
+        const markers: google.maps.Marker[][] = [];
+        await json.forEach((obj: {[key: string]: []}) => {
+            const lineMarkerArray: google.maps.Marker[] = [];
+            obj[key].forEach((value: {lat: number, lng: number, name: string}) => {
+                let marker = this.makeMarker(value, icon);
+                func(marker, value)
+                lineMarkerArray.push(marker);
+            });
+            markers.push(lineMarkerArray)
+        });
+        return markers;
     }
     makePolyline(path: {color: string, polygon: google.maps.LatLng[]} ) {
         const polyline = new google.maps.Polyline({
@@ -106,7 +129,8 @@ export class MapConfig {
             })
         })
     }
-    changeIcon(markers_obj: google.maps.Marker[][], icon: string) {
+    changeIcon(markers_obj: google.maps.Marker[][], key: string, size: string) {
+        const icon = this.markerIcons[key][size]
         markers_obj.forEach((markers)=>{
             markers.forEach((marker)=>{
                 marker.setIcon(icon);

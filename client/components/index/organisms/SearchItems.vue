@@ -62,23 +62,23 @@ export default Vue.extend({
                 return this.$store.getters['home/searchWord'];
             },
             set(newValue){
-                this.$store.dispatch('home/searchWord',newValue);
+                this.$store.dispatch('home/searchWord', newValue);
             }
         },
         stationSwitch: {
             get() {
-                return this.$store.getters['home/stationSwitch'];
+                return this.$store.getters['home/markerSwitches'].stations;
             },
             set(value) {
-                this.$store.dispatch('home/changeStationSwitch', value);
+                this.$store.dispatch('home/changeMarkerSwitches', {status: value, category: 'stations'});
             }
         },
         spotSwitch: {
             get() {
-                return this.$store.getters['home/spotSwitch'];
+                return this.$store.getters['home/markerSwitches'].spots;
             },
             set(value) {
-                this.$store.dispatch('home/changeSpotSwitch', value);
+                this.$store.dispatch('home/changeMarkerSwitches', {status: value, category: 'spots'});
             }
         },
     },
