@@ -12,6 +12,7 @@ export class MapConfig {
         tokyu: '../assets/img/tokyu.png'
     }
     public map: any | google.maps.Map = null
+    public infoWindow: any | google.maps.InfoWindow = null
     public polygons: any | google.maps.Polygon[][] = null
     constructor(options: any) {
       this.options = options
@@ -170,6 +171,31 @@ export class MapConfig {
             }
         }
     }
+    createInfoWindow(marker: google.maps.Marker, text: string) {
+        const infoWindow = new google.maps.InfoWindow({content: `<h3 style="color:black">${text}</h3>`});
+
+        // mouseoverイベントを取得するListenerを追加
+        const that = this;
+        google.maps.event.addListener(marker, 'mouseover', function(){
+            infoWindow.open(that.map, marker);
+          });
+  
+        // mouseoutイベントを取得するListenerを追加
+        google.maps.event.addListener(marker, 'mouseout', function(){
+            infoWindow.close();
+          });
+    }
+    createMapInfoWindow(lat: number, lng: number, text: string) {
+        const latLng = new google.maps.LatLng(lat, lng)
+        this.infoWindow = new google.maps.InfoWindow({
+            content: `<h3 style="color:black">${text}</h3>`,
+            position: latLng
+        });
+        this.infoWindow.open(this.map);
+    }
+    // removeMapInfoWindow(lat: number, lng: number, text: string) {
+    //     this.map.removeInf
+    // }
   }
   
   // plugin

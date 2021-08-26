@@ -7,7 +7,7 @@
             </div>
             <div class="mb-2">
                 <label>鉄道会社</label>
-                <item-select maxHeight="calc(100vh - 300px)" style="position:relative;z-index:2" v-model="selectedCompanyItems" placeholder="鉄道会社名を絞り込む" background-color="white" ripple="true"></item-select>
+                <item-select maxHeight="calc(100vh - 300px)" style="position:relative;z-index:2" v-model="selectedCompanyItems" :items="$store.getters['home/companies']" placeholder="鉄道会社名を絞り込む" background-color="white" ripple="true"></item-select>
             </div>
             <div v-if="selectedCompanyItems.length!==0">
                 <label>路線</label>

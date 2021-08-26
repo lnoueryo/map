@@ -11,7 +11,7 @@
                             </div>
                         </transition>
                         <transition-group name="list" tag="div">
-                            <div class="station-list" style="width:100%;color:black" v-for="(spot, k) in boundsFilter(word.spots)" :key="k" @click="onClickList(spot)">
+                            <div class="station-list" style="width:100%;color:black" v-for="(spot, k) in boundsFilter(word.spots)" :key="k" @click="onClickList(spot)" @mouseover="showInfoWindow(spot)" @mouseout="hideInfoWindow">
                                 <div>{{spot.name}}</div>
                             </div>
                         </transition-group>
@@ -115,7 +115,13 @@ export default Vue.extend({
         onClickList(station: Station){
             this.$store.dispatch('home/getStationInfo',{name: station.name + '駅'})
             this.$store.dispatch('home/selectMarker', station);
-        }
+        },
+        showInfoWindow(spot: any) {
+            this.$mapConfig.createMapInfoWindow(spot.lat, spot.lng, spot.name)
+        },
+        hideInfoWindow(spot: any) {
+            this.$mapConfig.infoWindow.setMap(null)
+        },
     }
 })
 </script>

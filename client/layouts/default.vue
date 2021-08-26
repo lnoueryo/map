@@ -48,4 +48,10 @@ export default Vue.extend({
     padding: 2px 10px;
     border-radius: 8px;
 }
+.gm-style-iw {
+  margin-left: 10px;
+}
+.gm-style-iw > button {
+  display: none !important;
+}
 </style>

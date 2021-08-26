@@ -109,9 +109,11 @@ export default Vue.extend({
                 this.makeCityPolygon(v)
             },
         },
-        markerSwitch:{
+        markerSwitch: {
             handler(value){
-                value ? this.showMarkers() : () => {
+                if(value) {
+                    this.showMarkers()
+                } else {
                     this.$mapConfig.hideMarkers(this.stationMarkers);
                     this.$mapConfig.hideMarkers(this.spotMarkers);
                 }
@@ -158,12 +160,14 @@ export default Vue.extend({
             this.$mapConfig.makeMap(mapEl as HTMLElement)
         },
         showMarkers() {
-            const stationMarkers = this.$mapConfig.boundsFilterForMarker(this.stationMarkers, this.stationSwitch) as any;
-            this.$mapConfig.cityFilterForMarker(stationMarkers, this.polygons, this.selectedCityItems);
-            const spotMarkers = this.$mapConfig.boundsFilterForMarker(this.spotMarkers, this.spotSwitch) as any;
-            this.$mapConfig.cityFilterForMarker(spotMarkers, this.polygons, this.selectedCityItems);
-            const cityMarkers = this.$mapConfig.boundsFilterForMarker(this.cityMarkers, this.citySwitch) as any;
-            this.$mapConfig.cityFilterForMarker(cityMarkers, this.polygons, this.selectedCityItems);
+            if(this.markerSwitch) {
+                const stationMarkers = this.$mapConfig.boundsFilterForMarker(this.stationMarkers, this.stationSwitch) as any;
+                this.$mapConfig.cityFilterForMarker(stationMarkers, this.polygons, this.selectedCityItems);
+                const spotMarkers = this.$mapConfig.boundsFilterForMarker(this.spotMarkers, this.spotSwitch) as any;
+                this.$mapConfig.cityFilterForMarker(spotMarkers, this.polygons, this.selectedCityItems);
+                const cityMarkers = this.$mapConfig.boundsFilterForMarker(this.cityMarkers, this.citySwitch) as any;
+                this.$mapConfig.cityFilterForMarker(cityMarkers, this.polygons, this.selectedCityItems);
+            }
         },
         async makeStationMarker(lines: Line[]) {
             const zoom = this.$mapConfig.map.getZoom();
@@ -190,7 +194,8 @@ export default Vue.extend({
             const markers: google.maps.Marker[][] = [];
             await words.forEach((word: any, i: number) => {
                 let marker = this.$mapConfig.makeMarker(word, '');
-                marker.addListener("click", async () => {
+                marker.addListener("click", async (e: google.maps.MapMouseEvent) => {
+                    await this.$store.dispatch('home/searchCityCode', e);
                     // this.$store.dispatch('home/selectMarker', word);
                     // await this.$store.dispatch('home/getTwitterInfo', {name: word.name});
                     // this.$store.commit('home/searching', false)
@@ -208,9 +213,10 @@ export default Vue.extend({
                     marker.addListener("click", async () => {
                         this.$store.dispatch('home/selectMarker', spot);
                         this.$store.dispatch('home/getTwitterInfo', {name: spot.name});
-                        // await this.$store.dispatch('home/getStationInfo', {name: spot.name})
-                        this.$store.commit('home/searching', false)
+                        await this.$store.dispatch('home/getStationInfo', {name: spot.name})
+                        // this.$store.commit('home/searching', false)
                     });
+                    this.$mapConfig.createInfoWindow(marker, spot.name)
                     spotMarkerArray.push(marker);
                 });
                 markers.push(spotMarkerArray)
@@ -367,5 +373,6 @@ export default Vue.extend({
             top:100px;
         }
     }
+
 }
 </style>

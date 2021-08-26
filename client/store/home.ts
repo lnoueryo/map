@@ -267,7 +267,7 @@ const mutations = {
         state.dotSwitch = payload;
     },
     selectMarker: (state: State, payload: Station) => {
-        state.selectedMarker = Object.assign({}, state.selectedMarker,payload);
+        state.selectedMarker = Object.assign({}, state.selectedMarker, payload);
     },
     searchWord: (state: State, payload: string) => {
         state.searchWord = payload;
@@ -367,7 +367,7 @@ const actions = {
         context.commit('stationInfo', response)
     },
     getTwitterInfo: async(context: any, payload: string) => {
-        let err, response = await $axios.$get('/api/twitter/',{params: payload});
+        let err, response = await $axios.$get('/api/twitter/',　{params: payload});
         if(err) {
             console.log(err)
             context.commit('stationInfo', 'ページが見つかりませんでした')

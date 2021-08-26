@@ -1,3 +1,4 @@
+import { $axios } from '~/utils/api';
 export class Map {
     public mapElement;
     public map;
