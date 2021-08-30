@@ -96,8 +96,8 @@ export default Vue.extend({
             input.blur();
             if(searchStation){
                 this.$store.dispatch('home/selectMarker', searchStation);
-                this.$store.dispatch('home/getStationInfo', {name: searchStation.name + '駅'});
-                this.$store.dispatch('home/getTwitterInfo', {name: searchStation.name + '駅'});
+                this.$store.dispatch('home/getStationInfo', {name: searchStation.name});
+                this.$store.dispatch('home/getTwitterInfo', {name: searchStation.name});
             } else {
                 alert('見つかりませんでした')
             }

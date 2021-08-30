@@ -1,5 +1,5 @@
 interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
-interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
+interface City {prefecture_id: string, city_code: string, city: string, polygons: Polygon[][]}
 interface Polygon {"lat":number,"lng":number}
 // import store from '~/store/home'
 export class MapConfig {

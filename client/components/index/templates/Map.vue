@@ -21,8 +21,8 @@ interface Station {id: number, prefecture: string, name: string, lat: number, ln
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string,stations: Station[]}
 interface DataType {stationIcon: {small: string, big: string}, spotIcon: {small: string, big: string},stationMarkers: google.maps.Marker[][],cityMarkers: google.maps.Marker[][],spotMarkers: google.maps.Marker[][],polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][],timer: null|NodeJS.Timer}
-interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
-interface Words   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
+interface City {prefecture_id: string, city_code: string, city: string, polygons: Polygon[][]}
+interface Cities   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
 
 export default Vue.extend({
     components: {
@@ -44,7 +44,7 @@ export default Vue.extend({
     computed:{
         ...mapGetters('home', [
             'lines',
-            'words',
+            'cities',
             'events',
             'markerSwitch',
             'lineSwitch',
@@ -136,8 +136,8 @@ export default Vue.extend({
         let timer: NodeJS.Timer|null;
         this.addClickMapListeners()
         this.makeStationMarker(this.lines)
-        this.makeCityMarkers(this.words)
-        this.makeSpotMarkers(this.words)
+        this.makeCityMarkers(this.cities)
+        this.makeSpotMarkers(this.cities)
         this.$mapConfig.map.addListener("bounds_changed", () => {
             const bounds = this.$mapConfig.currentBounds()
             const getMapCenter = this.$mapConfig.map.getCenter();
@@ -180,8 +180,8 @@ export default Vue.extend({
                     marker.addListener("click", async () => {
                         this.$store.dispatch('home/selectMarker',station);
                         this.$store.commit('home/twitterInfo', []);
-                        this.$store.dispatch('home/getTwitterInfo', {name: station.name + '駅'});
-                        await this.$store.dispatch('home/getStationInfo', {name: station.name + '駅'})
+                        this.$store.dispatch('home/getTwitterInfo', {name: station.name});
+                        await this.$store.dispatch('home/getStationInfo', {name: station.name})
                         this.$store.commit('home/searching', false)
                     });
                     lineMarkerArray.push(marker);
@@ -190,9 +190,9 @@ export default Vue.extend({
             });
             this.stationMarkers = markers;
         },
-        async makeCityMarkers(words: Words[]) {
+        async makeCityMarkers(cities: Cities[]) {
             const markers: google.maps.Marker[][] = [];
-            await words.forEach((word: any, i: number) => {
+            await cities.forEach((word: any, i: number) => {
                 let marker = this.$mapConfig.makeMarker(word, '');
                 marker.addListener("click", async (e: google.maps.MapMouseEvent) => {
                     await this.$store.dispatch('home/searchCityCode', e);
@@ -204,9 +204,9 @@ export default Vue.extend({
             });
             this.cityMarkers = markers
         },
-        async makeSpotMarkers(words: Words[]) {
+        async makeSpotMarkers(cities: Cities[]) {
             const markers: google.maps.Marker[][] = [];
-            await words.forEach((word: any, i: number) => {
+            await cities.forEach((word: any, i: number) => {
                 const spotMarkerArray: google.maps.Marker[] = [];
                 word.spots.forEach((spot: Station) => {
                     let marker = this.$mapConfig.makeMarker(spot, this.spotIcon.big, spot.name);

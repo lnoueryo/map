@@ -59,7 +59,7 @@ export default Vue.extend({
             input.blur();
             if(searchStation){
                 this.$store.dispatch('home/selectMarker', searchStation);
-                this.$store.dispatch('home/getStationInfo', {name: searchStation.name + '駅'}).then(() => {
+                this.$store.dispatch('home/getStationInfo', {name: searchStation.name}).then(() => {
                     this.$store.commit('home/searching', false)
                 });
             } else {

@@ -1,8 +1,8 @@
 import { $axios } from '~/utils/api';
 import companies from '~/assets/json/company.json';
-import cities from '~/assets/json/cities.json';
+import cities from '~/assets/json/city.json';
 import population from '../assets/json/population.json'
-import words from '../assets/json/words.json'
+
 
 interface State {
     companies: Company[]
@@ -27,7 +27,6 @@ interface State {
     population: {city: string, population: number[]},
     lineChartIndex: number,
     events: string[],
-    words: Words[],
     stationSwitch: boolean,
     citySwitch: boolean,
     spotSwitch: boolean,
@@ -38,16 +37,15 @@ interface Bounds {north: number, south: number, west: number, east: number};
 interface Company {id: number, name: string, address: string, founded: string, lines: Line[]};
 interface Line {id: number, company_id: number, name: string, polygon: Polygon, color: string,stations: Station[]};
 interface Station {name: string,id:number,line_id:number,order:number,prefecture:string,lat:number,lng:number,company_id:number,city_code: string}
-interface City {prefecture_id: string, city_code: number, city: string, polygons:Polygon[][]}
+// interface City {prefecture_id: string, city_code: string, city: string, polygons:Polygon[][]}
 interface AddressElement {Code: string, Name: string, Kana: string, Level: string}
 interface Twitter {id: number, 'name': string, 'profile_image_url': string, 'followers_count': number, 'friends_count': number, 'text': string, 'images': string[]}
-interface Words   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
+interface City   {name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}, polygons:Polygon[][]}
 
 const state = {
     companies: companies,
     cities: cities,
     population: population,
-    words: words,
     selectedCompanyItems: [],
     selectedLineItems: [],
     selectedCityItems: [],
@@ -79,10 +77,6 @@ const getters = {
     */
     companies: (state: State): Company[] => state.companies,
     /*
-    フィルタリングされていない市町村ポリゴンを返す
-    */
-    cities: (state: State): City[] => state.cities,
-    /*
     フィルタリングされていない人口情報を返す
     */
     population: (state: State) => state.population,
@@ -95,8 +89,11 @@ const getters = {
        const lines = [].concat(...getters.companies.map((company: Company): Line[] => company.lines));
        return getters.companyFilter(lines);
     },
-    words: (state: State, getters: any) => {
-        return state.spotSwitch ? getters.cityFilterForWords(state.words) : []
+    originalCities: (state: State, getters: any) => {
+        return state.cities
+    },
+    cities: (state: State, getters: any) => {
+        return state.spotSwitch ? getters.cityFilterForCities(state.cities) : []
     },
     /*
     company配列より路線図のみを抽出し、
@@ -149,25 +146,25 @@ const getters = {
     */
     cityFilter: (state: State, getters: any) => (lines: Line[]) => {//選択された路線図のフィルター
         const cityCodes = state.selectedCityItems.map((selectedCityItem) => { //選択された路線図のid
-            const code = selectedCityItem.prefecture_id + selectedCityItem.city_code;
+            const code = selectedCityItem.city_code;
             return code;
         })
         let copyLines: Line[] = JSON.parse(JSON.stringify(lines));
         return getters.selectedCities.length == 0 ? copyLines : copyLines.map((line) => {
             line.stations = line.stations.filter((station) => {
-                return cityCodes.includes(station.prefecture+station.city_code);
+                return cityCodes.includes(station.city_code);
             })
             return line;
         })
     },
-    cityFilterForWords: (state: State, getters: any) => (words: Words[]) => {//選択された路線図のフィルター
+    cityFilterForCities: (state: State, getters: any) => (cities: City[]) => {//選択された路線図のフィルター
         const cityCodes = state.selectedCityItems.map((selectedCityItem) => { //選択された路線図のid
-            const code = selectedCityItem.prefecture_id + selectedCityItem.city_code;
+            const code = selectedCityItem.city_code;
             return code;
         })
-        let copyWords: Words[] = JSON.parse(JSON.stringify(words));
-        return getters.selectedCities.length == 0 ? copyWords : copyWords.filter((word) => {
-            return cityCodes.includes(word.code);
+        let copyCities: City[] = JSON.parse(JSON.stringify(cities));
+        return getters.selectedCities.length == 0 ? copyCities : copyCities.filter((city) => {
+            return cityCodes.includes(city.city_code);
         })
     },
     selectedCompanyItems: (state: State): Company[] => state.selectedCompanyItems,
@@ -182,7 +179,7 @@ const getters = {
     selectedMarker: (state: State): Station => state.selectedMarker, //クリックされたマーカー(駅)のオブジェクトを返す
     showNumberOfMarkers: (state: State, getters: any): number => { //現在表示されているマーカーの数を返す
         const stations = getters.lines.reduce((sum:any, line:any): number => sum + (getters.boundsFilter(line.stations)).length, 0)
-        const spots = getters.words.reduce((sum:any, word:any): number => sum + (getters.boundsFilter(word.spots)).length, 0)
+        const spots = getters.cities.reduce((sum:any, city:any): number => sum + (getters.boundsFilter(city.spots)).length, 0)
         return getters.stationSwitch && getters.spotSwitch ? stations + spots : getters.stationSwitch ? stations : spots;
     },
     boundsFilter: (state: State) => (points: Coordinate[]): Coordinate[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
@@ -294,7 +291,7 @@ const mutations = {
     },
     selectCityItems: (state: State, payload: City) => {
         const index = state.selectedCityItems.findIndex((selectCity) => {
-            return (selectCity.prefecture_id + selectCity.city_code) == (payload.prefecture_id + payload.city_code);
+            return selectCity.city_code == payload.city_code;
         });
         index == -1 ? state.selectedCityItems.push(payload) : state.selectedCityItems.splice(index, 1)
     },
@@ -381,11 +378,11 @@ const actions = {
     searchCityCode: async(context: any,payload: google.maps.MapMouseEvent) => {
         const latLng = {lat: payload.latLng?.lat(), lng: payload.latLng?.lng()};
         const response = await $axios.$post('/api/search-by-reverse-geocode/', latLng);
-        const city = context.getters.cities.find((city: City) => {
-            return (city.prefecture_id + city.city_code) == response.Property.AddressElement[1].Code;
+        const city = context.getters.originalCities.find((city: City) => {
+            return city.city_code == response.Property.AddressElement[1].Code;
         })
         const index = context.state.selectedCityItems.findIndex((selectCity: City) => {
-            return (selectCity.prefecture_id + selectCity.city_code) == (city.prefecture_id + city.city_code);
+            return selectCity.city_code == city.city_code;
         });
         if (index == -1) context.dispatch('getCityWikiInfo', {name: city.name})
         context.commit('selectCityItems', city);
@@ -414,7 +411,7 @@ const actions = {
     },
     lineChartIndex: async(context: any, payload: any) => {
         const cityIndex = context.getters.population.findIndex((city: City) => {
-            return city.city == payload.Property.AddressElement[1].Name;
+            return city.name == payload.Property.AddressElement[1].Name;
         })
         if (cityIndex !== -1) context.commit('lineChartIndex', cityIndex);
     },
