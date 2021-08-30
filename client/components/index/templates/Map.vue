@@ -22,7 +22,7 @@ interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string,stations: Station[]}
 interface DataType {markers: {[key: string]: google.maps.Marker[][]},polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][],timer: null|NodeJS.Timer}
 interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
-interface Words   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
+interface Cities   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
 
 export default Vue.extend({
     components: {
@@ -42,7 +42,7 @@ export default Vue.extend({
             'fields',
             'markerSwitches',
             'lines',
-            'words',
+            'cities',
             'markerSwitch',
             'lineSwitch',
             'chartSwitch',
@@ -184,6 +184,7 @@ export default Vue.extend({
                 this.$store.dispatch('home/getTwitterInfo', {name: station.name + '駅'});
                 await this.$store.dispatch('home/getStationInfo', {name: station.name + '駅'})
                 this.$store.commit('home/searching', false)
+
             });
         },
         cityMarkerFunction(marker: google.maps.Marker, city: {name: string}) {

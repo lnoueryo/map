@@ -29,7 +29,7 @@ export default Vue.extend({
         ]),
         URL(){
             if (this.selectedMarker.station_name) {
-                return 'https://ja.wikipedia.org/wiki/' + this.selectedMarker.name + '駅'
+                return 'https://ja.wikipedia.org/wiki/' + this.selectedMarker.name
             }else {
                 return;
             }

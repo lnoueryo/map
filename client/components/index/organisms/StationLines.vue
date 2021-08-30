@@ -4,14 +4,14 @@
             <div class="middle-list" v-if="markerSwitch">
                 <div v-if="spotSwitch">
                     <div class="company-name">観光スポット</div>
-                    <div v-for="(word, j) in words" :key="j" style="position:relative;">
+                    <div v-for="(city, j) in cities" :key="j" style="position:relative;">
                         <transition name="list">
-                            <div class="company-name" v-if="boundsFilter(word.spots).length !== 0">
-                                {{word.city}}
+                            <div class="company-name" v-if="boundsFilter(city.spots).length !== 0">
+                                {{city.name}}
                             </div>
                         </transition>
                         <transition-group name="list" tag="div">
-                            <div class="station-list" style="width:100%;color:black" v-for="(spot, k) in boundsFilter(word.spots)" :key="k" @click="onClickList(spot)" @mouseover="showInfoWindow(spot)" @mouseout="hideInfoWindow">
+                            <div class="station-list" style="width:100%;color:black" v-for="(spot, k) in boundsFilter(city.spots)" :key="k" @click="onClickList(spot)" @mouseover="showInfoWindow(spot)" @mouseout="hideInfoWindow">
                                 <div>{{spot.name}}</div>
                             </div>
                         </transition-group>
@@ -69,7 +69,7 @@ export default Vue.extend({
             'companies',
             'selectedCompanyItems',
             'selectedLineItems',
-            'words',
+            'cities',
             'stationSwitch',
             'spotSwitch',
         ]),
@@ -113,7 +113,7 @@ export default Vue.extend({
             this.$store.dispatch('home/selectMarker',searchStation)
         },
         onClickList(station: Station){
-            this.$store.dispatch('home/getStationInfo',{name: station.name + '駅'})
+            this.$store.dispatch('home/getStationInfo',{name: station.name})
             this.$store.dispatch('home/selectMarker', station);
         },
         showInfoWindow(spot: any) {

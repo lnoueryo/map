@@ -113,7 +113,7 @@ export default Vue.extend({
             (this.$refs.searchBar as any).$refs.input.blur();
             if(searchStation){
                 this.$store.dispatch('home/selectMarker',searchStation);
-                this.$store.dispatch('home/getStationInfo', {name: searchStation.name + '駅'});
+                this.$store.dispatch('home/getStationInfo', {name: searchStation.name});
             } else {
                 alert('見つかりませんでした')
             }
