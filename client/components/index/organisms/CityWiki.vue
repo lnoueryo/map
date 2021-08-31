@@ -18,13 +18,9 @@ import {mapGetters} from 'vuex'
 export default Vue.extend({
     computed:{
         ...mapGetters('home', [
-            'lines',
-            'markerSwitch',
-            'lineSwitch',
             'selectedMarker',
-            'showNumberOfMarkers',
-            'searchStations',
-            'stationInfo',
+        ]),
+        ...mapGetters('info', [
             'cityWikiInfo',
         ]),
         URL(){

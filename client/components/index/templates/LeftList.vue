@@ -56,12 +56,9 @@ export default Vue.extend({
     computed:{
         ...mapGetters('home', [
             'lines',
-            'markerSwitch',
-            'lineSwitch',
             'selectedMarker',
             'boundsFilter',
             'searchStations',
-            'stationInfo',
             'showNumberOfMarkers',
             'cityWiki'
         ]),
@@ -84,10 +81,10 @@ export default Vue.extend({
         },
         changeList:{
             get(){
-                return this.$store.getters['home/changeList'];
+                return this.$store.getters['switch/changeList'];
             },
             set(newValue){
-                this.$store.dispatch('home/changeList', newValue);
+                this.$store.dispatch('switch/changeList', newValue);
             }
         },
     },
@@ -113,7 +110,7 @@ export default Vue.extend({
             (this.$refs.searchBar as any).$refs.input.blur();
             if(searchStation){
                 this.$store.dispatch('home/selectMarker',searchStation);
-                this.$store.dispatch('home/getStationInfo', {name: searchStation.name});
+                this.$store.dispatch('info/getStationInfo', {name: searchStation.name});
             } else {
                 alert('見つかりませんでした')
             }

@@ -31,17 +31,6 @@
                 <div>マーカーをクリックしてTwitterの駅情報を取得しましょう</div>
             </div>
         </div>
-        <!-- <div class="url-box">
-            <a :href="URL" target="_blank">{{URL}}</a>
-        </div> -->
-            <!-- <div v-html="stationInfo" v-if="stationInfo"></div>
-            <div v-else style="display:flex;align-items:center;height:100%;">
-                <div>マーカーをクリックして駅情報を取得しましょう</div>
-            </div>
-        </div>
-        <div class="url-box">
-            <a :href="URL" target="_blank">{{URL}}</a>
-        </div> -->
     </div>
 </template>
 
@@ -50,15 +39,7 @@ import Vue from 'vue'
 import {mapGetters} from 'vuex'
 export default Vue.extend({
     computed:{
-        ...mapGetters('home', [
-            'lines',
-            'markerSwitch',
-            'lineSwitch',
-            'selectedMarker',
-            'showNumberOfMarkers',
-            'boundsFilter',
-            'searchStations',
-            'stationInfo',
+        ...mapGetters('info', [
             'twitterInfo'
         ]),
     },

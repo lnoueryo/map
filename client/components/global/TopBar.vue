@@ -29,9 +29,7 @@ export default Vue.extend({
     computed:{
         ...mapGetters('home', [
             'searchStations',
-            'stationInfo',
             'showNumberOfMarkers',
-            'markerSwitch',
         ]),
         filteredSearchStations(){
             return this.searchStations.filter((_: any,index: number)=>{
@@ -49,7 +47,7 @@ export default Vue.extend({
     },
     methods:{
         onClickChangeList(){
-            this.$store.dispatch('home/changeList')
+            this.$store.dispatch('switch/changeList')
         },
         select(searchStation: Station){
             const searchBar = this.$refs.searchBar as any;
@@ -59,8 +57,8 @@ export default Vue.extend({
             input.blur();
             if(searchStation){
                 this.$store.dispatch('home/selectMarker', searchStation);
-                this.$store.dispatch('home/getStationInfo', {name: searchStation.name}).then(() => {
-                    this.$store.commit('home/searching', false)
+                this.$store.dispatch('info/getStationInfo', {name: searchStation.name}).then(() => {
+                    this.$store.commit('info/searching', false)
                 });
             } else {
                 alert('見つかりませんでした')

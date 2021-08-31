@@ -25,34 +25,34 @@ export default Vue.extend({
     computed:{
         markerSwitch:{
             get(){
-                return this.$store.getters['home/markerSwitch'];
+                return this.$store.getters['switch/markerSwitch'];
             },
             set(value){
-                this.$store.dispatch('home/changeMarkerSwitch', value);
+                this.$store.dispatch('switch/changeMarkerSwitch', value);
             }
         },
         lineSwitch:{
             get(){
-                return this.$store.getters['home/lineSwitch'];
+                return this.$store.getters['switch/lineSwitch'];
             },
             set(value){
-                this.$store.dispatch('home/changeLineSwitch', value);
+                this.$store.dispatch('switch/changeLineSwitch', value);
             }
         },
         chartSwitch:{
             get(){
-                return this.$store.getters['home/chartSwitch'];
+                return this.$store.getters['switch/chartSwitch'];
             },
             set(value){
-                this.$store.dispatch('home/changeChartSwitch', value);
+                this.$store.dispatch('switch/changeChartSwitch', value);
             }
         },
         dotSwitch:{
             get(){
-                return this.$store.getters['home/dotSwitch'];
+                return this.$store.getters['switch/dotSwitch'];
             },
             set(value){
-                this.$store.dispatch('home/changeDotSwitch', value);
+                this.$store.dispatch('switch/changeDotSwitch', value);
             }
         },
     },

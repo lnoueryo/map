@@ -35,16 +35,16 @@ export default Vue.extend({
     computed:{
         ...mapGetters('home', [
             'lines',
-            'events',
             'filteredLines',
-            'markerSwitch',
-            'lineSwitch',
-            'selectedMarker',
             'boundsFilter',
-            'stationInfo',
-            'companies',
             'selectedCompanyItems',
             'selectedLineItems',
+        ]),
+        ...mapGetters('switch', [
+            'markerSwitch',
+        ]),
+        ...mapGetters('info', [
+            'events',
         ]),
         selectCompany:{
             get(){
@@ -64,7 +64,7 @@ export default Vue.extend({
         },
     },
     async created(){
-        this.$store.dispatch('home/getEvents');
+        this.$store.dispatch('info/getEvents');
     },
     methods:{
         makeStationArray(lines: Line[]){

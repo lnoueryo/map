@@ -5,33 +5,17 @@ import population from '../assets/json/population.json'
 
 
 interface State {
-    fields: string[],
     companies: Company[]
+    cities: City[],
     selectedCompanyItems: Company[],
     selectedLineItems: Line[],
     selectedCityItems: City[],
-    map: any,
     currentBounds: Bounds,
-    markerSwitch: boolean,
-    lineSwitch: boolean,
-    chartSwitch: boolean,
-    dotSwitch: boolean,
     selectedMarker: Station,
     searchWord: string,
-    changeList: number,
-    stationInfo: null|string,
-    cityWikiInfo: null|string,
-    twitterInfo: Twitter[],
-    cities: City[],
-    searching: boolean,
     addressElement: null | AddressElement[],
     population: {city: string, population: number[]},
     lineChartIndex: number,
-    events: string[],
-    stationSwitch: boolean,
-    citySwitch: boolean,
-    spotSwitch: boolean,
-    markerSwitches: {[key: string]: boolean}
 }
 interface Coordinate {lat: number, lng: number};
 interface Polygon {lat: number, lng: number}[];
@@ -39,44 +23,24 @@ interface Bounds {north: number, south: number, west: number, east: number};
 interface Company {id: number, name: string, address: string, founded: string, lines: Line[]};
 interface Line {id: number, company_id: number, name: string, polygon: Polygon, color: string,stations: Station[]};
 interface Station {name: string,id:number,line_id:number,order:number,prefecture:string,lat:number,lng:number,company_id:number,city_code: string}
-// interface City {prefecture_id: string, city_code: string, city: string, polygons:Polygon[][]}
 interface AddressElement {Code: string, Name: string, Kana: string, Level: string}
-interface Twitter {id: number, 'name': string, 'profile_image_url': string, 'followers_count': number, 'friends_count': number, 'text': string, 'images': string[]}
 interface City   {name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}, polygons:Polygon[][]}
 
 const state = {
-    fields: ['stations', 'cities', 'spots'],
     companies: companies,
     cities: cities,
     population: population,
     selectedCompanyItems: [],
     selectedLineItems: [],
     selectedCityItems: [],
-    map: null,
     currentBounds: {south: 0, north: 0,east: 0, west: 0},
     selectedMarker: {},
     searchWord: null,
-    changeList: 0,
-    stationInfo: null,
-    cityWikiInfo: null,
-    twitterInfo: [],
-    searching: false,
     addressElement: null,
     lineChartIndex: 0,
-    events: [],
-    markerSwitch: true,
-    lineSwitch: true,
-    chartSwitch: false,
-    dotSwitch: true,
-    stationSwitch: true,
-    citySwitch: true,
-    spotSwitch: true,
-    markerSwitches: {}
 };
 
 const getters = {
-    fields: (state: State) => state.fields,
-    markerSwitches: (state: State) => state.markerSwitches,
     /*
     フィルタリングされていない会社,路線図,駅データ全ての配列
     現在データベースからではなくjsonファイルから読み込んでいる
@@ -86,7 +50,6 @@ const getters = {
     フィルタリングされていない人口情報を返す
     */
     population: (state: State) => state.population,
-    events: (state: State) => state.events,
     /*
     company配列より路線図のみを抽出し、
     選択された会社名でフィルタリングされた配列を返す
@@ -98,8 +61,8 @@ const getters = {
     originalCities: (state: State, getters: any) => {
         return state.cities
     },
-    cities: (state: State, getters: any) => {
-        return state.spotSwitch ? getters.cityFilterForCities(state.cities) : []
+    cities: (state: State, getters: any, rootState: any, rootGetters: any) => {
+        return rootGetters['switch/markerSwitches'].spots ? getters.cityFilterForCities(state.cities) : []
     },
     /*
     company配列より路線図のみを抽出し、
@@ -177,16 +140,11 @@ const getters = {
     selectedLineItems: (state: State): Line[] => state.selectedLineItems,
     selectedCityItems: (state: State): City[] => state.selectedCityItems,
     searchWord: (state: State): string => state.searchWord,
-    changeList: (state: State): number => state.changeList,
-    markerSwitch: (state: State): boolean => state.markerSwitch, //マーカー表示のboolean
-    lineSwitch: (state: State) => state.lineSwitch, //路線図表示のboolean
-    chartSwitch: (state: State) => state.chartSwitch, //グラフ表示のboolean
-    dotSwitch: (state: State) => state.dotSwitch, //ドット表示のboolean
     selectedMarker: (state: State): Station => state.selectedMarker, //クリックされたマーカー(駅)のオブジェクトを返す
-    showNumberOfMarkers: (state: State, getters: any): number => { //現在表示されているマーカーの数を返す
+    showNumberOfMarkers: (state: State, getters: any, rootState: any, rootGetters: any): number => { //現在表示されているマーカーの数を返す
         const stations = getters.lines.reduce((sum:any, line:any): number => sum + (getters.boundsFilter(line.stations)).length, 0)
         const spots = getters.cities.reduce((sum:any, city:any): number => sum + (getters.boundsFilter(city.spots)).length, 0)
-        return getters.stationSwitch && getters.spotSwitch ? stations + spots : getters.stationSwitch ? stations : spots;
+        return rootGetters['switch/markerSwitches'].stations && rootGetters['switch/markerSwitches'].spots ? stations + spots : rootGetters['switch/markerSwitches'].stations ? stations : spots;
     },
     boundsFilter: (state: State) => (points: Coordinate[]): Coordinate[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
         const filteredStations = points.filter((point) => {
@@ -206,11 +164,7 @@ const getters = {
         let map = new Map(stations.map(station => [station.name, station]));
         return Array.from(map.values());
     },
-    stationInfo: (state: State) => state.stationInfo, //ウィキから引っ張ってきたhtmlを返す
-    cityWikiInfo: (state: State) => state.cityWikiInfo, //ウィキから引っ張ってきたhtmlを返す
-    twitterInfo: (state: State) => state.twitterInfo, //ツイッターから引っ張ってきたjsonを返す
     selectedCities: (state: State) => state.selectedCityItems, //ウィキから引っ張ってきたhtmlを返す
-    searching: (state: State) => state.searching, //ウィキ検索中のloading処理
     removeAddressElement: (state: State) => (elements: AddressElement[], zoom: number) => {
         let index: number;
         if(8 <= zoom && 10 > zoom) index = 1;
@@ -224,17 +178,9 @@ const getters = {
     },
     addressElement: (state: State) => state.addressElement,
     lineChartIndex: (state: State) => state.lineChartIndex,
-    stationSwitch: (state: State) => state.stationSwitch,
-    citySwitch: (state: State) => state.citySwitch,
-    spotSwitch: (state: State) => state.spotSwitch,
 }
 
 const mutations = {
-    makeSwitches: (state: State) => {
-        state.fields.forEach((field: string) => {
-            state.markerSwitches[field] = true
-        });
-    },
     setCompanies: (state: State, payload: Company[]) => {
         payload.forEach(company => state.companies.push(company));
     },
@@ -250,52 +196,14 @@ const mutations = {
     clearItem: (state: State, payload: number) => {
         state.selectedCompanyItems.splice(payload, 1);
     },
-    map: (state: State, payload: any) => {
-        state.map = payload
-    },
     currentBounds: (state: State, payload: Bounds) => {
         state.currentBounds = Object.assign({}, state.currentBounds,payload)
-    },
-    markerSwitch: (state: State, payload: boolean) => {
-        state.markerSwitch = payload;
-    },
-    lineSwitch: (state: State, payload: boolean) => {
-        state.lineSwitch = payload;
-    },
-    chartSwitch: (state: State, payload: boolean) => {
-        state.chartSwitch = payload;
-    },
-    stationSwitch: (state: State, payload: boolean) => {
-        state.stationSwitch = payload;
-    },
-    changeMarkerSwitches: (state: State, payload: {category: string, status: boolean}) => {
-        let obj: {[key: string]: boolean} = {}
-        obj[payload.category] = payload.status
-        state.markerSwitches = Object.assign({}, state.markerSwitches, obj)
-    },
-    dotSwitch: (state: State, payload: boolean) => {
-        state.dotSwitch = payload;
     },
     selectMarker: (state: State, payload: Station) => {
         state.selectedMarker = Object.assign({}, state.selectedMarker, payload);
     },
     searchWord: (state: State, payload: string) => {
         state.searchWord = payload;
-    },
-    changeList: (state: State, payload: number) => {
-        state.changeList = payload;
-    },
-    stationInfo: (state: State, payload: string) => {
-        state.stationInfo = payload;
-    },
-    cityWikiInfo: (state: State, payload: string) => {
-        state.cityWikiInfo = payload;
-    },
-    twitterInfo: (state: State, payload: Twitter[]) => {
-        state.twitterInfo = payload;
-    },
-    searching: (state: State, payload: boolean) => {
-        state.searching = payload;
     },
     uncheck: (state: State, payload: Line[]) => {
         state.selectedLineItems = payload.length == 1
@@ -317,17 +225,9 @@ const mutations = {
     changeLineChartIndex: (state: State, payload: number) => {
         state.lineChartIndex += payload;
     },
-    events: (state: State, payload: string[]) => {
-        state.events = payload;
-    },
 };
 
 const actions = {
-    getCompanies: async(context: any) => {
-        // const response = await $axios.$get('/api/');
-        // console.log(response)
-        // context.commit('setCompanies', response);
-    },
     selectedCompanyItems: (context: any, payload: {name: string, text: string}[]) => {
         context.commit('selectedCompanyItems', payload)
     },
@@ -340,46 +240,11 @@ const actions = {
     getCurrentBounds: (context: any, payload: Bounds) => {
         context.commit('currentBounds', payload)
     },
-    changeMarkerSwitch: (context: any, payload: boolean) => {
-        context.commit('markerSwitch', payload)
-    },
-    changeLineSwitch: (context: any, payload: boolean) => {
-        context.commit('lineSwitch', payload)
-    },
-    changeChartSwitch: (context: any, payload: boolean) => {
-        context.commit('chartSwitch', payload)
-    },
-    changeMarkerSwitches: (context: any, payload: {category: string, status: boolean}) => {
-        context.commit('changeMarkerSwitches', payload)
-    },
-    changeDotSwitch: (context: any, payload: boolean) => {
-        context.commit('dotSwitch', payload)
-    },
     selectMarker: (context: any, payload: Station) => {
         context.commit('selectMarker', payload)
     },
     searchWord: (context: any, payload: string) => {
         context.commit('searchWord', payload)
-    },
-    changeList: (context: any, payload: number) => {
-        context.commit('changeList', payload)
-    },
-    getStationInfo: async(context: any, payload: string) => {
-        context.commit('searching', true)
-        let err, response = await $axios.$get('/api/wiki/',{params: payload});
-        if(err) {
-            console.log(err)
-            context.commit('stationInfo', 'ページが見つかりませんでした')
-        }
-        context.commit('stationInfo', response)
-    },
-    getTwitterInfo: async(context: any, payload: string) => {
-        let err, response = await $axios.$get('/api/twitter/',　{params: payload});
-        if(err) {
-            console.log(err)
-            context.commit('stationInfo', 'ページが見つかりませんでした')
-        }
-        context.commit('twitterInfo', response)
     },
     uncheck: (context: any, payload: string) => {
         context.commit('uncheck', payload)
@@ -393,7 +258,8 @@ const actions = {
         const index = context.state.selectedCityItems.findIndex((selectCity: City) => {
             return selectCity.city_code == city.city_code;
         });
-        if (index == -1) context.dispatch('getCityWikiInfo', {name: city.name})
+        if (index == -1) context.dispatch('info/getCityWikiInfo', {name: city.name}, { root: true })
+        // if (index == -1) context.dispatch('getCityWikiInfo', {name: city.name})
         context.commit('selectCityItems', city);
     },
     getCity: async(context: any, payload: {mapCenter: Coordinate, zoom: number}) => {
@@ -409,29 +275,12 @@ const actions = {
             context.commit('addressElement', AddressElement);
         }
     },
-    getCityWikiInfo: async(context: any, payload: string) => {
-        // context.commit('searching', true)
-        let err, response = await $axios.$get('/api/wiki/', {params: payload});
-        if(err) {
-            console.log(err)
-            context.commit('stationInfo', 'ページが見つかりませんでした')
-        }
-        context.commit('cityWikiInfo', response)
-    },
     lineChartIndex: async(context: any, payload: any) => {
         const cityIndex = context.getters.population.findIndex((city: City) => {
             return city.name == payload.Property.AddressElement[1].Name;
         })
         if (cityIndex !== -1) context.commit('lineChartIndex', cityIndex);
     },
-    getEvents: async(context: any) => {
-        const response = await $axios.$get('/api/event/');
-        context.commit('events', response);
-        // context.commit('events', response.events);
-    },
-    makeSwitches: (context: any) => {
-        context.commit('makeSwitches')
-    }
 };
 
 export default {

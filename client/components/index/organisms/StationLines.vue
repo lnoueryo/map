@@ -2,7 +2,7 @@
     <div>
         <transition name="fade">
             <div class="middle-list" v-if="markerSwitch">
-                <div v-if="spotSwitch">
+                <div v-if="markerSwitches.spots">
                     <div class="company-name">観光スポット</div>
                     <div v-for="(city, j) in cities" :key="j" style="position:relative;">
                         <transition name="list">
@@ -17,7 +17,7 @@
                         </transition-group>
                     </div>
                 </div>
-                <div v-if="stationSwitch">
+                <div v-if="markerSwitches.stations">
                     <div class="company-name">駅</div>
                     <div v-for="(company, i) in companies" :key="i" style="position:relative">
                         <transition name="list">
@@ -61,17 +61,16 @@ export default Vue.extend({
         ...mapGetters('home', [
             'lines',
             'filteredLines',
-            'markerSwitch',
-            'lineSwitch',
             'selectedMarker',
             'boundsFilter',
-            'stationInfo',
             'companies',
             'selectedCompanyItems',
             'selectedLineItems',
             'cities',
-            'stationSwitch',
-            'spotSwitch',
+        ]),
+        ...mapGetters('switch', [
+            'markerSwitch',
+            'markerSwitches'
         ]),
         selectCompany:{
             get(){
@@ -113,7 +112,7 @@ export default Vue.extend({
             this.$store.dispatch('home/selectMarker',searchStation)
         },
         onClickList(station: Station){
-            this.$store.dispatch('home/getStationInfo',{name: station.name})
+            this.$store.dispatch('info/getStationInfo',{name: station.name})
             this.$store.dispatch('home/selectMarker', station);
         },
         showInfoWindow(spot: any) {

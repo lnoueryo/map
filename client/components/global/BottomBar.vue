@@ -14,7 +14,7 @@
                 <div :style="wikiStyle" ref="wiki" v-html="stationInfo"></div>
             </div>
         </nav>
-        <div style="position:absolute;bottom:7%;left:50%;transform: translateY(-50%) translateX(-50%);width:100%;padding:0 10px;max-width:300px;z-index:15" v-if="this.$store.getters['home/searching']">
+        <div style="position:absolute;bottom:7%;left:50%;transform: translateY(-50%) translateX(-50%);width:100%;padding:0 10px;max-width:300px;z-index:15" v-if="this.$store.getters['info/searching']">
             <v-card color="orange" dark height="40">
                 <v-card-text style="height:30px;padding:5px 10px;">
                 Please stand by
@@ -54,7 +54,7 @@ export default {
             return this.$store.getters.windowSize.y;
         },
         stationInfo(){
-            return this.$store.getters['home/stationInfo'];
+            return this.$store.getters['info/stationInfo'];
         }
     },
     watch:{

@@ -48,8 +48,9 @@ export default Vue.extend({
     computed:{
         ...mapGetters('home', [
             'searchStations',
-            'stationInfo',
             'showNumberOfMarkers',
+        ]),
+        ...mapGetters('switch', [
             'markerSwitch',
         ]),
         filteredSearchStations(){
@@ -67,18 +68,18 @@ export default Vue.extend({
         },
         stationSwitch: {
             get() {
-                return this.$store.getters['home/markerSwitches'].stations;
+                return this.$store.getters['switch/markerSwitches'].stations;
             },
             set(value) {
-                this.$store.dispatch('home/changeMarkerSwitches', {status: value, category: 'stations'});
+                this.$store.dispatch('switch/changeMarkerSwitches', {status: value, category: 'stations'});
             }
         },
         spotSwitch: {
             get() {
-                return this.$store.getters['home/markerSwitches'].spots;
+                return this.$store.getters['switch/markerSwitches'].spots;
             },
             set(value) {
-                this.$store.dispatch('home/changeMarkerSwitches', {status: value, category: 'spots'});
+                this.$store.dispatch('switch/changeMarkerSwitches', {status: value, category: 'spots'});
             }
         },
     },
@@ -96,8 +97,8 @@ export default Vue.extend({
             input.blur();
             if(searchStation){
                 this.$store.dispatch('home/selectMarker', searchStation);
-                this.$store.dispatch('home/getStationInfo', {name: searchStation.name});
-                this.$store.dispatch('home/getTwitterInfo', {name: searchStation.name});
+                this.$store.dispatch('info/getStationInfo', {name: searchStation.name});
+                this.$store.dispatch('info/getTwitterInfo', {name: searchStation.name});
             } else {
                 alert('見つかりませんでした')
             }

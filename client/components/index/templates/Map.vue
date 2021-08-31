@@ -39,23 +39,26 @@ export default Vue.extend({
     },
     computed:{
         ...mapGetters('home', [
-            'fields',
-            'markerSwitches',
             'lines',
             'cities',
-            'markerSwitch',
-            'lineSwitch',
-            'chartSwitch',
-            'dotSwitch',
             'selectedMarker',
             'selectedCompanyItems',
             'selectedCityItems',
             'selectedLineItems',
+        ]),
+        ...mapGetters('switch', [
+            'fields',
+            'markerSwitches',
+            'markerSwitch',
+            'lineSwitch',
+            'chartSwitch',
+            'dotSwitch',
         ])
     },
     watch: {
         markerSwitches: {
             handler(v) {
+                console.log(v)
                 this.showMarkers()
             },
             deep: true
@@ -130,7 +133,7 @@ export default Vue.extend({
         },
     },
     beforeCreate() {
-        this.$store.dispatch('home/makeSwitches')
+        this.$store.dispatch('switch/makeSwitches')
     },
     created() {
         this.fields.forEach((field: string) => {
@@ -180,10 +183,10 @@ export default Vue.extend({
         stationMarkerFunction(marker: google.maps.Marker, station: {name: string}) {
             marker.addListener("click", async () => {
                 this.$store.dispatch('home/selectMarker',station);
-                this.$store.commit('home/twitterInfo', []);
-                this.$store.dispatch('home/getTwitterInfo', {name: station.name + '駅'});
-                await this.$store.dispatch('home/getStationInfo', {name: station.name + '駅'})
-                this.$store.commit('home/searching', false)
+                this.$store.commit('info/twitterInfo', []);
+                this.$store.dispatch('info/getTwitterInfo', {name: station.name + '駅'});
+                await this.$store.dispatch('info/getStationInfo', {name: station.name + '駅'})
+                this.$store.commit('info/searching', false)
 
             });
         },
@@ -191,16 +194,16 @@ export default Vue.extend({
                 marker.addListener("click", async (e: google.maps.MapMouseEvent) => {
                     await this.$store.dispatch('home/searchCityCode', e);
                     // this.$store.dispatch('home/selectMarker', word);
-                    // await this.$store.dispatch('home/getTwitterInfo', {name: word.name});
-                    // this.$store.commit('home/searching', false)
+                    // await this.$store.dispatch('info/getTwitterInfo', {name: word.name});
+                    // this.$store.commit('info/searching', false)
                 });
         },
         spotMarkerFunction(marker: google.maps.Marker, spot: {name: string}) {
             marker.addListener("click", async () => {
                 this.$store.dispatch('home/selectMarker', spot);
-                this.$store.dispatch('home/getTwitterInfo', {name: spot.name});
-                await this.$store.dispatch('home/getStationInfo', {name: spot.name})
-                // this.$store.commit('home/searching', false)
+                this.$store.dispatch('info/getTwitterInfo', {name: spot.name});
+                await this.$store.dispatch('info/getStationInfo', {name: spot.name})
+                // this.$store.commit('info/searching', false)
             });
             this.$mapConfig.createInfoWindow(marker, spot.name)
         },
