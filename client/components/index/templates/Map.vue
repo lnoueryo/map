@@ -166,8 +166,8 @@ export default Vue.extend({
         },
         async setMarkers() {
             this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction)
-            this.markers.cities = await this.$mapConfig.makeMarkers([{cities: this.words}], 'cities', this.cityMarkerFunction)
-            this.markers.spots = await this.$mapConfig.makeMarkers(this.words, 'spots', this.spotMarkerFunction)
+            this.markers.cities = await this.$mapConfig.makeMarkers([{cities: this.cities}], 'cities', this.cityMarkerFunction)
+            this.markers.spots = await this.$mapConfig.makeMarkers(this.cities, 'spots', this.spotMarkerFunction)
         },
         showMarkers() {
             if(this.markerSwitch) {
