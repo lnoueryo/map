@@ -3,7 +3,7 @@
         <div class="toggle-switch">
             <div><slot></slot></div>
             <input :id="id" class="toggle-input" type='checkbox' v-model="checked"/>
-            <label :for="id" :style="value?{backgroundColor: backgroundColor}:{backgroundColor: '#ccc'}" class="toggle-label"/>
+            <label :for="id" :style="value ? {backgroundColor: backgroundColor} : {backgroundColor: '#ccc'}" class="toggle-label"/>
         </div>
     </div>
 </template>
@@ -11,9 +11,9 @@
 <script>
 export default {
   props:['id', 'backgroundColor', 'value'],
-    computed:{
-      checked:{
-        get(){
+    computed: {
+      checked: {
+        get() {
           return this.value;
         },
         set(newValue) {
@@ -61,9 +61,9 @@ label {
 }
 
 input:checked {
-  +label{
+  +label {
     background-color: #4BD865;
-    &:after{
+    &:after {
       left: 19px;
     }
   }
@@ -77,8 +77,8 @@ p {
 
 .toggle-switch {
   position: relative;
-  display:flex;
-  align-items:flex-end;
+  display: flex;
+  align-items: flex-end;
   justify-content: space-between;
   width: 100%;
 }

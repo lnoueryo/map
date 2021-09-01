@@ -16,11 +16,11 @@ const MapTop = () => import('../organisms/MapTop.vue');
    google: any;
 }
 declare const window: GMapWindow;
-interface Polygon {"lat":number,"lng":number}
-interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
+interface Polygon {lat: number, lng: number}
+interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number, city_code: string}
 interface LinePolyline {lat: number, lng: number}
-interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string,stations: Station[]}
-interface DataType {markers: {[key: string]: google.maps.Marker[][]},polylines: google.maps.Polyline[],polygons: google.maps.Polygon[][],timer: null|NodeJS.Timer}
+interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
+interface DataType {markers: {[key: string]: google.maps.Marker[][]}, polylines: google.maps.Polyline[], polygons: google.maps.Polygon[][], timer: null|NodeJS.Timer}
 interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
 interface Cities   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
 
@@ -37,7 +37,7 @@ export default Vue.extend({
             timer: null
         }
     },
-    computed:{
+    computed: {
         ...mapGetters('home', [
             'lines',
             'cities',
@@ -80,8 +80,8 @@ export default Vue.extend({
                 if (this.markerSwitch) {
                     this.$mapConfig.resetMarkers(this.markers.stations);
                     this.markers.stations = [];
-                    this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction)
-                    this.showMarkers()
+                    this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction);
+                    this.showMarkers();
                 }
                 if (this.lineSwitch) {
                     this.$mapConfig.resetPolyline(this.polylines);
@@ -95,8 +95,8 @@ export default Vue.extend({
                 if (this.markerSwitch) {
                     this.$mapConfig.resetMarkers(this.markers.stations);
                     this.markers.stations = [];
-                    this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction)
-                    this.showMarkers()
+                    this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction);
+                    this.showMarkers();
                 }
                 if (this.lineSwitch) {
                     this.$mapConfig.resetPolyline(this.polylines);
@@ -107,58 +107,58 @@ export default Vue.extend({
         },
         selectedCityItems: {
             handler(v){
-                this.makeCityPolygon(v)
+                this.makeCityPolygon(v);
             },
         },
         markerSwitch: {
-            handler(value){
+            handler(value) {
                 if(value) {
-                    this.showMarkers()
+                    this.showMarkers();
                 } else {
                     this.$mapConfig.hideMarkers(this.markers.stations);
                     this.$mapConfig.hideMarkers(this.markers.spots);
                 }
             }
         },
-        lineSwitch:{
-            handler(value){
-                value ? this.makeLineArray(this.lines) : this.$mapConfig.resetPolyline(this.polylines)
+        lineSwitch: {
+            handler(value) {
+                value ? this.makeLineArray(this.lines) : this.$mapConfig.resetPolyline(this.polylines);
             }
         },
         selectedMarker: {
             handler(v) {
-                const zoom = 16
+                const zoom = 16;
                 this.$mapConfig.focusMarker(v, zoom);
             }
         },
     },
     beforeCreate() {
-        this.$store.dispatch('switch/makeSwitches')
+        this.$store.dispatch('switch/makeSwitches');
     },
     created() {
         this.fields.forEach((field: string) => {
-            this.markers[field] = []
+            this.markers[field] = [];
         });
     },
-    async mounted(){
-        await this.setMap()
+    async mounted() {
+        await this.setMap();
         this.setMarkers();
         let timer: NodeJS.Timer|null;
 
         this.$mapConfig.map.addListener("bounds_changed", () => {
-            const bounds = this.$mapConfig.currentBounds()
+            const bounds = this.$mapConfig.currentBounds();
             const getMapCenter = this.$mapConfig.map.getCenter();
             const mapCenter = {lat: getMapCenter.lat(), lng: getMapCenter.lng()};
             const zoom = this.$mapConfig.map.getZoom();
-            console.log(zoom)
+            console.log(zoom);
             if(timer !== null) clearTimeout(timer)
             timer = setTimeout(() => {
-                this.showMarkers()
+                this.showMarkers();
                 this.$store.dispatch('home/getCity', {mapCenter: mapCenter, zoom: zoom});
                 this.$store.dispatch('home/getCurrentBounds', bounds);
-            },1000);
+            }, 1000);
             zoom > 13 ? this.$mapConfig.changeIcon(this.markers.stations, 'stations', 'big') : this.$mapConfig.changeIcon(this.markers.stations, 'stations', 'small');
-            zoom > 13 ? this.$mapConfig.changeIcon(this.markers.spots, 'spots', 'big') : this.$mapConfig.changeIcon(this.markers.spots, 'spots', 'small');
+            // zoom > 13 ? this.$mapConfig.changeIcon(this.markers.spots, 'spots', 'big') : this.$mapConfig.changeIcon(this.markers.spots, 'spots', 'small');
         });
     },
     methods:{
@@ -168,9 +168,9 @@ export default Vue.extend({
             this.addClickMapListeners();
         },
         async setMarkers() {
-            this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction)
-            this.markers.cities = await this.$mapConfig.makeMarkers([{cities: this.cities}], 'cities', this.cityMarkerFunction)
-            this.markers.spots = await this.$mapConfig.makeMarkers(this.cities, 'spots', this.spotMarkerFunction)
+            this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction);
+            this.markers.cities = await this.$mapConfig.makeMarkers([{cities: this.cities}], 'cities', this.cityMarkerFunction);
+            // this.markers.spots = await this.$mapConfig.makeMarkers(this.cities, 'spots', this.spotMarkerFunction)
         },
         showMarkers() {
             if(this.markerSwitch) {
@@ -184,9 +184,9 @@ export default Vue.extend({
             marker.addListener("click", async () => {
                 this.$store.dispatch('home/selectMarker',station);
                 this.$store.commit('info/twitterInfo', []);
-                this.$store.dispatch('info/getTwitterInfo', {name: station.name + '駅'});
-                await this.$store.dispatch('info/getStationInfo', {name: station.name + '駅'})
-                this.$store.commit('info/searching', false)
+                this.$store.dispatch('info/getTwitterInfo', {name: station.name});
+                await this.$store.dispatch('info/getStationInfo', {name: station.name});
+                this.$store.commit('info/searching', false);
 
             });
         },
@@ -205,7 +205,7 @@ export default Vue.extend({
                 await this.$store.dispatch('info/getStationInfo', {name: spot.name})
                 // this.$store.commit('info/searching', false)
             });
-            this.$mapConfig.createInfoWindow(marker, spot.name)
+            this.$mapConfig.createInfoWindow(marker, spot.name);
         },
         makeCityPolygon(v: City[]) {
             const that = this;
@@ -215,14 +215,14 @@ export default Vue.extend({
                     window.google.maps.event.addListener(polygon, 'click', (e: google.maps.MapMouseEvent) => {
                         that.onClickMap(e);
                     });
-                    return polygon
+                    return polygon;
                 })
             })
             if (this.polygons.length !== 0) {
                 this.$mapConfig.resetPolygon(this.polygons);
             }
             this.polygons = polygons;
-            this.showMarkers()
+            this.showMarkers();
         },
         async onClickMap(e: google.maps.MapMouseEvent) {
             window.google.maps.event.clearListeners(this.$mapConfig.map, 'click');
@@ -236,11 +236,11 @@ export default Vue.extend({
         },
         addClickMapListeners() {
             this.$mapConfig.map.addListener('click', (e: google.maps.MapMouseEvent) => {
-                this.clearTime()
+                this.clearTime();
                 const that = this;
                 this.timer = setTimeout(() => {
                     that.onClickMap(e);
-                },360)
+                },360);
             })
         },
         clamp(num: number, min: number, max: number) {
@@ -275,9 +275,7 @@ export default Vue.extend({
             }
         },
         clearTime() {
-            if (this.timer) {
-                clearTimeout(this.timer)
-            }
+            if (this.timer) clearTimeout(this.timer);
         }
     }
 })
@@ -286,34 +284,34 @@ export default Vue.extend({
 <style lang="scss" scoped>
 
 .map-container {
-    position:relative;
-    width:100%;
-    height:100vh;
-    max-height:calc(100vh - 64px);
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    max-height: calc(100vh - 64px);
     .line-chart {
         position: absolute;
-        top:40px;
+        top: 40px;
         bottom: 0;
         right: 0;
         left: 0;
         margin: auto;
     }
     .map-top {
-        position:absolute;
+        position: absolute;
         z-index: 1;
     }
     .dot {
-        position:absolute;
-        top:0;
-        bottom:0;
-        left:0;
-        right:0;
-        margin:auto;
-        width:9px;
-        height:9px;
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        margin: auto;
+        width: 9px;
+        height: 9px;
         border-radius:50%;
-        background-color:red;
-        opacity:0.4;
+        background-color: red;
+        opacity: 0.4;
         transition: all 2s;
     }
     #map {
@@ -327,7 +325,7 @@ export default Vue.extend({
         opacity: 0.4;
     }
     #overview-wrapper {
-        position:absolute;
+        position: absolute;
         width: 30%;
         bottom: 50px;
         left: 15px;
@@ -344,7 +342,7 @@ export default Vue.extend({
             }
         }
         #overview-container:before {
-            content:"";
+            content: "";
             display: block;
             padding-top: 56.25%;
         }
@@ -354,7 +352,7 @@ export default Vue.extend({
             top: 50px;
         }
         .line-chart{
-            top:100px;
+            top: 100px;
         }
     }
 

@@ -22,8 +22,8 @@
 <script lang="ts">
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
-interface Station {company_name: string,id:number,line_name:string,order:number,pref_name:string,lat:number,lng:number,name:string}
-interface DataType {countMarkers: number,width:number,buttons: string[]};
+interface Station {company_name: string, id: number, line_name: string, order: number, pref_name: string, lat: number, lng: number, name: string}
+interface DataType {countMarkers: number, width: number, buttons: string[]};
 interface DomEvent extends Event {clientX: number,clientY: number}
 import Vue from 'vue';
 import {mapGetters} from 'vuex';
@@ -62,54 +62,54 @@ export default Vue.extend({
             'showNumberOfMarkers',
             'cityWiki'
         ]),
-        component(){
+        component() {
             const componentTypes = ['station-lines', 'station-wiki', 'event', 'city-wiki', 'twitter'];
-            return componentTypes[(this as any).changeList];
+            return componentTypes[this.changeList];
         },
-        filteredSearchStations(){
-            return this.searchStations.filter((_: any,index: number)=>{
+        filteredSearchStations() {
+            return this.searchStations.filter((_: any,index: number) => {
                 return index < 5;
             });
         },
-        searchWord:{
-            get(){
+        searchWord: {
+            get() {
                 return this.$store.getters['home/searchWord'];
             },
-            set(newValue){
+            set(newValue) {
                 this.$store.dispatch('home/searchWord',newValue);
             }
         },
-        changeList:{
-            get(){
+        changeList: {
+            get() {
                 return this.$store.getters['switch/changeList'];
             },
-            set(newValue){
+            set(newValue) {
                 this.$store.dispatch('switch/changeList', newValue);
             }
         },
     },
     watch:{
-        showNumberOfMarkers(newValue, OldValue){ //vuexの変化を検知
-            (this as any).count(newValue, OldValue);
+        showNumberOfMarkers(newValue, OldValue) { //vuexの変化を検知
+            this.count(newValue, OldValue);
         },
     },
     methods:{
         limit(e: DomEvent){
-            if (e.clientX<500&&e.clientX>100) {
-                (this as any).width = e.clientX
+            if (e.clientX < 500 && e.clientX > 100) {
+                this.width = e.clientX
             }
         },
-        dragStart(){
+        dragStart() {
             const that = this;
-            const limit = (e: Event)=>{(that as any).limit(e)};
-            this.$root.$el.addEventListener('mousemove',limit);
-            this.$root.$el.addEventListener('mouseup',()=>{that.$root.$el.removeEventListener('mousemove',limit),{once:true}});
+            const limit = (e: Event) => {that.limit(e)};
+            this.$root.$el.addEventListener('mousemove', limit);
+            this.$root.$el.addEventListener('mouseup', () => {that.$root.$el.removeEventListener('mousemove',limit), {once:true}});
         },
-        select(searchStation: Station){
+        select(searchStation: Station) {
             (this.$refs.searchBar as any).blur = false;
             (this.$refs.searchBar as any).$refs.input.blur();
-            if(searchStation){
-                this.$store.dispatch('home/selectMarker',searchStation);
+            if(searchStation) {
+                this.$store.dispatch('home/selectMarker', searchStation);
                 this.$store.dispatch('info/getStationInfo', {name: searchStation.name});
             } else {
                 alert('見つかりませんでした')
@@ -126,10 +126,10 @@ export default Vue.extend({
                 const progress = elapsedTime / DURATION
 
                 if (progress < 1) {
-                    (this as any).countMarkers = Math.floor(from + progress * (to - from));
+                    this.countMarkers = Math.floor(from + progress * (to - from));
                 } else {
                     clearInterval(timer);
-                    (this as any).countMarkers = to;
+                    this.countMarkers = to;
                 }
             }, 1)
         },

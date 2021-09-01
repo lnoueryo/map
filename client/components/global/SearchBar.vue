@@ -3,7 +3,7 @@
         <div class="cp_iptxt" @click="focus" @mouseover="blur=false">
 			<div class="d-flex">
 				<input ref="input" type="text" :placeholder="placeholder" v-model="searchWord" @blur="check" @keyup.enter="onEnter">
-				<v-icon style="position:absolute;top:0;bottom:0;right:5px;left:initial;color:#aaaaaa;" @click="searchWord=null">mdi-close</v-icon>
+				<v-icon class="close" @click="searchWord=null">mdi-close</v-icon>
 			</div>
             <v-icon id="magnify">mdi-magnify</v-icon>
         </div>
@@ -77,28 +77,36 @@ export default {
 	input[type=text]:focus + i {
 		color: #da3c41;
 	}
+	.close {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		right: 5px;
+		left: initial;
+		color: #aaaaaa;
+	}
 
 }
-.w100{
+.w100 {
     width:100%;
 }
-.menu{
+.menu {
 	position: absolute;
-	height:0;
+	height: 0;
 	visibility: hidden;
 	opacity: 0;
-	width:100%;
+	width: 100%;
 	transform: translateY(-25px) rotateX(30deg);
 	transition: all .2s;
 	transition-timing-function: ease-in;
-	border-radius:5px;
+	border-radius: 5px;
 }
-.search-box{
-	position:relative;
+.search-box {
+	position: relative;
 }
 
-.search-box:focus-within{
-	.menu{
+.search-box:focus-within {
+	.menu {
 		visibility: visible;
 		opacity: 1;
 		height:auto;

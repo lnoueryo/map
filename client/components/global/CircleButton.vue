@@ -7,7 +7,7 @@
 </template>
 
 <style lang="scss" scoped>
-    .circle-button{
+    .circle-button {
         display: flex;
         justify-content: center;
         align-items: center;
@@ -18,7 +18,7 @@
         transition: all .5s;
         cursor: pointer;
     }
-    .circle-button:hover{
+    .circle-button:hover {
         background-color: #0044a48e
     }
 </style>

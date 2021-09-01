@@ -1,11 +1,11 @@
 <template>
     <div>
-        <div style="height:100vh;background-color:white;color:black;overflow-x:hidden;overflow-y:scroll;max-height:calc(100vh - 238px);">
+        <div class="main-container">
             <div v-if="twitterInfo.length !== 0">
                 <div class="py-2" v-for="(twitter, i) in twitterInfo" :key="i">
                     <div class="px-1" style="display:flex;">
                         <div>
-                            <img style="width:100%;border-radius:50%;width:48px;height:48px;" :src="twitter.profile_image_url">
+                            <img class="avator" :src="twitter.profile_image_url">
                         </div>
                         <div class="px-1">
                             <div>{{twitter.name}}</div>
@@ -27,7 +27,7 @@
                     </div>
                 </div>
             </div>
-            <div v-else style="display:flex;align-items:center;height:100%;">
+            <div v-else class="centering">
                 <div>マーカーをクリックしてTwitterの駅情報を取得しましょう</div>
             </div>
         </div>
@@ -59,15 +59,34 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
-    .url-box{
-        text-align:center;
-        position:relative;
-        bottom:0;
-        font-size:14px;
-        word-break:break-all;
-        font-weight:bold;
-        background-color:white;
-        padding-right:5px;
-        padding-top:3px;
+    .main-container {
+        height: 100vh;
+        background-color: white;
+        color: black;
+        overflow-x: hidden;
+        overflow-y: scroll;
+        max-height: calc(100vh - 238px);
+        .avator {
+            width: 100%;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+        }
+    }
+    .url-box {
+        text-align: center;
+        position: relative;
+        bottom: 0;
+        font-size: 14px;
+        word-break: break-all;
+        font-weight: bold;
+        background-color: white;
+        padding-right: 5px;
+        padding-top: 3px;
+    }
+    .centering {
+        display: flex;
+        align-items: center;
+        height: 100%;
     }
 </style>

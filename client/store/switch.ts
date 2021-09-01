@@ -13,7 +13,7 @@ interface State {
 }
 
 const state = {
-    fields: ['stations', 'cities', 'spots'],
+    fields: ['stations', 'cities'],
     changeList: 0,
     markerSwitch: true,
     lineSwitch: true,

@@ -17,7 +17,7 @@
             <top-bar v-if="!smp"></top-bar>
         </div>
         <div>
-            <bottom-bar v-if="!smp"></bottom-bar>
+            <bottom v-if="!smp"></bottom>
         </div>
     </div>
 </template>
@@ -27,13 +27,8 @@ import Vue from 'vue'
 const RightDrawer = () => import('../components/index/templates/RightDrawer.vue');
 const LeftList = () => import('../components/index/templates/LeftList.vue');
 const MapView = () => import('../components/index/templates/Map.vue');
-const TopBar = () => import('../components/global/TopBar.vue');
-const BottomBar = () => import('../components/global/BottomBar.vue');
-// import RightDrawer from '../components/index/templates/RightDrawer.vue'
-// import LeftList from '../components/index/templates/LeftList.vue'
-// import MapView from '../components/index/templates/Map.vue'
-// import TopBar from '../components/global/TopBar.vue'
-// import BottomBar from '../components/global/BottomBar.vue'
+const TopBar = () => import('../components/index/templates/TopBar.vue');
+const Bottom = () => import('../components/index/templates/Bottom.vue');
 interface DataType {open: boolean, lefList: boolean}
 export default Vue.extend({
     components: {
@@ -41,7 +36,7 @@ export default Vue.extend({
         LeftList,
         MapView,
         TopBar,
-        BottomBar,
+        Bottom,
     },
     data(): DataType {
         return {

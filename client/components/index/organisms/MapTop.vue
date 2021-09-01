@@ -9,8 +9,8 @@
 <script>
 import Vue from "vue";
 export default Vue.extend({
-    computed:{
-        addressElement(){
+    computed: {
+        addressElement() {
             return this.$store.getters['home/addressElement'];
         }
     }
@@ -18,7 +18,7 @@ export default Vue.extend({
 </script>
 
 <style lang="scss">
-    .top{
+    .top {
         background-color: rgba(0, 0, 0, 0.5);
         width: 100%;
         padding: 0px 5%;

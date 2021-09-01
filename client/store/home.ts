@@ -193,9 +193,6 @@ const mutations = {
     selectedCityItems: (state: State, payload: City[]) => {
         state.selectedCityItems = payload;
     },
-    clearItem: (state: State, payload: number) => {
-        state.selectedCompanyItems.splice(payload, 1);
-    },
     currentBounds: (state: State, payload: Bounds) => {
         state.currentBounds = Object.assign({}, state.currentBounds,payload)
     },
@@ -233,9 +230,6 @@ const actions = {
     },
     selectedLineItems: (context: any, payload: {name: string, text: string}[]) => {
         context.commit('selectedLineItems', payload)
-    },
-    clearItem: (context: any, payload: number) => {
-        context.commit('clearItem', payload);
     },
     getCurrentBounds: (context: any, payload: Bounds) => {
         context.commit('currentBounds', payload)
@@ -277,7 +271,7 @@ const actions = {
     },
     lineChartIndex: async(context: any, payload: any) => {
         const cityIndex = context.getters.population.findIndex((city: City) => {
-            return city.name == payload.Property.AddressElement[1].Name;
+            return city.city == payload.Property.AddressElement[1].Name;
         })
         if (cityIndex !== -1) context.commit('lineChartIndex', cityIndex);
     },

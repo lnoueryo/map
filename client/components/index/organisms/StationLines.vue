@@ -47,17 +47,16 @@
 <script lang="ts">
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_id: number, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
-interface Station {company_id: number,id:number,line_id:number,order:number,pref_name:string,lat:number,lng:number,name:string}
-interface Company {id: number, name: string, address: string, founded: string, lines: Line[]};
+interface Station {company_id: number, id: number, line_id: number, order: number, pref_name: string, lat: number, lng: number, name: string}
 
 import Vue from 'vue';
 const SearchBar = () => import('../../global/SearchBar.vue');
 import { mapGetters } from 'vuex';
 export default Vue.extend({
-    components:{
+    components: {
         SearchBar
     },
-    computed:{
+    computed: {
         ...mapGetters('home', [
             'lines',
             'filteredLines',
@@ -72,47 +71,47 @@ export default Vue.extend({
             'markerSwitch',
             'markerSwitches'
         ]),
-        selectCompany:{
-            get(){
+        selectCompany: {
+            get() {
                 return this.$store.getters['home/selectedCompanyItems']
             },
-            set(value){
+            set(value) {
                 this.$store.dispatch('home/selectedCompanyItems', value)
             }
         },
-        selectLine:{
-            get(){
+        selectLine: {
+            get() {
                 return this.$store.getters['home/selectedLineItems']
             },
-            set(value){
+            set(value) {
                 this.$store.dispatch('home/selectedLineItems', value)
             }
         }
     },
     methods:{
-        makeStationArray(lines: Line[]){
+        makeStationArray(lines: Line[]) {
             const stations: Station[] = []
-            lines.filter((line)=>{
+            lines.filter((line) => {
                 this.boundsFilter(line.stations).forEach((station: Station) => {
                     stations.push(station)
                 });
             })
             return stations
         },
-        isCheck(id: number,lines: Line[]){
+        isCheck(id: number, lines: Line[]) {
             const filterLine: Line[] = this.filteredLines(lines);
-            const stations = (this as any).makeStationArray(filterLine);
-            return stations.some((station: Station)=>{
-                return station.company_id==id;
+            const stations = this.makeStationArray(filterLine);
+            return stations.some((station: Station) => {
+                return station.company_id == id;
             })
         },
-        select(searchStation: Station){
+        select(searchStation: Station) {
             (this.$refs.searchBar as any).blur = false;
             (this.$refs.searchBar as any).$refs.input.blur();
-            this.$store.dispatch('home/selectMarker',searchStation)
+            this.$store.dispatch('home/selectMarker',searchStation);
         },
-        onClickList(station: Station){
-            this.$store.dispatch('info/getStationInfo',{name: station.name})
+        onClickList(station: Station) {
+            this.$store.dispatch('info/getStationInfo',{name: station.name});
             this.$store.dispatch('home/selectMarker', station);
         },
         showInfoWindow(spot: any) {
@@ -132,20 +131,20 @@ export default Vue.extend({
     .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
         opacity: 0;
     }
-    .middle-list{
-        overflow-y:scroll;
-        overflow-x:hidden;
-        height:100vh;
-        max-height:calc(100vh - 213px);
+    .middle-list {
+        overflow-y: scroll;
+        overflow-x: hidden;
+        height: 100vh;
+        max-height: calc(100vh - 213px);
         transition: all .5s;
-        .company-name{
-            text-align:center;
-            border-radius:5px;
-            color:white;
-            background-color:#363636;
-            width:100%;
+        .company-name {
+            text-align: center;
+            border-radius: 5px;
+            color: white;
+            background-color: #363636;
+            width: 100%;
             display: block;
-            padding:10px;
+            padding: 10px;
             transition: all .5s;
             cursor: pointer;
         }
@@ -158,12 +157,12 @@ export default Vue.extend({
             transition: all .5s;
         }
         .line-name {
-            text-align:center;
-            border-radius:5px;
-            color:white;
-            width:100%;
+            text-align: center;
+            border-radius: 5px;
+            color: white;
+            width: 100%;
             display: block;
-            padding:10px;
+            padding: 10px;
             transition: all .5s;
             cursor: pointer;
         }
@@ -174,7 +173,7 @@ export default Vue.extend({
         .line-name:active {
             opacity: .9;
         }
-        .list-move{
+        .list-move {
             transition: transform 1s;
         }
         .list-enter {
@@ -186,7 +185,7 @@ export default Vue.extend({
         }
         .list-leave-active {
             transition: all 1s;
-            position:absolute;
+            position: absolute;
         }
         .list-leave-to /* .list-leave-active for below version 2.1.8 */ {
             opacity: 0;
@@ -194,9 +193,9 @@ export default Vue.extend({
         }
     }
     .station-list {
-        padding:10px;
-        background-color:white;
-        width:100%;
+        padding: 10px;
+        background-color: white;
+        width: 100%;
         transition: all .5s;
         cursor: pointer;
     }
