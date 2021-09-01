@@ -13,7 +13,6 @@ interface State {
 }
 
 const state = {
-    fields: ['stations', 'cities'],
     changeList: 0,
     markerSwitch: true,
     lineSwitch: true,
@@ -23,7 +22,6 @@ const state = {
 };
 
 const getters = {
-    fields: (state: State) => state.fields,
     changeList: (state: State): number => state.changeList,
     markerSwitches: (state: State) => state.markerSwitches,
     markerSwitch: (state: State): boolean => state.markerSwitch, //マーカー表示のboolean
@@ -36,8 +34,8 @@ const mutations = {
     changeList: (state: State, payload: number) => {
         state.changeList = payload;
     },
-    makeSwitches: (state: State) => {
-        state.fields.forEach((field: string) => {
+    makeSwitches: (state: State, payload: string[]) => {
+        payload.forEach((field: string) => {
             state.markerSwitches[field] = true
         });
     },
@@ -82,8 +80,13 @@ const actions = {
     changeDotSwitch: (context: any, payload: boolean) => {
         context.commit('dotSwitch', payload)
     },
-    makeSwitches: (context: any) => {
-        context.commit('makeSwitches')
+    makeSwitches: ({ dispatch, commit, getters, rootGetters }: any) => {
+        const page = $nuxt.$route.name
+        if(page == 'index') {
+            commit('makeSwitches', rootGetters['home/fields'])
+        } else {
+            commit('makeSwitches', rootGetters[`${page}/fields`])
+        }
     }
 };
 

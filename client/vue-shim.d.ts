@@ -17,10 +17,15 @@ declare module "*.ts" {
 }
 declare module '*.vue' {
     import { MapConfig } from '~/plugins/map';
-  
+    import { NuxtApp } from '@nuxt/types/app'
+    global {
+      const $nuxt: NuxtApp
+    }
+
     module 'vue/types/vue' {
       interface Vue {
         $mapConfig: MapConfig;
       }
     }
   }
+

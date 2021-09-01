@@ -1,10 +1,10 @@
 import { $axios } from '~/utils/api';
 import companies from '~/assets/json/company.json';
-import cities from '~/assets/json/city.json';
+import cities from '~/assets/json/old_city.json';
 import population from '../assets/json/population.json'
 
-
 interface State {
+    fields: string[]
     companies: Company[]
     cities: City[],
     selectedCompanyItems: Company[],
@@ -27,6 +27,7 @@ interface AddressElement {Code: string, Name: string, Kana: string, Level: strin
 interface City   {name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}, polygons:Polygon[][]}
 
 const state = {
+    fields: ['stations', 'cities', 'spots'],
     companies: companies,
     cities: cities,
     population: population,
@@ -41,6 +42,7 @@ const state = {
 };
 
 const getters = {
+    fields: (state: State) => state.fields,
     /*
     フィルタリングされていない会社,路線図,駅データ全ての配列
     現在データベースからではなくjsonファイルから読み込んでいる
