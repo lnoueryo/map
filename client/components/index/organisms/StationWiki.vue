@@ -32,9 +32,9 @@ export default Vue.extend({
         stationInfo: {
             handler() {
                 this.$nextTick(() => {
-                    const wiki = this.$refs.wiki;
+                    const wiki = this.$refs.wiki as HTMLDivElement;
                     wiki.scrollTop = 0
-                    const table = wiki.getElementsByClassName('infobox bordered')[0];
+                    const table = wiki.getElementsByClassName('infobox bordered')[0] as HTMLTableElement;
                     table.style.width = ''
                     table.style.margin = 'auto'
                 })

@@ -39,6 +39,7 @@ export default Vue.extend({
     },
     computed: {
         ...mapGetters('home', [
+            'fields',
             'lines',
             'cities',
             'selectedMarker',
@@ -47,7 +48,6 @@ export default Vue.extend({
             'selectedLineItems',
         ]),
         ...mapGetters('switch', [
-            'fields',
             'markerSwitches',
             'markerSwitch',
             'lineSwitch',
@@ -170,7 +170,7 @@ export default Vue.extend({
         async setMarkers() {
             this.markers.stations = await this.$mapConfig.makeMarkers(this.lines, 'stations', this.stationMarkerFunction);
             this.markers.cities = await this.$mapConfig.makeMarkers([{cities: this.cities}], 'cities', this.cityMarkerFunction);
-            // this.markers.spots = await this.$mapConfig.makeMarkers(this.cities, 'spots', this.spotMarkerFunction)
+            this.markers.spots = await this.$mapConfig.makeMarkers(this.cities, 'spots', this.spotMarkerFunction)
         },
         showMarkers() {
             if(this.markerSwitch) {

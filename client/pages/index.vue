@@ -44,14 +44,14 @@ export default Vue.extend({
             lefList: false,
         }
     },
-    computed:{
-        smp(){
-            return this.$store.getters.windowSize.x>500
+    computed: {
+        smp() {
+            return this.$store.getters.windowSize.x > 500
         }
     },
-    beforeCreate(){
-        // this.$store.dispatch('home/getCompanies');
-    },
+    // beforeCreate(){
+    //     this.$store.dispatch('switch/getCompanies', ['stations, cities']);
+    // },
     mounted(){
         this.$on('open', (this as any).drawer);
     },

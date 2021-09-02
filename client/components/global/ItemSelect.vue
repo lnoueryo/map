@@ -76,16 +76,16 @@ export default Vue.extend({
         indexChange() {
             const closeStyle = {zIndex: -1, backgroundColor: this.backgroundColor};
             const openStyle = {zIndex: 1, transitionDelay: '.5s', backgroundColor: this.backgroundColor};
-            return this.menuClass.active ? closeStyle : openStyle;
+            return (this as any).menuClass.active ? closeStyle : openStyle;
         },
         selectedItems: {
             get() {
-                this.wait = false;
-                return this.value;
+                (this as any).wait = false;
+                return (this as any).value;
             },
             set(value) {
-                this.wait = true;
-                this.$emit("input", value);
+                (this as any).wait = true;
+                (this as any).$emit("input", value);
             }
         },
         chipSettings() {
@@ -98,20 +98,20 @@ export default Vue.extend({
     methods:{
         openMenu() {
             const that = this;
-            if (this.menuClass.active) {
-                this.$root.$el.removeEventListener('click', that.menuActive);
+            if ((this as any).menuClass.active) {
+                this.$root.$el.removeEventListener('click', (that as any).menuActive);
             } else {
-                this.menuClass.active = true;
-                this.iconClass.rotate = true;
-                this.$root.$el.addEventListener('click', that.menuActive, {once: true});
+                (this as any).menuClass.active = true;
+                (this as any).iconClass.rotate = true;
+                this.$root.$el.addEventListener('click', (that as any).menuActive, {once: true});
             }
         },
         menuActive() {
-            this.menuClass.active = false;
+            (this as any).menuClass.active = false;
         },
         reset() {
-            this.selectedItems = [];
-            this.menuActive();
+            (this as any).selectedItems = [];
+            (this as any).menuActive();
         },
     }
 })

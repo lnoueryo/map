@@ -81,7 +81,7 @@ const actions = {
         context.commit('dotSwitch', payload)
     },
     makeSwitches: ({ dispatch, commit, getters, rootGetters }: any) => {
-        const page = $nuxt.$route.name
+        const page = $nuxt.$route.name;
         if(page == 'index') {
             commit('makeSwitches', rootGetters['home/fields'])
         } else {

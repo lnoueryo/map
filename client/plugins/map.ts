@@ -1,7 +1,7 @@
 interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
-interface City {prefecture_id: string, city_code: string, city: string, polygons: Polygon[][]}
-interface Polygon {"lat":number,"lng":number}
-// import store from '~/store/home'
+interface City {prefecture_id: string, city_code: string, city: string, polygons: Coordinate[][], lat: number, lng: number}
+interface Coordinate {lat: number, lng: number}
+
 export class MapConfig {
     private options: any
     // private markerIcons = {
@@ -22,11 +22,11 @@ export class MapConfig {
       this.options = options
     }
 
-    mapOptions(): any {
-        return this.options
+    mapOptions(options: google.maps.MapOptions): any {
+        this.options = {...this.options, ...options};
     }
     async makeMap(el: HTMLElement) {
-        this.map = new google.maps.Map(el, this.mapOptions())
+        this.map = new google.maps.Map(el, this.options)
         return this.map
     }
     makePolygon(coordinates: {lat: number,lng: number}[], i: number) {
@@ -217,9 +217,15 @@ export class MapConfig {
         });
         this.infoWindow.open(this.map);
     }
-    // removeMapInfoWindow(lat: number, lng: number, text: string) {
-    //     this.map.removeInf
-    // }
+    boundsFilter(points: Coordinate[]) { //現在表示されているマップ内にあるマーカー(駅)のみ返す
+        const currentBounds = this.currentBounds()
+        const filteredStations = points.filter((point: Coordinate) => {
+            const verticalCondition = currentBounds.west < point.lng && currentBounds.east > point.lng;
+            const horizontalCondition = currentBounds.south < point.lat && currentBounds.north > point.lat;
+            return verticalCondition && horizontalCondition;
+        });
+        return filteredStations;
+    }
   }
   
   // plugin

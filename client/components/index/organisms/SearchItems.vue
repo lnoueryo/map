@@ -85,7 +85,7 @@ export default Vue.extend({
     },
     watch: {
         showNumberOfMarkers(newValue, OldValue) { //vuexから表示されている数の変化を検知
-            this.count(newValue, OldValue);
+            (this as any).count(newValue, OldValue);
         },
     },
     methods: {

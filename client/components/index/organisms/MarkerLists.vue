@@ -4,38 +4,15 @@
             <div class="middle-list" v-if="markerSwitch">
                 <div v-if="markerSwitches.spots">
                     <div class="company-name">観光スポット</div>
-                    <div v-for="(city, j) in cities" :key="j" style="position:relative;">
-                        <transition name="list">
-                            <div class="company-name" v-if="boundsFilter(city.spots).length !== 0">
-                                {{city.name}}
-                            </div>
-                        </transition>
-                        <transition-group name="list" tag="div">
-                            <div class="station-list" style="width:100%;color:black" v-for="(spot, k) in boundsFilter(city.spots)" :key="k" @click="onClickList(spot)" @mouseover="showInfoWindow(spot)" @mouseout="hideInfoWindow">
-                                <div>{{spot.name}}</div>
-                            </div>
-                        </transition-group>
-                    </div>
+                    <lists :list-title="cities" field="spots"></lists>
                 </div>
-                <div v-if="markerSwitches.stations">
+                <div v-if="markerSwitches.stations && $mapConfig.map.getBounds()">
                     <div class="company-name">駅</div>
                     <div v-for="(company, i) in companies" :key="i" style="position:relative">
                         <transition name="list">
                             <div v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
                         </transition>
-                        <div v-for="(line, j) in filteredLines(company.lines)" :key="j" style="color:black">
-                            <transition name="list">
-                                <div v-if="boundsFilter(line.stations).length!==0">
-                                    <label class="line-name" :style="{backgroundColor: line.color}" :for="line.name"><input :id="line.name" type="checkbox" :value="line" v-model="selectLine" style="display:none;">{{line.name}}</label>
-                                </div>
-                            </transition>
-                            <transition-group name="list" tag="div">
-                                <div class="station-list" style="width:100%" v-for="(station, k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)">
-                                <!-- <div style="width:100%" v-for="(station,k) in boundsFilter(line.stations)" :key="k" @click="onClickList(station)" :style="selectedMarker.name==station.name?{borderLeft: 'solid 5px orange',transition: 'all .5s'}:{transition: 'all .5s'}"> -->
-                                    <div style="">{{station.name}}</div>
-                                </div>
-                            </transition-group>
-                        </div>
+                        <lists :firstInput="selectLine" @firstInput="selectLine = $event" @secondInput="selectStationMarker" :list-title="company.lines" field="stations"></lists>
                     </div>
                 </div>
             </div>
@@ -48,13 +25,14 @@
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_id: number, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
 interface Station {company_id: number, id: number, line_id: number, order: number, pref_name: string, lat: number, lng: number, name: string}
-
+interface Coordinate {lat: number, lng: number}
+interface Spot {id: number, name: string, place_id: string, address: string, lat: number, lng: number, prefecture_id: string, city_code: string, geohash: string}
 import Vue from 'vue';
-const SearchBar = () => import('../../global/SearchBar.vue');
+const Lists = () => import('../../global/Lists.vue');
 import { mapGetters } from 'vuex';
 export default Vue.extend({
     components: {
-        SearchBar
+        Lists,
     },
     computed: {
         ...mapGetters('home', [
@@ -89,10 +67,15 @@ export default Vue.extend({
         }
     },
     methods:{
+        selectStationMarker(obj: {name: string}) {
+            this.$store.dispatch('info/getStationInfo', {name: obj.name});
+            this.$store.dispatch('home/selectMarker', obj);
+        },
         makeStationArray(lines: Line[]) {
-            const stations: Station[] = []
-            lines.filter((line) => {
-                this.boundsFilter(line.stations).forEach((station: Station) => {
+            const stations: Coordinate[] = []
+            lines.filter((line: {stations: Coordinate[]}) => {
+                const filterStations = this.$mapConfig.boundsFilter(line.stations);
+                filterStations.forEach((station: Coordinate) => {
                     stations.push(station)
                 });
             })
@@ -100,7 +83,7 @@ export default Vue.extend({
         },
         isCheck(id: number, lines: Line[]) {
             const filterLine: Line[] = this.filteredLines(lines);
-            const stations = this.makeStationArray(filterLine);
+            const stations = (this as any).makeStationArray(filterLine);
             return stations.some((station: Station) => {
                 return station.company_id == id;
             })
@@ -114,10 +97,10 @@ export default Vue.extend({
             this.$store.dispatch('info/getStationInfo',{name: station.name});
             this.$store.dispatch('home/selectMarker', station);
         },
-        showInfoWindow(spot: any) {
+        showInfoWindow(spot: Spot) {
             this.$mapConfig.createMapInfoWindow(spot.lat, spot.lng, spot.name)
         },
-        hideInfoWindow(spot: any) {
+        hideInfoWindow() {
             this.$mapConfig.infoWindow.setMap(null)
         },
     }
@@ -135,7 +118,7 @@ export default Vue.extend({
         overflow-y: scroll;
         overflow-x: hidden;
         height: 100vh;
-        max-height: calc(100vh - 213px);
+        max-height: calc(100vh - 250px);
         transition: all .5s;
         .company-name {
             text-align: center;

@@ -41,12 +41,12 @@ export default Vue.extend({
     },
     computed: {
         horizontalAxisFilter() {
-            return this.horizontalAxis.filter((_: any, i: number) => {
+            return (this as any).horizontalAxis.filter((_: any, i: number) => {
                 return i > 13
             })
         },
         verticalAxisFilter() {
-            return this.verticalAxis.filter((_: any, i: number) => {
+            return (this as any).verticalAxis.filter((_: any, i: number) => {
                 return i > 13
             })
         },
@@ -63,7 +63,7 @@ export default Vue.extend({
     watch: {
         windowSize: {
             handler() {
-                !this.time ? this.resetChart() : clearTimeout(this.timer)
+                !(this as any).time ? this.resetChart() : clearTimeout((this as any).timer)
                 const that = this;
                 this.timer = setTimeout(() => {
                     that.timer = null

@@ -23,11 +23,10 @@
 interface LinePolyline {lat: number, lng: number}
 interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
 interface Station {company_name: string, id: number, line_name: string, order: number, pref_name: string, lat: number, lng: number, name: string}
-interface DataType {countMarkers: number, width: number, buttons: string[]};
+interface DataType {width: number, buttons: string[]};
 interface DomEvent extends Event {clientX: number,clientY: number}
 import Vue from 'vue';
-import {mapGetters} from 'vuex';
-const StationLines = () => import('../organisms/StationLines.vue');
+const MarkerLists = () => import('../organisms/MarkerLists.vue');
 const CityWiki = () => import('../organisms/CityWiki.vue');
 const StationWiki = () => import('../organisms/StationWiki.vue');
 const SearchItems = () => import('../organisms/SearchItems.vue');
@@ -37,8 +36,8 @@ const SearchBar = () => import('../../global/SearchBar.vue');
 
 
 export default Vue.extend({
-    components:{
-        StationLines,
+    components: {
+        MarkerLists,
         StationWiki,
         SearchBar,
         SearchItems,
@@ -48,90 +47,35 @@ export default Vue.extend({
     },
     data(): DataType {
         return {
-            countMarkers: 0,
             width: 315,
             buttons: ['train', 'information-outline', 'format-align-right', 'city', 'twitter']
         }
     },
-    computed:{
-        ...mapGetters('home', [
-            'lines',
-            'selectedMarker',
-            'boundsFilter',
-            'searchStations',
-            'showNumberOfMarkers',
-            'cityWiki'
-        ]),
+    computed: {
         component() {
-            const componentTypes = ['station-lines', 'station-wiki', 'event', 'city-wiki', 'twitter'];
-            return componentTypes[this.changeList];
-        },
-        filteredSearchStations() {
-            return this.searchStations.filter((_: any,index: number) => {
-                return index < 5;
-            });
-        },
-        searchWord: {
-            get() {
-                return this.$store.getters['home/searchWord'];
-            },
-            set(newValue) {
-                this.$store.dispatch('home/searchWord',newValue);
-            }
+            const componentTypes = ['marker-lists', 'station-wiki', 'event', 'city-wiki', 'twitter'];
+            return componentTypes[(this as any).$store.getters['switch/changeList']];
         },
         changeList: {
             get() {
-                return this.$store.getters['switch/changeList'];
+                return (this as any).$store.getters['switch/changeList'];
             },
             set(newValue) {
-                this.$store.dispatch('switch/changeList', newValue);
+                (this as any).$store.dispatch('switch/changeList', newValue);
             }
         },
     },
-    watch:{
-        showNumberOfMarkers(newValue, OldValue) { //vuexの変化を検知
-            this.count(newValue, OldValue);
-        },
-    },
-    methods:{
-        limit(e: DomEvent){
+    methods: {
+        limit(e: DomEvent) {
             if (e.clientX < 500 && e.clientX > 100) {
-                this.width = e.clientX
+                this.$data.width = e.clientX
             }
         },
         dragStart() {
             const that = this;
-            const limit = (e: Event) => {that.limit(e)};
-            this.$root.$el.addEventListener('mousemove', limit);
-            this.$root.$el.addEventListener('mouseup', () => {that.$root.$el.removeEventListener('mousemove',limit), {once:true}});
-        },
-        select(searchStation: Station) {
-            (this.$refs.searchBar as any).blur = false;
-            (this.$refs.searchBar as any).$refs.input.blur();
-            if(searchStation) {
-                this.$store.dispatch('home/selectMarker', searchStation);
-                this.$store.dispatch('info/getStationInfo', {name: searchStation.name});
-            } else {
-                alert('見つかりませんでした')
-            }
-        },
-        count(newValue: number, OldValue: number){
-            const DURATION = 600
-            const from = OldValue;
-            const to = newValue;
-            const startTime = Date.now()
-            const that = this;
-            let timer = setInterval(() => {
-                const elapsedTime = Date.now() - startTime
-                const progress = elapsedTime / DURATION
-
-                if (progress < 1) {
-                    this.countMarkers = Math.floor(from + progress * (to - from));
-                } else {
-                    clearInterval(timer);
-                    this.countMarkers = to;
-                }
-            }, 1)
+            const limit = (e: DomEvent) => {(that as any).limit(e)};
+            (this as any).$root.$el.addEventListener('mousemove', limit);
+            (this as any).$root.$el.addEventListener('mouseup', () => {(that as any).$root.$el.removeEventListener('mousemove',limit), {once:true}});
         },
     }
 })
