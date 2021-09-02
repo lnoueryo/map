@@ -6,7 +6,7 @@
                     <div class="company-name">観光スポット</div>
                     <lists :list-title="cities" field="spots"></lists>
                 </div>
-                <div v-if="markerSwitches.stations && $mapConfig.map.getBounds()">
+                <div v-if="markerSwitches.stations">
                     <div class="company-name">駅</div>
                     <div v-for="(company, i) in companies" :key="i" style="position:relative">
                         <transition name="list">
@@ -39,7 +39,6 @@ export default Vue.extend({
             'lines',
             'filteredLines',
             'selectedMarker',
-            'boundsFilter',
             'companies',
             'selectedCompanyItems',
             'selectedLineItems',

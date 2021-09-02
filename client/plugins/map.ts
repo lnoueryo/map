@@ -139,11 +139,17 @@ export class MapConfig {
     }
     currentBounds() {
         const bounds = this.map.getBounds() as google.maps.LatLngBounds;
-        const north = bounds.getNorthEast().lat();
-        const south = bounds.getSouthWest().lat();
-        const east = bounds.getNorthEast().lng();
-        const west = bounds.getSouthWest().lng();
-        return {south: south, north: north,east: east, west: west};
+        let result;
+        if (bounds) {
+            const north = bounds.getNorthEast().lat();
+            const south = bounds.getSouthWest().lat();
+            const east = bounds.getNorthEast().lng();
+            const west = bounds.getSouthWest().lng();
+            result = {south: south, north: north,east: east, west: west}
+        } else {
+            result = this.options.restriction.latLngBounds
+        }
+        return result;
     }
     focusMarker(station: Station, num: number) {
         this.map.setZoom(num);
@@ -217,8 +223,8 @@ export class MapConfig {
         });
         this.infoWindow.open(this.map);
     }
-    boundsFilter(points: Coordinate[]) { //現在表示されているマップ内にあるマーカー(駅)のみ返す
-        const currentBounds = this.currentBounds()
+    boundsFilter(points: Coordinate[], currentBounds = this.currentBounds()) { //現在表示されているマップ内にあるマーカー(駅)のみ返す
+        // const currentBounds = this.currentBounds()
         const filteredStations = points.filter((point: Coordinate) => {
             const verticalCondition = currentBounds.west < point.lng && currentBounds.east > point.lng;
             const horizontalCondition = currentBounds.south < point.lat && currentBounds.north > point.lat;

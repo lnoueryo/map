@@ -25,6 +25,8 @@ interface Line {id: number, company_id: number, name: string, polygon: Polygon, 
 interface Station {name: string,id:number,line_id:number,order:number,prefecture:string,lat:number,lng:number,company_id:number,city_code: string}
 interface AddressElement {Code: string, Name: string, Kana: string, Level: string}
 interface City   {name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}, polygons:Polygon[][]}
+interface Spot {id: number, name: string, place_id: string, address: string, lat: number, lng: number, prefecture_id: string, city_code: string, geohash: string}
+
 
 const state = {
     fields: ['stations', 'cities', 'spots'],
@@ -142,11 +144,18 @@ const getters = {
     selectedLineItems: (state: State): Line[] => state.selectedLineItems,
     selectedCityItems: (state: State): City[] => state.selectedCityItems,
     searchWord: (state: State): string => state.searchWord,
+    currentBounds: (state: State) => state.currentBounds,
     selectedMarker: (state: State): Station => state.selectedMarker, //クリックされたマーカー(駅)のオブジェクトを返す
     showNumberOfMarkers: (state: State, getters: any, rootState: any, rootGetters: any): number => { //現在表示されているマーカーの数を返す
-        const stations = getters.lines.reduce((sum:any, line:any): number => sum + (getters.boundsFilter(line.stations)).length, 0)
-        const spots = getters.cities.reduce((sum:any, city:any): number => sum + (getters.boundsFilter(city.spots)).length, 0)
-        return rootGetters['switch/markerSwitches'].stations && rootGetters['switch/markerSwitches'].spots ? stations + spots : rootGetters['switch/markerSwitches'].stations ? stations : spots;
+        const stationNum = [].concat(...getters.lines.map((line: Line) => {
+            return getters.boundsFilter(line.stations);
+        })).map((station: Station) => station.name).filter((name, index, array) => array.indexOf(name) === index).length;
+
+        const spotNum = [].concat(...getters.cities.map((city: City) => {
+            return getters.boundsFilter(city.spots);
+        })).map((spot: Spot) => spot.name).filter((name, index, array) => array.indexOf(name) === index).length;
+
+        return rootGetters['switch/markerSwitches'].stations && rootGetters['switch/markerSwitches'].spots ? stationNum + spotNum : rootGetters['switch/markerSwitches'].stations ? stationNum : spotNum;
     },
     boundsFilter: (state: State) => (points: Coordinate[]): Coordinate[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
         const filteredStations = points.filter((point) => {
@@ -162,7 +171,7 @@ const getters = {
         })).filter((station: Station) => station.name.indexOf(state.searchWord) > -1);
         return state.searchWord?getters.removeOverlap(stations):[];
     },
-    removeOverlap: (state:State) =>(stations: Station[]) => { //重複した駅名を削除
+    removeOverlap: (state: State) =>(stations: Station[]) => { //重複した駅名を削除
         let map = new Map(stations.map(station => [station.name, station]));
         return Array.from(map.values());
     },
