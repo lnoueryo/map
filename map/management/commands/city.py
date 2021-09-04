@@ -36,9 +36,9 @@ def create():
     companies, lines, stationsに分割してJSONのままで保存する。
     """
     df_cities = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/cities.csv'))
-    cities_dict_list = parse_id_to_str(df_cities.to_dict(orient='records'))
+    cities_dict_list = id_to_str(df_cities.to_dict(orient='records'))
     df_spots = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/spots.csv'))
-    spots_dict_list = parse_id_to_str(df_spots.to_dict(orient='records'))
+    spots_dict_list = id_to_str(df_spots.to_dict(orient='records'))
 
     for city in cities_dict_list:
         city['polygons'] = eval(city['polygons']) if 'polygons' in city and type(city['polygons']) == str else []
@@ -51,9 +51,9 @@ def create():
 
 def new_city():
     df_cities = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/cities.csv'))
-    cities_dict_list = parse_id_to_str(df_cities.to_dict(orient='records'))
+    cities_dict_list = id_to_str(df_cities.to_dict(orient='records'))
     df_spots = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/spots.csv'))
-    spots_dict_list = parse_id_to_str(df_spots.to_dict(orient='records'))
+    spots_dict_list = id_to_str(df_spots.to_dict(orient='records'))
 
     for city in cities_dict_list:
         city['polygons'] = eval(city['polygons']) if 'polygons' in city and type(city['polygons']) == str else []
@@ -62,7 +62,7 @@ def new_city():
     with open(json_file_path, mode='w+', encoding='utf-8') as f:
             json.dump(cities_dict_list, f, ensure_ascii=False, indent=2)
 
-def parse_id_to_str(spots):
+def id_to_str(spots):
     for spot in spots:
         spot['prefecture_id'] = str(spot['prefecture_id'])
         spot['city_code'] = str(spot['city_code'])

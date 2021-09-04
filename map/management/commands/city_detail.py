@@ -119,17 +119,17 @@ def create_json():
     poplation_dict_list = df_population.to_dict(orient='records')
     json_file_path = os.path.join(settings.BASE_DIR / f'data/json/city_population.json')
     with open(json_file_path, mode='w+', encoding='utf-8') as f:
-        json.dump(parse_code_to_str(poplation_dict_list), f, ensure_ascii=False, indent=2)
+        json.dump(code_to_str(poplation_dict_list), f, ensure_ascii=False, indent=2)
 
     occupation_dict_list = df_occupation.to_dict(orient='records')
     json_file_path = os.path.join(settings.BASE_DIR / f'data/json/city_occupation.json')
     with open(json_file_path, mode='w+', encoding='utf-8') as f:
-        json.dump(parse_code_to_str(occupation_dict_list), f, ensure_ascii=False, indent=2)
+        json.dump(code_to_str(occupation_dict_list), f, ensure_ascii=False, indent=2)
 
     facility_dict_list = df_facility.to_dict(orient='records')
     json_file_path = os.path.join(settings.BASE_DIR / f'data/json/city_facility.json')
     with open(json_file_path, mode='w+', encoding='utf-8') as f:
-        json.dump(parse_code_to_str(facility_dict_list), f, ensure_ascii=False, indent=2)
+        json.dump(code_to_str(facility_dict_list), f, ensure_ascii=False, indent=2)
 
 def drop_columns():
 
@@ -157,7 +157,7 @@ def drop_columns():
     df = df.drop(index=[13, 13100], axis=0)
     df.to_csv(os.path.join(settings.BASE_DIR / f'data/csv/city_detail.csv'))
 
-def parse_code_to_str(dict_list):
+def code_to_str(dict_list):
     for dict in dict_list:
         dict['city_code'] = str(dict['city_code'])
     return dict_list

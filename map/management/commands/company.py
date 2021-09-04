@@ -43,7 +43,7 @@ def create():
     df_lines = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/lines.csv'))
     lines_dict_list = df_lines.to_dict(orient='records')
     df_stations = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/stations.csv'))
-    stations_dict_list = parse_id_to_str(df_stations.to_dict(orient='records'))
+    stations_dict_list = id_to_str(df_stations.to_dict(orient='records'))
     for line in lines_dict_list:
         line['polygon'] = eval(line['polygon'])
     with open(os.path.join(settings.BASE_DIR / f'data/json/companies.json'), mode='w+', encoding='utf-8') as f:
@@ -91,7 +91,7 @@ def combine_through_line_jointable():
     for line in lines:
         line['polygon'] = eval(line['polygon'])
         line_station_list = [line_station for line_station in line_stations if line['id'] == line_station['line_id']]
-        station_list = [station for station in parse_id_to_str(stations) for line_station in line_station_list if line_station['station_id'] == station['id']]
+        station_list = [station for station in id_to_str(stations) for line_station in line_station_list if line_station['station_id'] == station['id']]
         line['stations'] = station_list
     return lines
 
@@ -116,7 +116,7 @@ def change_station():
     with open(json_file_path, mode='w+', encoding='utf-8') as f:
             json.dump(stations, f, ensure_ascii=False, indent=2)
 
-def parse_id_to_str(stations):
+def id_to_str(stations):
     for station in stations:
         station['prefecture_id'] = str(station['prefecture_id'])
         station['city_code'] = str(station['city_code'])
