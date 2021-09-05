@@ -11,7 +11,7 @@
                         <v-btn block @click="fade">delete</v-btn>
                     </div>
                 </div>
-                <div :style="componentStyle">
+                <div ref="component" :style="componentStyle">
                     <slot></slot>
                 </div>
             </div>
@@ -21,7 +21,7 @@
 
 <script>
 export default {
-    props: ['show'],
+    props: ['show', 'difference'],
     data() {
         return {
             translateY: 0,
@@ -32,12 +32,13 @@ export default {
                 zIndex: 0,
             },
             componentStyle: {
-                height: 0,
+                height: 'initial',
                 transition: 'all .5s',
                 overflowY: 'hidden',
                 overflowX: 'hidden',
             },
             position: false,
+            component: this.$refs.component
         }
     },
     computed: {
@@ -50,9 +51,9 @@ export default {
             handler(v) {
                 if (v) {
                     const newNavStyle = {height: '100px', transform: 'translateY(-100px)'};
-                    const newComponentStyle = {height: '40px'};
+                    // const newComponentStyle = {height: '40px'};
                     this.navStyle = {...this.navStyle, ...newNavStyle};
-                    this.componentStyle = {...this.componentStyle, ...newComponentStyle};
+                    this.componentStyle = {...this.componentStyle};
                 }
             }
         }
@@ -60,15 +61,16 @@ export default {
     methods:{
         upWiki() {
             this.position = true;
-            const newNavStyle = {height: '100vh', transform: `translateY(-100vh)`, zIndex: 10};
-            const newComponentStyle = {height: 'calc(100vh - 40px)', overflowY: 'scroll'};
+            const newNavStyle = {height: '100vh', transform: `translateY(calc(-100vh + ${this.difference}))`, zIndex: 10};
+            const newComponentStyle = {height: 'calc(100vh - 40px)', 'overflowX': 'hidden', 'overflowY': 'scroll'};
             this.navStyle = {...this.navStyle, ...newNavStyle};
             this.componentStyle = {...this.componentStyle, ...newComponentStyle};
         },
         downWiki() {
+            this.$refs.component.scrollTop = 0;
             this.position = false;
             const newNavStyle = {height: '100px', transform: 'translateY(-100px)', zIndex: 0};
-            const newComponentStyle = {height: '40px', overflowY: 'hidden'};
+            const newComponentStyle = {overflowY: 'hidden'};
             this.navStyle = {...this.navStyle, ...newNavStyle};
             this.componentStyle = {...this.componentStyle, ...newComponentStyle};
         },
@@ -76,7 +78,7 @@ export default {
             this.$emit('hide');
             this.position = false;
             const newNavStyle = {height: '0px', transform: 'translateY(0px)', zIndex: 0};
-            const newComponentStyle = {height: '0px', overflowY: 'hidden'};
+            const newComponentStyle = {overflowY: 'hidden'};
             this.navStyle = {...this.navStyle, ...newNavStyle};
             this.componentStyle = {...this.componentStyle, ...newComponentStyle};
         }
