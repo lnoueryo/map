@@ -75,6 +75,7 @@ export default {
             this.componentStyle = {...this.componentStyle, ...newComponentStyle};
         },
         fade() {
+            this.$refs.component.scrollTop = 0;
             this.$emit('hide');
             this.position = false;
             const newNavStyle = {height: '0px', transform: 'translateY(0px)', zIndex: 0};

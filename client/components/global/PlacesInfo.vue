@@ -57,7 +57,7 @@ export default Vue.extend({
     computed: {
         photos() {
             if (this.placesData) {
-                const photos = this.placesData?.photos.map((photo) => {
+                const photos = this.placesData?.photos.map((photo: google.maps.places.PlacePhoto) => {
                     return photo.getUrl();
                 })
                 console.log(photos)
@@ -67,7 +67,7 @@ export default Vue.extend({
         }
     },
     methods: {
-        roundHalf(num) {
+        roundHalf(num: number) {
             return Math.round(num * 2) / 2;
         }
     }

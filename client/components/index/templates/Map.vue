@@ -16,8 +16,10 @@ const MapTop = () => import('../organisms/MapTop.vue');
 declare const window: GMapWindow;
 interface Polygon {lat: number, lng: number}
 interface DataType {markers: {[key: string]: google.maps.Marker[][]}, polygons: google.maps.Polygon[][], timer: null|NodeJS.Timer}
-interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
-interface Cities   {code: string, province: string, lat: string, lng: string, city: string, spots: {name: string, place_id: string, address: string, lat: string, lng: string}}
+// interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
+interface Prefecture {id: string, name: string, lat: number, lng: number, cities: City[]}
+
+interface City   {city_code: string, province: string, lat: string, lng: string, city: string, spots: Spot}
 interface Coordinate {lat: number, lng: number}
 interface Spot {name: string, place_id: string, address: string, lat: string, lng: string}
 
@@ -51,7 +53,7 @@ export default Vue.extend({
     watch: {
         $route (to, from) {
             if('click' in to.query) {
-                const bounds = sessionStorage.getItem('tokyo-map');
+                const bounds = sessionStorage.getItem('tokyo-map') as string;
                 this.$mapConfig.focusMarker(JSON.parse(bounds), 11);
             }
             this.checkQuery()
@@ -93,14 +95,14 @@ export default Vue.extend({
             this.$mapConfig.mapOptions(mapOptions);
             this.$mapConfig.makeMap(mapEl as HTMLElement);
             this.$mapConfig.placesService()
-            this.onClickMap()
+            // this.onClickMap()
         },
-        prefectureMarkerFunction(marker: google.maps.Marker, prefecture: Coordinate) {
+        prefectureMarkerFunction(marker: google.maps.Marker, prefecture: Prefecture) {
             marker.addListener("click", async (e: google.maps.MapMouseEvent) => {
                 this.$router.push(`/?prefecture_id=${prefecture.id}`)
             });
         },
-        cityMarkerFunction(marker: google.maps.Marker, city: Coordinate) {
+        cityMarkerFunction(marker: google.maps.Marker, city: City) {
             marker.addListener("click", async (e: google.maps.MapMouseEvent) => {
                 this.$router.push(`/?prefecture_id=${this.$route.query.prefecture_id}&city_code=${city.city_code}`)
             });
@@ -112,9 +114,9 @@ export default Vue.extend({
         },
         checkQuery() {
             const query = this.$route.query;
-            query.prefecture_id && query.city_code
-                                ? this.selectCityMarker(query) : query.prefecture_id
-                                ? this.setCityMarkers(query.prefecture_id)
+            query?.prefecture_id && query.city_code
+                                ? this.selectCityMarker(query as any) : query?.prefecture_id
+                                ? this.setCityMarkers(query.prefecture_id as any)
                                 : this.setPrefectureMarkers();
         },
         async setPrefectureMarkers() {
@@ -125,17 +127,17 @@ export default Vue.extend({
             }
             this.$mapConfig.mapOptions(mapOtions);
         },
-        setCityMarkers(id) {
+        setCityMarkers(id: string) {
             this.$mapConfig.resetAllMarkers(this.markers)
-            const prefecture = this.prefectures.find((prefecture) => prefecture.id == id);
+            const prefecture = this.prefectures.find((prefecture: Prefecture) => prefecture.id == id);
             this.markers.cities = this.$mapConfig.makeMarkers([prefecture], 'cities', this.cityMarkerFunction);
             if('click' in this.$route.query) return;
             const zoom = 11;
             this.$mapConfig.focusMarker(prefecture, zoom);
         },
-        selectCityMarker(query) {
+        selectCityMarker(query: {city_code: string}) {
             this.$mapConfig.resetAllMarkers(this.markers)
-            const city = this.prefectures.reduce((a, b) => a.cities.concat(b.cities)).cities.find(x => x.city_code == query.city_code)
+            const city = this.prefectures.reduce((a: Prefecture, b: Prefecture) => a.cities.concat(b.cities)).cities.find((x: City) => x.city_code == query.city_code)
             this.markers.spots = this.$mapConfig.makeMarkers([city], 'spots', this.spotMarkerFunction);
             const zoom = 14;
             this.$mapConfig.focusMarker(city, zoom);
@@ -145,7 +147,7 @@ export default Vue.extend({
         },
         async onClickMap(e: google.maps.MapMouseEvent) {
             this.$mapConfig.map.addListener('dblclick', (e: google.maps.MapMouseEvent) => {
-                const bounds = JSON.stringify({lat: e.latLng.lat(), lng: e.latLng.lng()})
+                const bounds = JSON.stringify({lat: (e.latLng as any).lat(), lng: (e.latLng as any).lng()})
                 sessionStorage.setItem('tokyo-map', bounds);
                 const query = Object.assign({click: null}, this.$route.query)
                 const queryArray = Object.keys(this.$route.query)

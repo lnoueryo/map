@@ -15,9 +15,6 @@
                         </div>
                     </div>
                     <div v-if="twitter.images.length !== 0">
-                        <!-- <div v-for="(image, j) in twitter.images" :key="j">
-                        <img style="width:100%" :src="image" alt="">
-                        </div> -->
                         <v-carousel hide-delimiters :show-arrows="twitter.images.length !== 1" height="250px">
                             <v-carousel-item
                             v-for="(image,j) in twitter.images"
@@ -29,7 +26,7 @@
                 </div>
             </div>
             <div v-else class="centering">
-                <div>マーカーをクリックしてTwitterの駅情報を取得しましょう</div>
+                <div>Twitter情報はありませんでした</div>
             </div>
         </div>
     </div>
@@ -53,7 +50,7 @@ export default Vue.extend({
             const  hours =  ("0"+date.getHours()).slice(-2);
             const  minutes =  ("0"+date.getMinutes()).slice(-2);
             const changedDate = `${year}-${month}-${day} ${hours}:${minutes}`
-            return changedDate
+            return changedDate;
         }
     }
 })

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES2018",
     "module": "ESNext",
     "moduleResolution": "Node",
     "lib": [
@@ -13,6 +13,7 @@
     "sourceMap": true,
     "strict": true,
     "noEmit": true,
+    "experimentalDecorators": true,
     "baseUrl": ".",
     "paths": {
       "~/*": [
@@ -23,13 +24,15 @@
       ]
     },
     "types": [
-      "@types/node",
       "@nuxt/types",
       "@nuxtjs/axios",
+      "@types/node",
       "google.maps"
     ]
   },
   "exclude": [
-    "node_modules"
-  ],
+    "node_modules",
+    ".nuxt",
+    "dist"
+  ]
 }

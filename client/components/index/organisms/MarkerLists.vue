@@ -27,8 +27,10 @@
 
 
 <script lang="ts">
-interface Coordinate {lat: number, lng: number}
+interface Prefecture {id: string, name: string, wiki: string, lat: number, lng: number, cities: City[]}
+interface City   {name: string, wiki: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: Spot[]}
 interface Spot {id: number, name: string, place_id: string, address: string, lat: number, lng: number, prefecture_id: string, city_code: string, geohash: string}
+interface DataType {listNum: number, prefecture: Prefecture | null, city: City | null, spot: Spot | null, wikiReady: boolean, placesReady: boolean, currentWikiData: string}
 import Vue from 'vue';
 const SimpleLists = () => import('../../global/SimpleLists.vue');
 const HalfModal = () => import('../../global/HalfModal.vue');
@@ -44,12 +46,12 @@ export default Vue.extend({
         PlacesInfo,
         Twitter
     },
-    data() {
+    data(): DataType {
         return {
             listNum: 0,
-            prefecture: '',
-            city: '',
-            spot: '',
+            prefecture: null,
+            city: null,
+            spot: null,
             wikiReady: false,
             placesReady: false,
             currentWikiData: '',
@@ -90,10 +92,10 @@ export default Vue.extend({
         },
         selectedPrefecture() {
             // const prefecture = this.prefectures.find((prefecture) => prefecture.id == this.$route.query.prefecture_id)
-            return this.prefectures.find((prefecture) => prefecture.id == this.$route.query.prefecture_id);
+            return this.prefectures.find((prefecture: Prefecture) => prefecture.id == this.$route.query.prefecture_id);
         },
         selectedCity() {
-            return this.cities.find((city) => city.city_code == this.$route.query.city_code);
+            return this.cities.find((city: City) => city.city_code == this.$route.query.city_code);
         }
     },
     watch: {
@@ -106,24 +108,24 @@ export default Vue.extend({
             this.$router.push({query: query})
         },
         spot(v) {
-            if(this.currentPlacesData == v.name) {
-                this.placesReady = true;
+            if((this as any).currentPlacesData == v.name) {
+                (this as any).placesReady = true;
             } else {
-                this.currentPlacesData = v.name
+                (this as any).currentPlacesData = v.name
                 this.$store.dispatch('info/spotDetail', v)
                 this.$store.dispatch('info/getTwitterInfo', v)
-                const wiki = this.$refs.wiki;
+                const wiki = this.$refs.wiki as any;
                 wiki.fade()
             }
         },
         cityWikiInfo(v) {
             if(v) {
-                this.wikiReady = true;
+                (this as any).wikiReady = true;
             }
         },
         spotDetail(v) {
             if(v) {
-                this.placesReady = true;
+                (this as any).placesReady = true;
             }
         }
     },
@@ -136,26 +138,27 @@ export default Vue.extend({
         //                         : this.listNum = 0;
         // },
         back() {
-            const query = {...{}, ...this.$route.query}
+            const query = {...{}, ...this.$route.query} as any
             const queryArray = Object.keys(this.$route.query)
+            if(queryArray.length !== 0) delete query[queryArray.slice(-1)[0]]
             delete query[queryArray.slice(-1)[0]]
             this.$router.push({query: query})
         },
-        getWiki(obj) {
-            if(this.currentWikiData == obj.name) {
-                this.wikiReady = true;
+        getWiki(obj: City | Prefecture) {
+            if((this as any).currentWikiData == obj.name) {
+                (this as any).wikiReady = true;
             } else {
-                this.currentWikiData = obj.name
+                (this as any).currentWikiData = obj.name
                 this.$store.dispatch('info/getCityWikiInfo', {name: obj.wiki});
-                const places = this.$refs.places;
+                const places = this.$refs.places as any;
                 places.fade()
             }
         },
         hideWiki() {
-            this.wikiReady = false;
+            (this as any).wikiReady = false;
         },
         hidePlaces() {
-            this.placesReady = false;
+            (this as any).placesReady = false;
         }
     }
 })

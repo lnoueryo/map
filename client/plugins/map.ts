@@ -94,7 +94,7 @@ export class MapConfig {
         });
         return marker
     }
-    makeMarkers(json: {}[], key: string, func: ((marker: google.maps.Marker, value: Coordinate) => void)) {
+    makeMarkers(json: {}[], key: string, func: any) {
         const zoom = this.map.getZoom();
         let icon = ''
         const isIcon = this.markerIcons[key] || null;
