@@ -61,8 +61,8 @@ export default {
     methods:{
         upWiki() {
             this.position = true;
-            const newNavStyle = {height: '100vh', transform: `translateY(calc(-100vh + ${this.difference}))`, zIndex: 10};
-            const newComponentStyle = {height: 'calc(100vh - 40px)', 'overflowX': 'hidden', 'overflowY': 'scroll'};
+            const newNavStyle = {height: `calc(100vh - ${this.difference})`, transform: `translateY(calc(-100vh + ${this.difference}))`, zIndex: 10};
+            const newComponentStyle = {height: 'calc(100vh - 205px)', 'overflowX': 'hidden', 'overflowY': 'scroll'};
             this.navStyle = {...this.navStyle, ...newNavStyle};
             this.componentStyle = {...this.componentStyle, ...newComponentStyle};
         },
@@ -93,6 +93,7 @@ export default {
         left: 0;
         color: black;
         background-color: #ffffff;
+        padding-top: 5px;
     }
     .mw-parser-output {
         position: relative;

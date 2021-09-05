@@ -38,6 +38,7 @@ class TwitterAPI(APIView):
     api = tweepy.API(auth)
     def get(self, request):
         title = (request.GET.dict())['name']
+        print(title)
         tweets_obj = self.api.search(title, lang='ja', rpp=100, count=100, result_type='recent', tweet_mode='extended')
         tweets = []
         for tweet_obj in tweets_obj:

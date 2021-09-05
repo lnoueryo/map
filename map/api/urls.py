@@ -1,7 +1,9 @@
 from django.urls import path
 from map.api.views.wikipedia import WikiAPI
+from map.api.views.yahoo import (
+    ReverseGeocodeAPI
+)
 from map.api.views.views import (
-    ReverseGeocodeAPI,
     TwitterAPI,
     EventAPI
 )

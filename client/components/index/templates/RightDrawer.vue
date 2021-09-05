@@ -2,7 +2,7 @@
     <div>
         <nav :class="drawerClass">
             <div class="display-height">
-                <filter-select></filter-select>
+                <!-- <filter-select></filter-select> -->
                 <drawer-option></drawer-option>
             </div>
         </nav>

@@ -1,12 +1,8 @@
 <template>
     <div>
         <nav class="top-bar">
-            <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord" @select="select(filteredSearchStations[0])">
-                <div class="menu" v-if="searchStations.length!==0" style="background-color:orange">
-                    <div @mouseup.stop.prevent="select(searchStation)" v-for="(searchStation, i) in filteredSearchStations" :key="i" class="list">
-                        <span>{{searchStation.name}}</span>
-                    </div>
-                </div>
+            <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord">
+
             </search-bar>
         </nav>
     </div>
@@ -28,14 +24,8 @@ export default Vue.extend({
     },
     computed:{
         ...mapGetters('home', [
-            'searchStations',
             'showNumberOfMarkers',
         ]),
-        filteredSearchStations() {
-            return this.searchStations.filter((_: any,index: number) => {
-                return index < 5;
-            });
-        },
         searchWord: {
             get() {
                 return this.$store.getters['home/searchWord'];

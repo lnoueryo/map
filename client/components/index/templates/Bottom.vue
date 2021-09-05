@@ -43,19 +43,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-    .bottom-bar {
-        position: absolute;
-        right: 0;
-        left: 0;
-        color: black;
-        background-color: #ffffff;
-    }
-    .mw-parser-output {
-        position: relative;
-        z-index: 10;
-        background-color: white;
-        margin: auto;
-    }
     .lazy {
         position: absolute;
         bottom: 7%;

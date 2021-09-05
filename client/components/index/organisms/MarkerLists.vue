@@ -1,107 +1,162 @@
 <template>
     <div>
         <transition name="fade">
-            <div class="middle-list" v-if="markerSwitch">
-                <div v-if="markerSwitches.spots">
-                    <div class="company-name">観光スポット</div>
-                    <lists :list-title="cities" field="spots"></lists>
-                </div>
-                <div v-if="markerSwitches.stations">
-                    <div class="company-name">駅</div>
-                    <div v-for="(company, i) in companies" :key="i" style="position:relative">
-                        <transition name="list">
-                            <div v-if="isCheck(company.id, company.lines)"><label class="company-name" :for="company.name"><input :id="company.name" type="checkbox" :value="company" v-model="selectCompany" style="display:none;">{{company.name}}</label></div>
-                        </transition>
-                        <lists :firstInput="selectLine" @firstInput="selectLine = $event" @secondInput="selectStationMarker" :list-title="company.lines" field="stations"></lists>
-                    </div>
-                </div>
+            <div class="middle-list">
+                <simple-lists :items="prefectures" @item="prefecture={...prefecture, ...$event}" v-if="!$route.query.prefecture_id">都道府県を選択してください</simple-lists>
+                <simple-lists :items="selectedPrefecture.cities" @item="city={...city, ...$event}" v-if="$route.query.prefecture_id && !$route.query.city_code">
+                    <div @click="getWiki(selectedPrefecture)">{{selectedPrefecture.name}}</div>
+                </simple-lists>
+                <simple-lists :items="selectedCity.spots" @item="spot={...spot, ...$event}" v-if="$route.query.prefecture_id && $route.query.city_code">
+                    <div @click="getWiki(selectedCity)">{{selectedCity.name}}</div>
+                </simple-lists>
             </div>
         </transition>
+        <half-modal ref=wiki :show="wikiReady" @hide="hideWiki" difference="164px">
+            <wiki-info :wiki-data="cityWikiInfo"></wiki-info>
+        </half-modal>
+        <half-modal ref="places" :show="placesReady" @hide="hidePlaces" difference="164px">
+            <div>
+                <places-info :places-data="spotDetail"></places-info>
+            </div>
+            <div>
+                <twitter></twitter>
+            </div>
+        </half-modal>
     </div>
 </template>
 
 
 <script lang="ts">
-interface LinePolyline {lat: number, lng: number}
-interface Line {id: number, company_id: number, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
-interface Station {company_id: number, id: number, line_id: number, order: number, pref_name: string, lat: number, lng: number, name: string}
 interface Coordinate {lat: number, lng: number}
 interface Spot {id: number, name: string, place_id: string, address: string, lat: number, lng: number, prefecture_id: string, city_code: string, geohash: string}
 import Vue from 'vue';
-const Lists = () => import('../../global/Lists.vue');
+const SimpleLists = () => import('../../global/SimpleLists.vue');
+const HalfModal = () => import('../../global/HalfModal.vue');
+const WikiInfo = () => import('../../global/WikiInfo.vue');
+const PlacesInfo = () => import('../../global/PlacesInfo.vue');
+const Twitter = () => import('../organisms/Twitter.vue');
 import { mapGetters } from 'vuex';
 export default Vue.extend({
     components: {
-        Lists,
+        SimpleLists,
+        HalfModal,
+        WikiInfo,
+        PlacesInfo,
+        Twitter
+    },
+    data() {
+        return {
+            listNum: 0,
+            prefecture: '',
+            city: '',
+            spot: '',
+            wikiReady: false,
+            placesReady: false,
+            currentWikiData: '',
+        }
     },
     computed: {
         ...mapGetters('home', [
-            'lines',
-            'filteredLines',
-            'selectedMarker',
-            'companies',
-            'selectedCompanyItems',
-            'selectedLineItems',
+            'selectedPrefectureItems',
+            'selectedCityItems',
+            'prefectures',
             'cities',
+            'spots',
         ]),
         ...mapGetters('switch', [
             'markerSwitch',
             'markerSwitches'
         ]),
-        selectCompany: {
+        ...mapGetters('info', [
+            'cityWikiInfo',
+            'spotDetail',
+        ]),
+        selectPrefecture: {
             get() {
-                return this.$store.getters['home/selectedCompanyItems']
+                console.log(this.selectedPrefectureItems)
+                return this.selectedPrefectureItems;
             },
             set(value) {
-                this.$store.dispatch('home/selectedCompanyItems', value)
+                this.$store.dispatch('home/selectedPrefectureItems', value)
             }
         },
-        selectLine: {
+        selectCity: {
             get() {
-                return this.$store.getters['home/selectedLineItems']
+                return this.$store.getters['home/selectedCityItems']
             },
             set(value) {
-                this.$store.dispatch('home/selectedLineItems', value)
+                this.$store.dispatch('home/selectedCityItems', value)
+            }
+        },
+        selectedPrefecture() {
+            // const prefecture = this.prefectures.find((prefecture) => prefecture.id == this.$route.query.prefecture_id)
+            return this.prefectures.find((prefecture) => prefecture.id == this.$route.query.prefecture_id);
+        },
+        selectedCity() {
+            return this.cities.find((city) => city.city_code == this.$route.query.city_code);
+        }
+    },
+    watch: {
+        prefecture(v) {
+            const query = {...this.$route.query, ...{prefecture_id: v.id}}
+            this.$router.push({query: query})
+        },
+        city(v) {
+            const query = {...this.$route.query, ...{city_code: v.city_code}}
+            this.$router.push({query: query})
+        },
+        spot(v) {
+            if(this.currentPlacesData == v.name) {
+                this.placesReady = true;
+            } else {
+                this.currentPlacesData = v.name
+                this.$store.dispatch('info/spotDetail', v)
+                this.$store.dispatch('info/getTwitterInfo', v)
+                const wiki = this.$refs.wiki;
+                wiki.fade()
+            }
+        },
+        cityWikiInfo(v) {
+            if(v) {
+                this.wikiReady = true;
+            }
+        },
+        spotDetail(v) {
+            if(v) {
+                this.placesReady = true;
             }
         }
     },
     methods:{
-        selectStationMarker(obj: {name: string}) {
-            this.$store.dispatch('info/getStationInfo', {name: obj.name});
-            this.$store.dispatch('home/selectMarker', obj);
+        // checkQuery() {
+        //     const query = this.$route.query;
+        //     query.prefecture_id && query.city_code
+        //                         ? this.listNum = 2 : query.prefecture_id
+        //                         ? this.listNum = 1
+        //                         : this.listNum = 0;
+        // },
+        back() {
+            const query = {...{}, ...this.$route.query}
+            const queryArray = Object.keys(this.$route.query)
+            delete query[queryArray.slice(-1)[0]]
+            this.$router.push({query: query})
         },
-        makeStationArray(lines: Line[]) {
-            const stations: Coordinate[] = []
-            lines.filter((line: {stations: Coordinate[]}) => {
-                const filterStations = this.$mapConfig.boundsFilter(line.stations);
-                filterStations.forEach((station: Coordinate) => {
-                    stations.push(station)
-                });
-            })
-            return stations
+        getWiki(obj) {
+            if(this.currentWikiData == obj.name) {
+                this.wikiReady = true;
+            } else {
+                this.currentWikiData = obj.name
+                this.$store.dispatch('info/getCityWikiInfo', {name: obj.wiki});
+                const places = this.$refs.places;
+                places.fade()
+            }
         },
-        isCheck(id: number, lines: Line[]) {
-            const filterLine: Line[] = this.filteredLines(lines);
-            const stations = (this as any).makeStationArray(filterLine);
-            return stations.some((station: Station) => {
-                return station.company_id == id;
-            })
+        hideWiki() {
+            this.wikiReady = false;
         },
-        select(searchStation: Station) {
-            (this.$refs.searchBar as any).blur = false;
-            (this.$refs.searchBar as any).$refs.input.blur();
-            this.$store.dispatch('home/selectMarker',searchStation);
-        },
-        onClickList(station: Station) {
-            this.$store.dispatch('info/getStationInfo',{name: station.name});
-            this.$store.dispatch('home/selectMarker', station);
-        },
-        showInfoWindow(spot: Spot) {
-            this.$mapConfig.createMapInfoWindow(spot.lat, spot.lng, spot.name)
-        },
-        hideInfoWindow() {
-            this.$mapConfig.infoWindow.setMap(null)
-        },
+        hidePlaces() {
+            this.placesReady = false;
+        }
     }
 })
 </script>
@@ -117,7 +172,8 @@ export default Vue.extend({
         overflow-y: scroll;
         overflow-x: hidden;
         height: 100vh;
-        max-height: calc(100vh - 250px);
+        max-height: calc(100vh - 165px);
+        // max-height: calc(100vh - 212px);
         transition: all .5s;
         .company-name {
             text-align: center;

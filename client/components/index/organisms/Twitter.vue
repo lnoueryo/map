@@ -2,6 +2,7 @@
     <div>
         <div class="main-container">
             <div v-if="twitterInfo.length !== 0">
+                <h2 class="text-center">Twitter</h2>
                 <div class="py-2" v-for="(twitter, i) in twitterInfo" :key="i">
                     <div class="px-1" style="display:flex;">
                         <div>
@@ -14,16 +15,16 @@
                         </div>
                     </div>
                     <div v-if="twitter.images.length !== 0">
-                        <div v-for="(image, j) in twitter.images" :key="j">
+                        <!-- <div v-for="(image, j) in twitter.images" :key="j">
                         <img style="width:100%" :src="image" alt="">
-                        </div>
-                        <!-- <v-carousel hide-delimiters>
+                        </div> -->
+                        <v-carousel hide-delimiters :show-arrows="twitter.images.length !== 1" height="250px">
                             <v-carousel-item
                             v-for="(image,j) in twitter.images"
                             :key="j"
                             :src="image"
                             ></v-carousel-item>
-                        </v-carousel> -->
+                        </v-carousel>
                     </div>
                 </div>
             </div>
@@ -60,12 +61,8 @@ export default Vue.extend({
 
 <style lang="scss" scoped>
     .main-container {
-        height: 100vh;
         background-color: white;
         color: black;
-        overflow-x: hidden;
-        overflow-y: scroll;
-        max-height: calc(100vh - 238px);
         .avator {
             width: 100%;
             border-radius: 50%;

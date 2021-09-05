@@ -1,11 +1,11 @@
 <template>
     <div>
         <div class="left-list" :style="{width: width+'px'}">
-            <v-btn-toggle mandatory v-model="changeList" color="indigo" background-color="#2f2f2f">
+            <!-- <v-btn-toggle mandatory v-model="changeList" color="indigo" background-color="#2f2f2f">
                 <v-btn v-for="(button,i) in buttons" :key="i">
                     <v-icon>mdi-{{button}}</v-icon>
                 </v-btn>
-            </v-btn-toggle>
+            </v-btn-toggle> -->
             <div class="list-top">
                 <search-items ref="searchItem"></search-items>
             </div>
@@ -20,12 +20,10 @@
 </template>
 
 <script lang="ts">
-interface LinePolyline {lat: number, lng: number}
-interface Line {id: number, company_name: string, name: string, polygon: LinePolyline[], color: string, stations: Station[]}
-interface Station {company_name: string, id: number, line_name: string, order: number, pref_name: string, lat: number, lng: number, name: string}
 interface DataType {width: number, buttons: string[]};
 interface DomEvent extends Event {clientX: number,clientY: number}
 import Vue from 'vue';
+import { mapGetters } from 'vuex';
 const MarkerLists = () => import('../organisms/MarkerLists.vue');
 const CityWiki = () => import('../organisms/CityWiki.vue');
 const StationWiki = () => import('../organisms/StationWiki.vue');
@@ -47,8 +45,8 @@ export default Vue.extend({
     },
     data(): DataType {
         return {
-            width: 315,
-            buttons: ['train', 'information-outline', 'format-align-right', 'city', 'twitter']
+            width: 345,
+            buttons: ['train', 'information-outline', 'format-align-right', 'city', 'twitter'],
         }
     },
     computed: {
@@ -103,7 +101,7 @@ export default Vue.extend({
         width:100%;
         background-color: #363636;
         position:relative;
-        max-height:calc(100vh - 114px);
+        // max-height:calc(100vh - 114px);
         margin-bottom:100px
     }
     .list-top{

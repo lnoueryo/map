@@ -1,15 +1,15 @@
 <template>
     <div>
         <div class="d-flex">
-            <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord" @select="select(filteredSearchStations[0])">
-                <div class="menu" v-if="searchStations.length !== 0" style="background-color: white">
+            <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord">
+                <!-- <div class="menu" v-if="searchStations.length !== 0" style="background-color: white">
                     <div @mouseup.stop.prevent="select(searchStation)" v-for="(searchStation, i) in filteredSearchStations" :key="i" class="list">
                         <span>{{searchStation.name}}</span>
                     </div>
-                </div>
+                </div> -->
             </search-bar>
             <div>
-                <v-btn class="ml-1" icon color="indigo" @click="$parent.$data.width=315">
+                <v-btn class="ml-1" icon color="indigo" @click="$parent.$data.width=345">
                     <v-icon>mdi-arrow-collapse-horizontal</v-icon>
                 </v-btn>
             </div>
@@ -19,10 +19,6 @@
             <b v-if="markerSwitch">{{countMarkers}}</b>
             <b v-else>0</b>
             <span>件</span>
-        </div>
-        <div class="d-flex my-2 px-3" style="font-size:14px;">
-            <toggle-switch class="mr-2 px-2 w50" v-model="stationSwitch" id="stationSwitch" background-color="#ff9800">駅</toggle-switch>
-            <toggle-switch class="px-2 w50" v-model="spotSwitch" id="spotSwitch" background-color="#ff9800">観光地</toggle-switch>
         </div>
     </div>
 </template>
@@ -47,17 +43,11 @@ export default Vue.extend({
     },
     computed: {
         ...mapGetters('home', [
-            'searchStations',
-            'showNumberOfMarkers',
+            // 'showNumberOfMarkers',
         ]),
         ...mapGetters('switch', [
             'markerSwitch',
         ]),
-        filteredSearchStations() {
-            return this.searchStations.filter((_: any,index: number) => {
-                return index < 5;
-            });
-        },
         searchWord: {
             get() {
                 return this.$store.getters['home/searchWord'];
@@ -66,28 +56,12 @@ export default Vue.extend({
                 this.$store.dispatch('home/searchWord', newValue);
             }
         },
-        stationSwitch: {
-            get() {
-                return this.$store.getters['switch/markerSwitches'].stations;
-            },
-            set(value) {
-                this.$store.dispatch('switch/changeMarkerSwitches', {status: value, category: 'stations'});
-            }
-        },
-        spotSwitch: {
-            get() {
-                return this.$store.getters['switch/markerSwitches'].spots;
-            },
-            set(value) {
-                this.$store.dispatch('switch/changeMarkerSwitches', {status: value, category: 'spots'});
-            }
-        },
     },
-    watch: {
-        showNumberOfMarkers(newValue, OldValue) { //vuexから表示されている数の変化を検知
-            (this as any).count(newValue, OldValue);
-        },
-    },
+    // watch: {
+    //     showNumberOfMarkers(newValue, OldValue) { //vuexから表示されている数の変化を検知
+    //         (this as any).count(newValue, OldValue);
+    //     },
+    // },
     methods: {
         select(searchStation: Station) {
             const searchBar = this.$refs.searchBar as any;
