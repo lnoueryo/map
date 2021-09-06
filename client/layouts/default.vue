@@ -25,7 +25,12 @@ export default Vue.extend({
             windowSize: {x: 0, y: 0 }
         }
     },
-    beforeCreate(){
+    beforeCreate() {
+        if (process.env.NODE_ENV === 'production') {
+            if (window.location.hostname === 'map-ai7ganlifq-an.a.run.app') {
+                this.$axios.defaults.baseURL = '/'
+            }
+        }
         this.$store.dispatch('isAuth', this.$route.name)
     },
     mounted () {
