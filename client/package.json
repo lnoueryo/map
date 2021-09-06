@@ -9,6 +9,13 @@
     "generate": "nuxt generate",
     "lint:js": "eslint --ext \".js,.vue\" --ignore-path .gitignore .",
     "lint": "yarn lint:js",
+    "server": "run-p server:*",
+    "server:nuxt": "nuxt",
+    "server:django": "python3 ../manage.py runserver",
+    "deploy": "run-s deploy:*",
+    "deploy:dev": "nuxt generate",
+    "deploy:django": "python3 ../manage.py deploy",
+    "collect": "yarn dev",
     "test": "jest"
   },
   "dependencies": {
@@ -33,6 +40,7 @@
     "eslint-plugin-nuxt": "^2.0.0",
     "eslint-plugin-vue": "^7.12.1",
     "jest": "^27.0.5",
+    "npm-run-all": "^4.1.5",
     "ts-jest": "^27.0.3",
     "vue-jest": "^3.0.4"
   }

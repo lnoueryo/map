@@ -23,7 +23,7 @@ export default {
     ],
     link: [{ rel: 'icon', type: 'image/x-icon', href: '/logo.png' }],
     script: [
-      { src: `https://maps.googleapis.com/maps/api/js?key=${process.env.API_KEY}&libraries=geometry,places&v=quarterly`, defer: false, body: true },
+      { src: `https://maps.googleapis.com/maps/api/js?key=${process.env.NODE_ENV === 'production' ? process.env.PROD_API_KEY : process.env.DEV_API_KEY}&libraries=geometry,places&v=quarterly`, defer: false, body: true },
       { src: 'https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js', defer: true, body: true },
       { src: 'https://unpkg.com/@googlemaps/markerwithlabel/dist/index.min.js', defer: true, body: true },
     ]
@@ -71,7 +71,7 @@ export default {
 
   //ローカル
   axios: {
-    baseURL: 'http://localhost:3000/api/',
+    baseURL: process.env.NODE_ENV === 'production' ? process.env.baseURL : 'http://localhost:3000/api/',
     retry: { retries: 5 },
   },
   proxy: {
