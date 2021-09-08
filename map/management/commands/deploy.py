@@ -4,14 +4,14 @@ import time
 import signal
 from django.conf import settings
 from django.core.management.base import BaseCommand, CommandError
+
 def execute():
 
     try:
-        # process = Popen(['echo yes | python3 manage.py collectstatic'], stdin=PIPE, stdout=PIPE, shell=True)
-        # process = Popen(['(echo yes&echo yes&echo yes&echo yes) | python3 manage.py collectstatic'], stdin=PIPE, stdout=PIPE, shell=True)
-        os.chdir('../')
+        if os.getcwd() == 'D:\project\map\gmap\client':
+            os.chdir('../')
 
-        print(os.getcwd())
+        process = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', '-m', 'pip', 'freeze', '>', 'requirements.txt'], stdin=PIPE, stdout=PIPE, shell=True)
         process = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', 'manage.py', 'collectstatic'], stdin=PIPE, stdout=PIPE, shell=True)
         print(process)
         process.wait()

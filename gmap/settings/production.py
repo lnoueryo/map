@@ -1,9 +1,32 @@
 from .base import *
-import environ
+import io
 
-# SECURITY WARNING: keep the secret key used in production secret!
-env = environ.Env()
-env.read_env(os.path.join(BASE_DIR,'.env'))
+import google.auth
+import environ
+from google.cloud import secretmanager
+
+env = environ.Env(DEBUG=(bool, False))
+env_file = os.path.join(BASE_DIR, ".env")
+
+# Attempt to load the Project ID into the environment, safely failing on error.
+try:
+    _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
+except google.auth.exceptions.DefaultCredentialsError:
+    pass
+print(os.environ.get("GOOGLE_CLOUD_PROJECT", None))
+if os.path.isfile(env_file):
+    env.read_env(env_file)
+else:
+    try:
+        project_id = os.environ.get("GOOGLE_CLOUD_PROJECT")
+
+        client = secretmanager.SecretManagerServiceClient()
+        name = f"projects/{project_id}/secrets/gmap-keys/versions/latest"
+        payload = client.access_secret_version(name=name).payload.data.decode("UTF-8")
+
+        env.read_env(io.StringIO(payload))
+    except Exception as e:
+        print(e)
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
