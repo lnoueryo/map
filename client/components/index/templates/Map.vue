@@ -234,11 +234,8 @@ export default Vue.extend({
         }
     }
     @media screen and (max-width: 500px) {
-        .map-top {
-            top: 50px;
-        }
-        .line-chart{
-            top: 100px;
+        .map-container {
+            max-height: calc(100vh - 120px)
         }
     }
 

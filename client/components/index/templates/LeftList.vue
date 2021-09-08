@@ -1,6 +1,6 @@
 <template>
-    <div>
-        <div class="left-list" :style="{width: width+'px'}">
+    <div style="position: relative;">
+        <div class="left-list" :style="{width: adjustWidth}">
             <!-- <v-btn-toggle mandatory v-model="changeList" color="indigo" background-color="#2f2f2f">
                 <v-btn v-for="(button,i) in buttons" :key="i">
                     <v-icon>mdi-{{button}}</v-icon>
@@ -9,13 +9,16 @@
             <div class="list-top">
                 <search-items ref="searchItem"></search-items>
             </div>
-            <keep-alive>
-                <transition name="fade">
-                    <div :is="component"></div>
-                </transition>
-            </keep-alive>
-        <div class="resize" @mousedown="dragStart"></div>
+            <div class="list-middle" :class="{'show' : leftListSwitch}">
+                <keep-alive>
+                    <transition name="fade">
+                        <div :is="component"></div>
+                    </transition>
+                </keep-alive>
+            </div>
+            <div class="resize" @mousedown="dragStart"></div>
         </div>
+        <half-modals ref="modals"></half-modals>
     </div>
 </template>
 
@@ -29,9 +32,11 @@ const CityWiki = () => import('../organisms/CityWiki.vue');
 const StationWiki = () => import('../organisms/StationWiki.vue');
 const SearchItems = () => import('../organisms/SearchItems.vue');
 const Event = () => import('../organisms/Event.vue');
-const Twitter = () => import('../organisms/Twitter.vue');
+const HalfModals = () => import('../organisms/HalfModals.vue');
 const SearchBar = () => import('../../global/SearchBar.vue');
-
+const WikiInfo = () => import('../../global/WikiInfo.vue');
+const PlacesInfo = () => import('../../global/PlacesInfo.vue');
+const Twitter = () => import('../organisms/Twitter.vue');
 
 export default Vue.extend({
     components: {
@@ -40,8 +45,10 @@ export default Vue.extend({
         SearchBar,
         SearchItems,
         Event,
-        CityWiki,
-        Twitter,
+        HalfModals,
+        WikiInfo,
+        PlacesInfo,
+        Twitter
     },
     data(): DataType {
         return {
@@ -50,6 +57,12 @@ export default Vue.extend({
         }
     },
     computed: {
+        adjustWidth() {
+            return (this as any).smp ? '100%' : (this as any).width + 'px';
+        },
+        smp() {
+            return this.$store.getters.windowSize.x < 500
+        },
         component() {
             const componentTypes = ['marker-lists', 'station-wiki', 'event', 'city-wiki', 'twitter'];
             return componentTypes[(this as any).$store.getters['switch/changeList']];
@@ -62,6 +75,9 @@ export default Vue.extend({
                 (this as any).$store.dispatch('switch/changeList', newValue);
             }
         },
+        leftListSwitch() {
+            return this.$store.getters['switch/leftListSwitch'];
+        }
     },
     methods: {
         limit(e: DomEvent) {
@@ -87,31 +103,44 @@ export default Vue.extend({
         opacity: 0;
         transition: opacity .5s;
     }
-    .resize{
-        position:absolute;
-        top:0;
-        bottom:0;
-        right:-3px;
-        width:6px;
-        z-index:5;
-        cursor:ew-resize;
+    .resize {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        right: -3px;
+        width: 6px;
+        z-index: 5;
+        cursor: ew-resize;
     }
-    .left-list{
-        height:100vh;
+    .left-list {
         width:100%;
-        background-color: #363636;
         position:relative;
-        // max-height:calc(100vh - 114px);
-        margin-bottom:100px
+        overflow: hidden;
     }
-    .list-top{
-        padding:10px;
-        padding-right:5px;
-        text-align:center;
-        border-radius:5px;
-        color:#363636;
-        background-color:white;
-        position:relative;
-        width:100%;
+    .list-top {
+        padding: 10px;
+        padding-right: 5px;
+        text-align: center;
+        border-radius: 5px;
+        color: #363636;
+        background-color: white;
+        position: relative;
+        width: 100%;
+        z-index: 2;
+    }
+    @media screen and (max-width: 500px) {
+        .left-list{
+            z-index: 2;
+            overflow: initial;
+        }
+        .list-middle {
+            position: absolute;
+            width: 100%;
+            transition: all 1s;
+            top: -100vh;
+        }
+        .show {
+            top: 57px;
+        }
     }
 </style>

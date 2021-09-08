@@ -1,6 +1,6 @@
 <template>
     <div>
-        <nav class="bottom-bar" :style="navStyle">
+        <nav class="bottom-bar" :style="position ? {top: show ? '0' : '100vh', overflowY: 'scroll'} : {top: show ? '75vh' : '100vh', overflowY: 'initial'}">
             <div class="hidden-frame">
                 <div class="d-flex" v-if="show">
                     <div class="mx-2 w100">
@@ -47,41 +47,42 @@ export default {
         },
     },
     watch:{
-        show: {
-            handler(v) {
-                if (v) {
-                    const newNavStyle = {height: '100px', transform: 'translateY(-100px)'};
-                    // const newComponentStyle = {height: '40px'};
-                    this.navStyle = {...this.navStyle, ...newNavStyle};
-                    this.componentStyle = {...this.componentStyle};
-                }
-            }
-        }
+        // show: {
+        //     handler(v) {
+        //         if (v) {
+        //             // const newNavStyle = {height: '100px', transform: 'translateY(-100px)'};
+        //             // const newComponentStyle = {height: '40px'};
+        //             // this.navStyle = {...this.navStyle, ...newNavStyle};
+        //             // this.componentStyle = {...this.componentStyle};
+        //         }
+        //     }
+        // }
     },
     methods:{
         upWiki() {
             this.position = true;
-            const newNavStyle = {height: `calc(100vh - ${this.difference})`, transform: `translateY(calc(-100vh + ${this.difference}))`, zIndex: 10};
-            const newComponentStyle = {height: 'calc(100vh - 205px)', 'overflowX': 'hidden', 'overflowY': 'scroll'};
-            this.navStyle = {...this.navStyle, ...newNavStyle};
-            this.componentStyle = {...this.componentStyle, ...newComponentStyle};
+            // const newNavStyle = {height: `calc(100vh - ${this.difference})`, transform: `translateY(calc(-100vh + ${this.difference}))`, zIndex: 10};
+            // const newComponentStyle = {height: 'calc(100vh - 205px)', 'overflowX': 'hidden', 'overflowY': 'scroll'};
+            // this.navStyle = {...this.navStyle, ...newNavStyle};
+            // this.componentStyle = {...this.componentStyle, ...newComponentStyle};
         },
         downWiki() {
             this.$refs.component.scrollTop = 0;
             this.position = false;
-            const newNavStyle = {height: '100px', transform: 'translateY(-100px)', zIndex: 0};
-            const newComponentStyle = {overflowY: 'hidden'};
-            this.navStyle = {...this.navStyle, ...newNavStyle};
-            this.componentStyle = {...this.componentStyle, ...newComponentStyle};
+            // const newNavStyle = {height: '100px', transform: 'translateY(-100px)', zIndex: 0};
+            // const newComponentStyle = {overflowY: 'hidden'};
+            // this.navStyle = {...this.navStyle, ...newNavStyle};
+            // this.componentStyle = {...this.componentStyle, ...newComponentStyle};
         },
         fade() {
             this.$refs.component.scrollTop = 0;
-            this.$emit('hide');
             this.position = false;
-            const newNavStyle = {height: '0px', transform: 'translateY(0px)', zIndex: 0};
-            const newComponentStyle = {overflowY: 'hidden'};
-            this.navStyle = {...this.navStyle, ...newNavStyle};
-            this.componentStyle = {...this.componentStyle, ...newComponentStyle};
+            this.$emit('hide');
+            // this.show = false;
+            // const newNavStyle = {height: '0px', transform: 'translateY(0px)', zIndex: 0};
+            // const newComponentStyle = {overflowY: 'hidden'};
+            // this.navStyle = {...this.navStyle, ...newNavStyle};
+            // this.componentStyle = {...this.componentStyle, ...newComponentStyle};
         }
     }
 }
@@ -92,9 +93,12 @@ export default {
         position: absolute;
         right: 0;
         left: 0;
+        top: 100vh;
+        z-index: 2;
         color: black;
         background-color: #ffffff;
-        padding-top: 5px;
+        transition: all .5s;
+        bottom: 0;
     }
     .mw-parser-output {
         position: relative;
@@ -103,10 +107,15 @@ export default {
         margin: auto;
     }
     .hidden-frame {
-        overflow-x: hidden;
         width: 100%;
     }
     .w100 {
         width: 100%;
+    }
+    @media screen and (max-width: 500px) {
+        .bottom-bar {
+            position: fixed;
+            z-index: 5;
+        }
     }
 </style>

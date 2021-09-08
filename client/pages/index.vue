@@ -6,19 +6,19 @@
         <div id="container" :class="{'open': open}">
             <div class="main-view">
                 <div>
-                    <left-list v-if="smp"></left-list>
+                    <left-list></left-list>
                 </div>
                 <div class="map-container">
                     <map-view></map-view>
                 </div>
             </div>
         </div>
-        <div>
-            <top-bar v-if="!smp"></top-bar>
+        <!-- <div>
+            <top-bar v-if="smp"></top-bar>
         </div>
         <div>
-            <bottom v-if="!smp"></bottom>
-        </div>
+            <bottom v-if="smp"></bottom>
+        </div> -->
     </div>
 </template>
 
@@ -46,14 +46,15 @@ export default Vue.extend({
     },
     computed: {
         smp() {
-            return this.$store.getters.windowSize.x > 500
+            return this.$store.getters.windowSize.x < 500
         }
     },
-    // beforeCreate(){
+    // beforeCreate() {
     //     this.$store.dispatch('switch/getCompanies', ['stations, cities']);
     // },
     mounted(){
         this.$on('open', (this as any).drawer);
+        console.log('success')
     },
     methods:{
         drawer(){ //right-drawerが開いた時の処理
@@ -64,36 +65,39 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
-    #wrapper{
-        width:100%;
-        height:100%;
-        max-height:calc(100vh);
-        overflow:hidden;
+    #wrapper {
+        width: 100%;
+        height: calc(100vh - 100px);
         position: relative;
         #container {
             width: 100%;
-            position:relative;
-            padding-right:100px;
+            position: relative;
+            padding-right: 100px;
             transition: all .3s;
-            .main-view{
-                display:flex;
-                overflow:hidden;
-                max-height:calc(100%-200px);
-                .map-container{
-                    position:relative;
-                    width:100%;
+            .main-view {
+                display: flex;
+                overflow: hidden;
+                .map-container {
+                    position: relative;
+                    width: 100%;
+                }
+            }
+            @media screen and (max-width: 500px) {
+                .main-view {
+                    //left-listを上げて、map-viewを下げる
+                    display: block;
                 }
             }
         }
-        #container.open{
+        #container.open {
             padding-right: 256px;
             transition: all .3s;
         }
         @media screen and (max-width: 500px) {
             #container {
-                padding-right:0;
+                padding-right: 0;
             }
-            #container.open{
+            #container.open {
                 padding-right: 0;
                 transition: all .3s;
             }

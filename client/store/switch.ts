@@ -10,7 +10,8 @@ interface State {
     citySwitch: boolean,
     spotSwitch: boolean,
     markerSwitches: {[key: string]: boolean}
-    listSwitch: boolean
+    listSwitch: boolean,
+    leftListSwitch: boolean
 }
 
 const state = {
@@ -20,7 +21,8 @@ const state = {
     chartSwitch: false,
     dotSwitch: true,
     markerSwitches: {},
-    listSwitch: false
+    listSwitch: false,
+    leftListSwitch: false,
 };
 
 const getters = {
@@ -31,6 +33,7 @@ const getters = {
     chartSwitch: (state: State) => state.chartSwitch, //グラフ表示のboolean
     dotSwitch: (state: State) => state.dotSwitch, //ドット表示のboolean
     listSwitch: (state: State) => state.listSwitch, //ドット表示のboolean
+    leftListSwitch: (state: State) => state.leftListSwitch, //ドット表示のboolean
 }
 
 const mutations = {
@@ -65,6 +68,9 @@ const mutations = {
     listSwitch: (state: State, payload: boolean) => {
         state.listSwitch = payload;
     },
+    leftListSwitch: (state: State, payload: boolean) => {
+        state.leftListSwitch = payload;
+    },
 };
 
 const actions = {
@@ -88,6 +94,9 @@ const actions = {
     },
     changeListSwitch: (context: any, payload: boolean) => {
         context.commit('listSwitch', payload)
+    },
+    changeLeftListSwitch: (context: any, payload: boolean) => {
+        context.commit('leftListSwitch', payload)
     },
     makeSwitches: ({ dispatch, commit, getters, rootGetters }: any) => {
         const page = $nuxt.$route.name;

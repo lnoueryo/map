@@ -1,7 +1,7 @@
 <template>
     <div>
         <transition name="fade">
-            <div class="middle-list">
+            <div class="middle-list" :style="leftListSwitch ? {bottom: '100vh', transition: 'all 1.8s'} : {bottom: '0', transition: 'all .8s'}">
                 <simple-lists :items="prefectures" @item="prefecture={...prefecture, ...$event}" v-if="!$route.query.prefecture_id">都道府県を選択してください</simple-lists>
                 <simple-lists :items="selectedPrefecture.cities" @item="city={...city, ...$event}" v-if="$route.query.prefecture_id && !$route.query.city_code">
                     <div @click="getWiki(selectedPrefecture)">{{selectedPrefecture.name}}</div>
@@ -11,17 +11,6 @@
                 </simple-lists>
             </div>
         </transition>
-        <half-modal ref=wiki :show="wikiReady" @hide="hideWiki" difference="164px">
-            <wiki-info :wiki-data="cityWikiInfo"></wiki-info>
-        </half-modal>
-        <half-modal ref="places" :show="placesReady" @hide="hidePlaces" difference="164px">
-            <div>
-                <places-info :places-data="spotDetail"></places-info>
-            </div>
-            <div>
-                <twitter></twitter>
-            </div>
-        </half-modal>
     </div>
 </template>
 
@@ -67,7 +56,8 @@ export default Vue.extend({
         ]),
         ...mapGetters('switch', [
             'markerSwitch',
-            'markerSwitches'
+            'markerSwitches',
+            'leftListSwitch'
         ]),
         ...mapGetters('info', [
             'cityWikiInfo',
@@ -75,7 +65,6 @@ export default Vue.extend({
         ]),
         selectPrefecture: {
             get() {
-                console.log(this.selectedPrefectureItems)
                 return this.selectedPrefectureItems;
             },
             set(value) {
@@ -107,36 +96,8 @@ export default Vue.extend({
             const query = {...this.$route.query, ...{city_code: v.city_code}}
             this.$router.push({query: query})
         },
-        spot(v) {
-            if((this as any).currentPlacesData == v.name) {
-                (this as any).placesReady = true;
-            } else {
-                (this as any).currentPlacesData = v.name
-                this.$store.dispatch('info/spotDetail', v)
-                this.$store.dispatch('info/getTwitterInfo', v)
-                const wiki = this.$refs.wiki as any;
-                wiki.fade()
-            }
-        },
-        cityWikiInfo(v) {
-            if(v) {
-                (this as any).wikiReady = true;
-            }
-        },
-        spotDetail(v) {
-            if(v) {
-                (this as any).placesReady = true;
-            }
-        }
     },
     methods:{
-        // checkQuery() {
-        //     const query = this.$route.query;
-        //     query.prefecture_id && query.city_code
-        //                         ? this.listNum = 2 : query.prefecture_id
-        //                         ? this.listNum = 1
-        //                         : this.listNum = 0;
-        // },
         back() {
             const query = {...{}, ...this.$route.query} as any
             const queryArray = Object.keys(this.$route.query)
@@ -145,21 +106,14 @@ export default Vue.extend({
             this.$router.push({query: query})
         },
         getWiki(obj: City | Prefecture) {
-            if((this as any).currentWikiData == obj.name) {
-                (this as any).wikiReady = true;
-            } else {
-                (this as any).currentWikiData = obj.name
-                this.$store.dispatch('info/getCityWikiInfo', {name: obj.wiki});
-                const places = this.$refs.places as any;
-                places.fade()
-            }
+            (this.$parent.$refs.modals as any).getWiki(obj)
         },
-        hideWiki() {
-            (this as any).wikiReady = false;
-        },
-        hidePlaces() {
-            (this as any).placesReady = false;
-        }
+        // hideWiki() {
+        //     (this as any).wikiReady = false;
+        // },
+        // hidePlaces() {
+        //     (this as any).placesReady = false;
+        // }
     }
 })
 </script>
@@ -175,9 +129,7 @@ export default Vue.extend({
         overflow-y: scroll;
         overflow-x: hidden;
         height: 100vh;
-        max-height: calc(100vh - 165px);
-        // max-height: calc(100vh - 212px);
-        transition: all .5s;
+        max-height: calc(100vh - 164px);
         .company-name {
             text-align: center;
             border-radius: 5px;
@@ -233,19 +185,11 @@ export default Vue.extend({
             transform: translateX(256px);
         }
     }
-    .station-list {
-        padding: 10px;
-        background-color: white;
-        width: 100%;
-        transition: all .5s;
-        cursor: pointer;
-    }
-    .station-list:hover {
-        opacity: 0.7;
-        transition: all .5s;
-    }
-    .station-list:active {
-        opacity: 0.9;
-        transition: all .5s;
+    @media screen and (max-width: 500px) {
+        .middle-list {
+            //リストを上から半分出す
+            height: initial;
+            max-height: calc(50vh - 55px);
+        }
     }
 </style>

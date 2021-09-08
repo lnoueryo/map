@@ -9,12 +9,15 @@
                 </div> -->
             </search-bar>
             <div>
-                <v-btn class="ml-1" icon color="indigo" @click="$parent.$data.width=345">
+                <v-btn class="ml-1" icon color="indigo" @click="$parent.$data.width=345" v-if="pc">
                     <v-icon>mdi-arrow-collapse-horizontal</v-icon>
+                </v-btn>
+                <v-btn class="ml-1" icon color="orange" @click="changeLeftListSwitch = !changeLeftListSwitch" :style="changeLeftListSwitch ? {transform: 'rotateX(0deg)'} : {transform: 'rotateX(180deg)'}" v-if="smp">
+                    <v-icon>mdi-chevron-down</v-icon>
                 </v-btn>
             </div>
         </div>
-        <div style="padding:10px">
+        <div style="padding:10px" v-if="pc">
             <span>現在の表示件数</span>
             <b v-if="markerSwitch">{{countMarkers}}</b>
             <b v-else>0</b>
@@ -42,9 +45,6 @@ export default Vue.extend({
         }
     },
     computed: {
-        ...mapGetters('home', [
-            // 'showNumberOfMarkers',
-        ]),
         ...mapGetters('switch', [
             'markerSwitch',
         ]),
@@ -55,6 +55,21 @@ export default Vue.extend({
             set(newValue) {
                 this.$store.dispatch('home/searchWord', newValue);
             }
+        },
+        changeLeftListSwitch: {
+            get() {
+                return this.$store.getters['switch/leftListSwitch'];
+            },
+            set(newValue) {
+                console.log(newValue)
+                this.$store.dispatch('switch/changeLeftListSwitch', newValue);
+            }
+        },
+        pc() {
+            return this.$store.getters.windowSize.x > 500;
+        },
+        smp() {
+            return this.$store.getters.windowSize.x < 500;
         },
     },
     // watch: {
