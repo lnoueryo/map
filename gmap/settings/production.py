@@ -13,7 +13,7 @@ try:
     _, os.environ["GOOGLE_CLOUD_PROJECT"] = google.auth.default()
 except google.auth.exceptions.DefaultCredentialsError:
     pass
-print(os.environ.get("GOOGLE_CLOUD_PROJECT", None))
+# print(os.environ.get("GOOGLE_CLOUD_PROJECT", None))
 if os.path.isfile(env_file):
     env.read_env(env_file)
 else:
