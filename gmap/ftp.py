@@ -23,7 +23,9 @@ port = 21
 timeout = 50
 
 
-def ftp_upload(hostname, username, password, port, upload_src_path, upload_dst_path, timeout):
+def ftp_upload():
+    logger.info("===START FTP===")
+# def ftp_upload(hostname, username, password, port, upload_src_path, timeout):
     logger.info({
         'action': 'ftp_upload',
         'status': 'run'
@@ -49,10 +51,6 @@ def ftp_upload(hostname, username, password, port, upload_src_path, upload_dst_p
         'action': 'ftp_upload',
         'status': 'success'
     })
-
-def execute():
-    logger.info("===START FTP===")
-    ftp_upload(hostname, username, password, port, upload_src_path, upload_src_path, timeout)
     logger.info("===FINISH FTP===")
 
 def placeFiles(ftp, path):
@@ -77,7 +75,3 @@ def placeFiles(ftp, path):
             print("CWD", "..")
             ftp.cwd("..")
 
-
-class Command(BaseCommand):
-    def handle(self, *args, **options):
-        execute()
