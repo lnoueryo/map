@@ -1,0 +1,27 @@
+steps:
+- name: gcr.io/cloud-builders/docker
+  args: ['build', '-t', 'gcr.io/$_PROJECT_ID/$_IMAGE', 'client']
+- name: 'gcr.io/$_PROJECT_ID/$_IMAGE'
+  entrypoint: 'npx'
+  args: ['cypress', 'run', '--record', '--key', '$_RECORD_KEYS']
+  dir: 'client'
+  timeout: '10m0s'
+# - name: 'gcr.io/$_PROJECT_ID/slackbot'
+#   args: [
+#     '--build',
+#     '$BUILD_ID',
+#     '--webhook', 'https://hooks.slack.com/services/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'
+#   ]
+# artifacts:
+#   objects:
+#     location: 'gs://asia.artifacts.storelocator-v2.appspot.com/builds/slmap/e2e/$BUILD_ID'
+#     paths: ['slmap3/*']
+# tags:
+# - "e2e"
+# - "test"
+# - "slmap"
+images: ['gcr.io/$_PROJECT_ID/$_IMAGE']
+# options:
+#   machineType: 'N1_HIGHCPU_32'
+#   trim-tide-313616
+#   e2e-map
