@@ -62,7 +62,12 @@ def create_pull_request(title, description, head_branch, git_token, project_name
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
-        parser.add_argument('message', nargs='?', default='all', type=str)
+        parser.add_argument('message', type=str, default='')
+        parser.add_argument('description', type=str, default='')
+        parser.add_argument('branch', type=str, default='feature/new_page')
 
     def handle(self, *args, **options):
-        execute(options['message', 'description', 'branch'])
+        message = options['message']
+        description = options['description']
+        branch = options['branch']
+        execute(message, description, branch)
