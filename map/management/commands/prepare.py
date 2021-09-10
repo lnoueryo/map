@@ -36,13 +36,14 @@ def execute(message, description, branch):
     except Exception as e:
         print(e)
 
-def create_pull_request(title, description, head_branch, project_name='lnoueryo', repo_name='gmap', base_branch='develop'):
+def create_pull_request(title, description, head_branch, project_name='lnoueryo', repo_name='map', base_branch='develop'):
     """Creates the pull request for the head_branch against the base_branch"""
-    git_pulls_api = "https://github.com/api/v3/repos/{0}/{1}/pulls".format(
+    git_pulls_api = "https://api.github.com/repos/{0}/{1}/pulls".format(
         project_name,
         repo_name)
     headers = {
-        "Authorization": "token {0}".format(settings.GITHUB['API_KEY']),
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": "token {0}".format(settings.GIT_HUB['API_KEY']),
         "Content-Type": "application/json"}
 
     payload = {
