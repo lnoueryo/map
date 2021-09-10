@@ -113,4 +113,7 @@ export default {
   build: {
     publicPath: '/static/_nuxt/'
   },
+  generate: {
+    dir: '../dist'
+  },
 }
