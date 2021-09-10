@@ -36,7 +36,7 @@ def execute(message, description, branch):
     except Exception as e:
         print(e)
 
-def create_pull_request(title, description, head_branch, git_token, project_name='lnoueryo', repo_name='gmap', base_branch='develop'):
+def create_pull_request(title, description, head_branch, project_name='lnoueryo', repo_name='gmap', base_branch='develop'):
     """Creates the pull request for the head_branch against the base_branch"""
     git_pulls_api = "https://github.com/api/v3/repos/{0}/{1}/pulls".format(
         project_name,
