@@ -14,7 +14,7 @@ function fizzbuzz(num) {
 }
 // -- End: Our Application Code --
 beforeEach(() => {
-  cy.visit('http://localhost:3000/')
+  cy.visit('https://tokyo-map.jpn.org/')
 })
 
 afterEach(() => {
