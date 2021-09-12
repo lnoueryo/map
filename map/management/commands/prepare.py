@@ -23,7 +23,7 @@ def execute(message, description, branch):
         # process2 = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', 'manage.py', 'collectstatic'], stdin=PIPE, stdout=PIPE, shell=True)
         # process2.wait()
         # process2.kill()
-        ftp.ftp_upload()
+        # ftp.ftp_upload()
         repo = git.Repo()
         try:
             o = repo.remotes.origin
