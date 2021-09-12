@@ -15,11 +15,6 @@ function fizzbuzz(num) {
 // -- End: Our Application Code --
 beforeEach(() => {
   cy.visit('https://tokyo-map.jpn.org/')
-  // await cy.waitUntil(() => cy.window().then(win => true), {
-  //   errorMsg: 'This is a custom error message', // overrides the default error message
-  //   timeout: 2000, // waits up to 2000 ms, default to 5000
-  //   interval: 500 // performs the check every 500 ms, default to 200
-  // });
 })
 afterEach(() => {
   // runs after each test block
