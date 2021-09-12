@@ -1,7 +1,7 @@
 pull_request_rules:
   - name: Automatic merge on approval
     conditions:
-      - "check-success=Cypress"
+      - "#approved-reviews-by>=0"
     actions:
       merge:
         method: merge
