@@ -19,7 +19,7 @@ def execute(message, description, branch):
         # nuxt = Popen(['yarn', 'generate'], stdin=PIPE, stdout=PIPE, shell=True)
         # nuxt.wait()
         # os.chdir('../')
-        process1 = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', '-m', 'pip', 'freeze', '>', 'requirements.txt'], stdin=PIPE, stdout=PIPE, shell=True)
+        # process1 = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', '-m', 'pip', 'freeze', '>', 'requirements.txt'], stdin=PIPE, stdout=PIPE, shell=True)
         # process2 = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', 'manage.py', 'collectstatic'], stdin=PIPE, stdout=PIPE, shell=True)
         # process2.wait()
         # process2.kill()
@@ -28,7 +28,7 @@ def execute(message, description, branch):
         try:
             o = repo.remotes.origin
             o.pull()
-            repo.git.add(all=True)
+            repo.git.add('--all')
             repo.git.commit('.','-m',f'{message}')
             o.push()
             create_pull_request(title=f'{message}', description=f'{description}', head_branch=f'{branch}')
