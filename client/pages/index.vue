@@ -54,7 +54,6 @@ export default Vue.extend({
     // },
     mounted(){
         this.$on('open', (this as any).drawer);
-        console.log('success')
     },
     methods:{
         drawer(){ //right-drawerが開いた時の処理
