@@ -1,7 +1,8 @@
 pull_request_rules:
   - name: Automatic merge on approval
     conditions:
-      - "#approved-reviews-by>=1"
+      - "check-success=cypress: default-group"
+      - "check-success=e2e-map (trim-tide-313616)"
     actions:
       merge:
         method: merge
