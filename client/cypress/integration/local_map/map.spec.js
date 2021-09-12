@@ -13,7 +13,7 @@ function fizzbuzz(num) {
   }
 }
 // -- End: Our Application Code --
-beforeEach(async() => {
+beforeEach(() => {
   cy.visit('https://tokyo-map.jpn.org/')
   // await cy.waitUntil(() => cy.window().then(win => true), {
   //   errorMsg: 'This is a custom error message', // overrides the default error message
