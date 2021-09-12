@@ -10,6 +10,5 @@ RUN locale-gen ja_JP.UTF-8
 ENV LANG ja_JP.UTF-8
 ENV LC_CTYPE ja_JP.UTF-8
 RUN localedef -f UTF-8 -i ja_JP ja_JP.utf8
-RUN yarn install
 
 RUN apt-get install --no-install-recommends -y fonts-noto fonts-noto-cjk
