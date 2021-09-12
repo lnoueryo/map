@@ -20,10 +20,12 @@ def execute(message, description, branch):
         # nuxt.wait()
         # os.chdir('../')
         process1 = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', '-m', 'pip', 'freeze', '>', 'requirements.txt'], stdin=PIPE, stdout=PIPE, shell=True)
-        # process2 = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', 'manage.py', 'collectstatic'], stdin=PIPE, stdout=PIPE, shell=True)
-        # process2.wait()
-        # process2.kill()
-        # ftp.ftp_upload()
+        process1.wait()
+        process1.kill()
+        process2 = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', 'manage.py', 'collectstatic'], stdin=PIPE, stdout=PIPE, shell=True)
+        process2.wait()
+        process2.kill()
+        ftp.ftp_upload()
         repo = git.Repo()
         try:
             o = repo.remotes.origin
