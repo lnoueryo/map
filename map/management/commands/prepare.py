@@ -28,7 +28,7 @@ def execute(message, description, branch):
         try:
             o = repo.remotes.origin
             o.pull()
-            repo.git.add(all=True)
+            # repo.git.add(all=True)
             repo.git.commit('.','-m',f'{message}')
             o.push()
             create_pull_request(title=f'{message}', description=f'{description}', head_branch=f'{branch}')
