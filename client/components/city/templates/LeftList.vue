@@ -103,7 +103,7 @@ export default Vue.extend({
         width:100%;
         background-color: #363636;
         position:relative;
-        max-height:calc(100vh - 114px);
+        max-height: calc(var(--vh, 1vh) * 100 - 114px);
         margin-bottom:100px
     }
     .list-top{

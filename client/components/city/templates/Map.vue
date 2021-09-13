@@ -287,7 +287,7 @@ export default Vue.extend({
     position: relative;
     width: 100%;
     height: 100vh;
-    max-height: calc(100vh - 64px);
+    max-height: calc(var(--vh, 1vh) * 100 - 64px);
     .line-chart {
         position: absolute;
         top: 40px;

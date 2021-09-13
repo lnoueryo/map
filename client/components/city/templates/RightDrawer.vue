@@ -54,7 +54,8 @@ export default Vue.extend({
         padding: 5px;
         top: 64px;
         height: 100vh;
-        max-height: calc(100% - 64px);
+        max-height: calc(var(--vh, 1vh) * 100 - 64px);
+        // max-height: calc(100% - 64px);
         position: fixed;
         transform: translateX(100%);
         width: 256px;
@@ -70,7 +71,7 @@ export default Vue.extend({
     }
     #drawer-button-wrapper {
         height: 100vh;
-        max-height: calc(100% - 64px);
+        max-height: calc(var(--vh, 1vh) * 100 - 64px);
         width: 100px;
         position: fixed;
         right: 0;

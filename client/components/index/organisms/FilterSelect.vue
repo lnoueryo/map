@@ -3,15 +3,15 @@
         <div class="top-menu">
             <div class="mb-2">
                 <label>市町村</label>
-                <item-select maxHeight="calc(100vh - 200px)" style="position:relative;z-index:3" v-model="selectedCityItems" :items="$store.getters['home/cities']" placeholder="市区町村を絞り込む" background-color="white" ripple="true"></item-select>
+                <item-select maxHeight="calc(var(--vh, 1vh) * 100 - 200px)" style="position:relative;z-index:3" v-model="selectedCityItems" :items="$store.getters['home/cities']" placeholder="市区町村を絞り込む" background-color="white" ripple="true"></item-select>
             </div>
             <div class="mb-2">
                 <label>鉄道会社</label>
-                <item-select maxHeight="calc(100vh - 300px)" style="position:relative;z-index:2" v-model="selectedCompanyItems" :items="$store.getters['home/companies']" placeholder="鉄道会社名を絞り込む" background-color="white" ripple="true"></item-select>
+                <item-select maxHeight="calc(var(--vh, 1vh) * 100 - 300px);" style="position:relative;z-index:2" v-model="selectedCompanyItems" :items="$store.getters['home/companies']" placeholder="鉄道会社名を絞り込む" background-color="white" ripple="true"></item-select>
             </div>
             <div v-if="selectedCompanyItems.length!==0">
                 <label>路線</label>
-                <item-select maxHeight="calc(100vh - 300px)" style="position:relative;z-index:1" v-model="selectedLineItems" :items="$store.getters['home/lineItems']" placeholder="路線を絞り込む" background-color="white" ripple="true"></item-select>
+                <item-select maxHeight="calc(var(--vh, 1vh) * 100 - 300px);" style="position:relative;z-index:1" v-model="selectedLineItems" :items="$store.getters['home/lineItems']" placeholder="路線を絞り込む" background-color="white" ripple="true"></item-select>
             </div>
         </div>
     </div>

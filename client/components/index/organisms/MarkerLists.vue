@@ -129,7 +129,7 @@ export default Vue.extend({
         overflow-y: scroll;
         overflow-x: hidden;
         height: 100vh;
-        max-height: calc(100vh - 164px);
+        max-height: calc(var(--vh, 1vh) * 100 - 164px);
         .company-name {
             text-align: center;
             border-radius: 5px;

@@ -62,7 +62,7 @@ export default Vue.extend({
         color: black;
         overflow-x: hidden;
         overflow-y: scroll;
-        max-height: calc(100vh - 70px);
+        max-height: calc(var(--vh, 1vh) * 100 - 70px);
     }
     .centering {
         display: flex;

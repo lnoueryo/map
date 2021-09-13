@@ -34,11 +34,12 @@ export default Vue.extend({
 <style lang="scss" scoped>
 .main-container {
     height: 100vh;
+    // max-height: calc(100vh - 238px);
+    max-height: calc(var(--vh, 1vh) * 100 - 238px);
     background-color: white;
     color: black;
     overflow-x: hidden;
     overflow-y: scroll;
-    max-height: calc(100vh - 238px);
     .centering {
         display: flex;
         align-items: center;

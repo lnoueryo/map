@@ -65,7 +65,7 @@ export default Vue.extend({
         color: black;
         overflow-x: hidden;
         overflow-y: scroll;
-        max-height: calc(100vh - 238px);
+        max-height: calc(var(--vh, 1vh) * 100 - 238px);
         .avator {
             width: 100%;
             border-radius: 50%;
