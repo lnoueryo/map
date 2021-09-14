@@ -1,15 +1,15 @@
 import { $axios } from '~/utils/api';
 
 interface State {
-    stationInfo: null|string,
-    cityWikiInfo: null|string,
+    stationInfo: null | string,
+    cityWikiInfo: null | string,
     twitterInfo: Twitter[],
     events: string[],
     searching: boolean,
     spotDetail: null | google.maps.places.PlaceResult
 }
-interface Twitter {id: number, 'name': string, 'profile_image_url': string, 'followers_count': number, 'friends_count': number, 'text': string, 'images': string[]}
-interface Spot {name: string, place_id: string, address: string, lat: string, lng: string}
+interface Twitter { id: number, 'name': string, 'profile_image_url': string, 'followers_count': number, 'friends_count': number, 'text': string, 'images': string[] }
+interface Spot { name: string, place_id: string, address: string, lat: string, lng: string }
 const state = {
     stationInfo: null,
     cityWikiInfo: null,
@@ -50,40 +50,40 @@ const mutations = {
 };
 
 const actions = {
-    getStationInfo: async(context: any, payload: string) => {
+    getStationInfo: async (context: any, payload: string) => {
         context.commit('searching', true)
-        let err, response = await $axios.$get('/api/wiki/',{params: payload});
-        if(err) {
+        let err, response = await $axios.$get('/api/wiki/', { params: payload });
+        if (err) {
             console.log(err)
             context.commit('stationInfo', 'ページが見つかりませんでした')
         }
         context.commit('stationInfo', response)
     },
-    getTwitterInfo: async(context: any, payload: string) => {
+    getTwitterInfo: async (context: any, payload: string) => {
         console.log(payload)
-        let err, response = await $axios.$get('/api/twitter/',　{params: payload});
-        if(err) {
+        let err, response = await $axios.$get('/api/twitter/', { params: payload });
+        if (err) {
             console.log(err)
             context.commit('stationInfo', 'ページが見つかりませんでした')
         }
         console.log(response)
         context.commit('twitterInfo', response)
     },
-    getCityWikiInfo: async(context: any, payload: string) => {
+    getCityWikiInfo: async (context: any, payload: string) => {
         if (payload) {
-            let err, response = await $axios.$get('/api/wiki/', {params: payload});
-            if(err) {
+            let err, response = await $axios.$get('/api/wiki/', { params: payload });
+            if (err) {
                 console.log(err)
                 context.commit('cityWikiInfo', 'ページが見つかりませんでした')
             }
             context.commit('cityWikiInfo', response);
         } else context.commit('cityWikiInfo', payload);
     },
-    getEvents: async(context: any) => {
+    getEvents: async (context: any) => {
         const response = await $axios.$get('/api/event/');
         context.commit('events', response);
     },
-    spotDetail: async(context: any, payload: Spot) => {
+    spotDetail: async (context: any, payload: Spot) => {
         if (payload) {
             const result = await $nuxt.$mapConfig.placesDetail(payload.place_id);
             context.commit('spotDetail', result);

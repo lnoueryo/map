@@ -1,10 +1,10 @@
-interface Station {id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number,city_code: string}
-interface City {prefecture_id: string, city_code: string, city: string, polygons: Coordinate[][], lat: number, lng: number}
-interface Coordinate {lat: number, lng: number}
+interface Station { id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number, city_code: string }
+interface City { prefecture_id: string, city_code: string, city: string, polygons: Coordinate[][], lat: number, lng: number }
+interface Coordinate { lat: number, lng: number }
 export class MapConfig {
     private options: any
     public places: google.maps.places.PlacesService | null = null
-    private basicFields = ['business_status', 'geometry', 'icon', 'icon_mask_base_uri', 'icon_background_color','name', 'photo', 'plus_code', 'type', 'url', 'vicinity']
+    private basicFields = ['business_status', 'geometry', 'icon', 'icon_mask_base_uri', 'icon_background_color', 'name', 'photo', 'plus_code', 'type', 'url', 'vicinity']
     private atmosphereFields = ['price_level', 'rating', 'review', 'user_ratings_total']
     // private markerIcons = {
     //     jr: '../assets/img/jr.png',
@@ -14,19 +14,19 @@ export class MapConfig {
     //     tokyu: '../assets/img/tokyu.png'
     // }
     private markerIcons: any = {
-        stations: {small: require('~/assets/img/train.png'), big: require('~/assets/img/station.png')},
-        spots: {small: require('~/assets/img/spot_small.png'), big: require('~/assets/img/spot.png')},
+        stations: { small: require('~/assets/img/train.png'), big: require('~/assets/img/station.png') },
+        spots: { small: require('~/assets/img/spot_small.png'), big: require('~/assets/img/spot.png') },
     }
     public map: any | google.maps.Map = null
     public infoWindow: any | google.maps.InfoWindow = null
     public polygons: any | google.maps.Polygon[][] = null
     constructor(options: any) {
-      this.options = options
+        this.options = options
     }
 
     mapOptions(options: google.maps.MapOptions): any {
         if (this.map) this.map.setOptions(options);
-        else this.options = {...this.options, ...options};
+        else this.options = { ...this.options, ...options };
     }
     placesService(): any {
         this.places = new google.maps.places.PlacesService(this.map);
@@ -38,7 +38,7 @@ export class MapConfig {
                 fields: [...this.basicFields]
             };
             this.places?.getDetails(request, callback);
-            function callback (place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) {
+            function callback(place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) {
                 if (status == google.maps.places.PlacesServiceStatus.OK) {
                     resolve(place)
                 }
@@ -49,7 +49,7 @@ export class MapConfig {
         this.map = new google.maps.Map(el, this.options)
         return this.map
     }
-    makePolygon(coordinates: {lat: number,lng: number}[], i: number) {
+    makePolygon(coordinates: { lat: number, lng: number }[], i: number) {
         const polygon = new google.maps.Polygon({
             paths: coordinates,
             strokeColor: "red",
@@ -61,7 +61,7 @@ export class MapConfig {
         polygon.setMap(this.map);
         return polygon
     }
-    makeMarker(obj: {lat: number, lng: number}, icon: string = '', text: string = '') {
+    makeMarker(obj: { lat: number, lng: number }, icon: string = '', text: string = '') {
         // var MarkerWithLabel = require('markerwithlabel')(google.maps);
         // const icon = {
         //     url: url,
@@ -98,14 +98,14 @@ export class MapConfig {
         const zoom = this.map.getZoom();
         let icon = ''
         const isIcon = this.markerIcons[key] || null;
-        if(isIcon) {
+        if (isIcon) {
             // icon = (zoom > 9) ? this.markerIcons[key].big : this.markerIcons[key].small;
             icon = this.markerIcons[key].big;
         }
         const markers: google.maps.Marker[][] = [];
-        json.forEach((obj: {[key: string]: []}) => {
+        json.forEach((obj: { [key: string]: [] }) => {
             const lineMarkerArray: google.maps.Marker[] = [];
-            obj[key].forEach((value: {lat: number, lng: number, name: string}) => {
+            obj[key].forEach((value: { lat: number, lng: number, name: string }) => {
                 let marker = this.makeMarker(value, icon);
                 func(marker, value)
                 lineMarkerArray.push(marker);
@@ -114,10 +114,10 @@ export class MapConfig {
         });
         return markers;
     }
-    makePolyline(path: {color: string, polygon: google.maps.LatLng[]} ) {
+    makePolyline(path: { color: string, polygon: google.maps.LatLng[] }) {
         const polyline = new google.maps.Polyline({
             map: this.map,
-            path:path.polygon,
+            path: path.polygon,
             strokeColor: path.color,
             strokeOpacity: 0.9,
             strokeWeight: 3
@@ -150,7 +150,7 @@ export class MapConfig {
             })
         })
     }
-    resetAllMarkers(payload: {[key: string]: google.maps.Marker[][]}) {
+    resetAllMarkers(payload: { [key: string]: google.maps.Marker[][] }) {
         const allMarkers = (Object.values(payload))
         allMarkers.forEach((markers) => {
             this.resetMarkers(markers)
@@ -158,8 +158,8 @@ export class MapConfig {
     }
     changeIcon(markers_obj: google.maps.Marker[][], key: string, size: string) {
         const icon = this.markerIcons[key][size]
-        markers_obj.forEach((markers)=>{
-            markers.forEach((marker)=>{
+        markers_obj.forEach((markers) => {
+            markers.forEach((marker) => {
                 marker.setIcon(icon);
             })
         })
@@ -172,7 +172,7 @@ export class MapConfig {
             const south = bounds.getSouthWest().lat();
             const east = bounds.getNorthEast().lng();
             const west = bounds.getSouthWest().lng();
-            result = {south: south, north: north,east: east, west: west}
+            result = { south: south, north: north, east: east, west: west }
         } else {
             result = this.options.restriction.latLngBounds
         }
@@ -184,7 +184,7 @@ export class MapConfig {
         this.map.panTo(latLng);
     }
     boundsFilterForMarker(marker_obj: google.maps.Marker[][], markerSwitch: boolean) {
-        if(markerSwitch) {
+        if (markerSwitch) {
             const currentBounds = this.currentBounds()
             const markerInFrame: google.maps.Marker[] = []
             marker_obj.forEach((markers) => {
@@ -193,7 +193,7 @@ export class MapConfig {
                     const lng = marker.getPosition()?.lng() as number;
                     const verticalCondition = currentBounds.west < lng && currentBounds.east > lng;
                     const horizontalCondition = currentBounds.south < lat && currentBounds.north > lat;
-                    if(verticalCondition && horizontalCondition) {
+                    if (verticalCondition && horizontalCondition) {
                         markerInFrame.push(marker)
                         marker.setVisible(true)
                     } else {
@@ -212,8 +212,8 @@ export class MapConfig {
         }
     }
     cityFilterForMarker(markers: google.maps.Marker[], polygonArray: google.maps.Polygon[][], selectedCityItems: any) {
-        if(markers) {
-            if(selectedCityItems.length !== 0) {
+        if (markers) {
+            if (selectedCityItems.length !== 0) {
                 markers.forEach((marker) => {
                     const latLng = marker.getPosition() as google.maps.LatLng;
                     const isContain = polygonArray.some((polygons: any) => {
@@ -228,33 +228,33 @@ export class MapConfig {
             }
         }
     }
-    createInfoWindow(marker: google.maps.Marker, text: string, content=`<h3 style="color:black">${text}</h3>`) {
-        const infoWindow = new google.maps.InfoWindow({content: content});
+    createInfoWindow(marker: google.maps.Marker, text: string, content = `<h3 style="color:black">${text}</h3>`) {
+        const infoWindow = new google.maps.InfoWindow({ content: content });
 
         // mouseoverイベントを取得するListenerを追加
         const that = this;
-        google.maps.event.addListener(marker, 'mouseover', function(){
+        google.maps.event.addListener(marker, 'mouseover', function () {
             infoWindow.open(that.map, marker);
-          });
-  
+        });
+
         // mouseoutイベントを取得するListenerを追加
-        google.maps.event.addListener(marker, 'mouseout', function(){
+        google.maps.event.addListener(marker, 'mouseout', function () {
             infoWindow.close();
-          });
+        });
     }
-    createDetailInfoWindow(marker: google.maps.Marker, obj: {name: string}, content=`<h3 style="color:black">${obj}</h3>`) {
-        const infoWindow = new google.maps.InfoWindow({content: content});
+    createDetailInfoWindow(marker: google.maps.Marker, obj: { name: string }, content = `<h3 style="color:black">${obj}</h3>`) {
+        const infoWindow = new google.maps.InfoWindow({ content: content });
 
         // mouseoverイベントを取得するListenerを追加
         const that = this;
-        google.maps.event.addListener(marker, 'mouseover', function(){
+        google.maps.event.addListener(marker, 'mouseover', function () {
             infoWindow.open(that.map, marker);
-          });
-  
+        });
+
         // mouseoutイベントを取得するListenerを追加
-        google.maps.event.addListener(marker, 'mouseout', function(){
+        google.maps.event.addListener(marker, 'mouseout', function () {
             infoWindow.close();
-          });
+        });
     }
     createMapInfoWindow(lat: number, lng: number, text: string) {
         const latLng = new google.maps.LatLng(lat, lng)
@@ -273,15 +273,15 @@ export class MapConfig {
         console.log(filteredStations)
         return filteredStations;
     }
-  }
-  
-  // plugin
-  export default ({ app }: any, inject: any) => {
+}
+
+// plugin
+export default ({ app }: any, inject: any) => {
     // ... get status logic
-    const tokyoBounds = {north: 35.860687,south: 35.530351, west: 138.9403931, east: 139.9368243}
+    const tokyoBounds = { north: 35.860687, south: 35.530351, west: 138.9403931, east: 139.9368243 }
     const options = {
-        center: new google.maps.LatLng( 35.6729712, 139.7585771 ),
-        restriction: {latLngBounds: tokyoBounds, strictBounds: false,},
+        center: new google.maps.LatLng(35.6729712, 139.7585771),
+        restriction: { latLngBounds: tokyoBounds, strictBounds: false, },
         zoom: 15,
         mapTypeControl: false,
         fullscreenControl: false,
@@ -639,4 +639,4 @@ export class MapConfig {
     };
 
     inject('mapConfig', new MapConfig(options));
-  };
+};

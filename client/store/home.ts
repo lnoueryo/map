@@ -5,7 +5,7 @@ import population from '../assets/json/population.json'
 interface State {
     fields: string[]
     prefectures: City[],
-    population: {city: string, population: number[]},
+    population: { city: string, population: number[] },
     selectedPrefectureItems: Prefecture[],
     selectedCityItems: City[],
     currentBounds: Bounds,
@@ -13,13 +13,13 @@ interface State {
     searchWord: string,
     addressElement: null | AddressElement[],
 }
-interface Coordinate {lat: number, lng: number};
-interface Polygon {lat: number, lng: number}[];
-interface Bounds {north: number, south: number, west: number, east: number};
-interface AddressElement {Code: string, Name: string, Kana: string, Level: string}
-interface Prefecture {id: string, name: string, lat: number, lng: number, cities: City[]}
-interface City   {name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: Spot[], polygons:Polygon[][]}
-interface Spot {name: string, place_id: string, address: string, lat: string, lng: string}
+interface Coordinate { lat: number, lng: number };
+interface Polygon { lat: number, lng: number }[];
+interface Bounds { north: number, south: number, west: number, east: number };
+interface AddressElement { Code: string, Name: string, Kana: string, Level: string }
+interface Prefecture { id: string, name: string, lat: number, lng: number, cities: City[] }
+interface City { name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: Spot[], polygons: Polygon[][] }
+interface Spot { name: string, place_id: string, address: string, lat: string, lng: string }
 
 const state = {
     fields: ['prefectures', 'cities', 'spots'],
@@ -27,7 +27,7 @@ const state = {
     population: population,
     selectedPrefectureItems: [],
     selectedCityItems: [],
-    currentBounds: {south: 0, north: 0,east: 0, west: 0},
+    currentBounds: { south: 0, north: 0, east: 0, west: 0 },
     selectedMarker: {},
     searchWord: null,
     addressElement: null,
@@ -63,11 +63,11 @@ const getters = {
     selectedCities: (state: State) => state.selectedCityItems, //ウィキから引っ張ってきたhtmlを返す
     removeAddressElement: (state: State) => (elements: AddressElement[], zoom: number) => {
         let index: number;
-        if(8 <= zoom && 10 > zoom) index = 1;
-        else if(10 <= zoom && 14 > zoom) index = 2;
-        else if(14 <= zoom && 16 > zoom) index = 3;
-        else if(16 <= zoom && 18 > zoom) index = 4;
-        else if(18 <= zoom) index = 5;
+        if (8 <= zoom && 10 > zoom) index = 1;
+        else if (10 <= zoom && 14 > zoom) index = 2;
+        else if (14 <= zoom && 16 > zoom) index = 3;
+        else if (16 <= zoom && 18 > zoom) index = 4;
+        else if (18 <= zoom) index = 5;
         return elements.filter((element: AddressElement, i: number) => {
             return i < index;
         })
@@ -80,10 +80,10 @@ const mutations = {
         state.selectedPrefectureItems = payload;
     },
     currentBounds: (state: State, payload: Bounds) => {
-        state.currentBounds = {...state.currentBounds, ...payload}
+        state.currentBounds = { ...state.currentBounds, ...payload }
     },
     selectMarker: (state: State, payload: City) => {
-        state.selectedMarker = {...state.selectedMarker, ...payload};
+        state.selectedMarker = { ...state.selectedMarker, ...payload };
     },
     searchWord: (state: State, payload: string) => {
         state.searchWord = payload;
@@ -106,8 +106,8 @@ const actions = {
     searchWord: (context: any, payload: string) => {
         context.commit('searchWord', payload)
     },
-    getCity: async(context: any, payload: {mapCenter: Coordinate, zoom: number}) => {
-        const response = await $axios.$get('/api/search-by-reverse-geocode/', {params: payload.mapCenter});
+    getCity: async (context: any, payload: { mapCenter: Coordinate, zoom: number }) => {
+        const response = await $axios.$get('/api/search-by-reverse-geocode/', { params: payload.mapCenter });
         // const response = await $axios.$post('/api/search-by-reverse-geocode/', payload.mapCenter);
         console.log(response)
         let AddressElement;

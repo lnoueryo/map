@@ -1,15 +1,15 @@
 <template>
-    <div>
-        <div class="main-container">
-            <div v-html="cityWikiInfo" v-if="cityWikiInfo"></div>
-            <div v-else class="centering">
-                <div>地図をクリックして町情報を取得しましょう</div>
-            </div>
-        </div>
-        <div class="url-box">
-            <a :href="URL" target="_blank">{{URL}}</a>
+  <div>
+    <div class="main-container">
+        <div v-html="cityWikiInfo" v-if="cityWikiInfo"></div>
+        <div v-else class="centering">
+            <div>地図をクリックして町情報を取得しましょう</div>
         </div>
     </div>
+    <div class="url-box">
+        <a :href="URL" target="_blank">{{URL}}</a>
+    </div>
+  </div>
 </template>
 
 <script lang="ts">

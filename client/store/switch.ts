@@ -9,7 +9,7 @@ interface State {
     stationSwitch: boolean,
     citySwitch: boolean,
     spotSwitch: boolean,
-    markerSwitches: {[key: string]: boolean}
+    markerSwitches: { [key: string]: boolean }
     listSwitch: boolean,
     leftListSwitch: boolean
 }
@@ -57,8 +57,8 @@ const mutations = {
     stationSwitch: (state: State, payload: boolean) => {
         state.stationSwitch = payload;
     },
-    changeMarkerSwitches: (state: State, payload: {category: string, status: boolean}) => {
-        let obj: {[key: string]: boolean} = {}
+    changeMarkerSwitches: (state: State, payload: { category: string, status: boolean }) => {
+        let obj: { [key: string]: boolean } = {}
         obj[payload.category] = payload.status
         state.markerSwitches = Object.assign({}, state.markerSwitches, obj)
     },
@@ -86,7 +86,7 @@ const actions = {
     changeChartSwitch: (context: any, payload: boolean) => {
         context.commit('chartSwitch', payload)
     },
-    changeMarkerSwitches: (context: any, payload: {category: string, status: boolean}) => {
+    changeMarkerSwitches: (context: any, payload: { category: string, status: boolean }) => {
         context.commit('changeMarkerSwitches', payload)
     },
     changeDotSwitch: (context: any, payload: boolean) => {
@@ -100,7 +100,7 @@ const actions = {
     },
     makeSwitches: ({ dispatch, commit, getters, rootGetters }: any) => {
         const page = $nuxt.$route.name;
-        if(page == 'index') {
+        if (page == 'index') {
             commit('makeSwitches', rootGetters['home/fields'])
         } else {
             commit('makeSwitches', rootGetters[`${page}/fields`])

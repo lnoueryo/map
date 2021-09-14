@@ -16,6 +16,8 @@
 <script lang="ts">
 import Vue from 'vue'
 import HeaderBar from '../components/global/HeaderBar.vue'
+import {setHeight, invalidHover} from '../utils/smp';
+
 export default Vue.extend({
     components:{
         HeaderBar
@@ -39,12 +41,9 @@ export default Vue.extend({
     methods:{
         onResize () {
             this.$store.dispatch('windowSize', { x: window.innerWidth, y: window.innerHeight })
-            this.setHeight()
+            setHeight()
+            invalidHover();
         },
-        setHeight() {
-            let vh = window.innerHeight * 0.01;
-            document.documentElement.style.setProperty('--vh', `${vh}px`);
-        }
     }
 })
 </script>
