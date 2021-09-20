@@ -5,6 +5,8 @@ interface State {
     cityWikiInfo: null | string,
     twitterInfo: Twitter[],
     events: string[],
+    aroundSpotInfo: string[],
+    aroundStationInfo: string[],
     searching: boolean,
     spotDetail: null | google.maps.places.PlaceResult
 }
@@ -16,11 +18,15 @@ const state = {
     twitterInfo: [],
     searching: false,
     events: [],
-    spotDetail: null
+    spotDetail: null,
+    aroundSpotInfo: [],
+    aroundStationInfo: [],
 };
 
 const getters = {
     events: (state: State) => state.events,
+    aroundSpotInfo: (state: State) => state.aroundSpotInfo,
+    aroundStationInfo: (state: State) => state.aroundStationInfo,
     stationInfo: (state: State) => state.stationInfo, //ウィキから引っ張ってきたhtmlを返す
     cityWikiInfo: (state: State) => state.cityWikiInfo, //ウィキから引っ張ってきたhtmlを返す
     twitterInfo: (state: State) => state.twitterInfo, //ツイッターから引っ張ってきたjsonを返す
@@ -44,6 +50,12 @@ const mutations = {
     events: (state: State, payload: string[]) => {
         state.events = payload;
     },
+    aroundSpotInfo: (state: State, payload: string[]) => {
+        state.aroundSpotInfo = payload;
+    },
+    aroundStationInfo: (state: State, payload: string[]) => {
+        state.aroundStationInfo = payload;
+    },
     spotDetail: (state: State, payload: google.maps.places.PlaceResult) => {
         state.spotDetail = payload;
     }
@@ -66,7 +78,6 @@ const actions = {
             console.log(err)
             context.commit('stationInfo', 'ページが見つかりませんでした')
         }
-        console.log(response)
         context.commit('twitterInfo', response)
     },
     getCityWikiInfo: async (context: any, payload: string) => {
@@ -83,12 +94,20 @@ const actions = {
         const response = await $axios.$get('/api/event/');
         context.commit('events', response);
     },
+    getAroundSpotInfo: async (context: any, payload: Spot) => {
+        const response = await $axios.$get('/api/search-by-place-info/', {params: payload});
+        context.commit('aroundSpotInfo', response);
+    },
+    getAroundStationInfo: async (context: any, payload: Spot) => {
+        const response = await $axios.$get('/api/search-by-place-info/', {params: payload});
+        context.commit('aroundStationInfo', response);
+    },
     spotDetail: async (context: any, payload: Spot) => {
         if (payload) {
             const result = await $nuxt.$mapConfig.placesDetail(payload.place_id);
             context.commit('spotDetail', result);
         } else context.commit('spotDetail', payload);
-    }
+    },
 };
 
 export default {

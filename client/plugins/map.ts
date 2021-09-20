@@ -1,6 +1,7 @@
 interface Station { id: number, prefecture: string, name: string, lat: number, lng: number, line_id: number, order: number, company_id: number, city_code: string }
 interface City { prefecture_id: string, city_code: string, city: string, polygons: Coordinate[][], lat: number, lng: number }
 interface Coordinate { lat: number, lng: number }
+import MarkerWithLabel from '@googlemaps/markerwithlabel'
 export class MapConfig {
     private options: any
     public places: google.maps.places.PlacesService | null = null
@@ -35,7 +36,7 @@ export class MapConfig {
         return new Promise((resolve) => {
             const request = {
                 placeId: placeId,
-                fields: [...this.basicFields]
+                fields: [...this.basicFields, ...this.atmosphereFields]
             };
             this.places?.getDetails(request, callback);
             function callback(place: google.maps.places.PlaceResult | null, status: google.maps.places.PlacesServiceStatus) {
@@ -94,6 +95,20 @@ export class MapConfig {
         });
         return marker
     }
+    makeMarkerWithLabel(obj: { lat: number, lng: number }, icon: string = '', text: string = '') {
+        // const MarkerWithLabel = require('MarkerWithLabel')(google.maps);
+        const labelWidth = -12 - 4.5 * text.length
+        const marker = new MarkerWithLabel({
+            map: this.map,
+            position: new google.maps.LatLng(obj.lat, obj.lng),
+            icon: icon,
+            visible: true,
+            labelContent: text,                   //ラベル文字
+            labelAnchor: new google.maps.Point(labelWidth, -55),   //ラベル文字の基点
+            labelClass: 'labels',                        //CSSのクラス名                 //スタイル定義
+        }) as any;
+        return marker
+    }
     makeMarkers(json: {}[], key: string, func: any) {
         const zoom = this.map.getZoom();
         let icon = ''
@@ -106,7 +121,7 @@ export class MapConfig {
         json.forEach((obj: { [key: string]: [] }) => {
             const lineMarkerArray: google.maps.Marker[] = [];
             obj[key].forEach((value: { lat: number, lng: number, name: string }) => {
-                let marker = this.makeMarker(value, icon);
+                let marker = this.makeMarkerWithLabel(value, icon, value.name);
                 func(marker, value)
                 lineMarkerArray.push(marker);
             });
@@ -146,7 +161,7 @@ export class MapConfig {
     async resetMarkers(payload: google.maps.Marker[][]) {
         payload.forEach((markers) => {
             markers.forEach((marker) => {
-                marker.setMap(null);
+                if (marker) marker.setMap(null);
             })
         })
     }
@@ -241,6 +256,8 @@ export class MapConfig {
         google.maps.event.addListener(marker, 'mouseout', function () {
             infoWindow.close();
         });
+
+        return infoWindow;
     }
     createDetailInfoWindow(marker: google.maps.Marker, obj: { name: string }, content = `<h3 style="color:black">${obj}</h3>`) {
         const infoWindow = new google.maps.InfoWindow({ content: content });
@@ -270,7 +287,6 @@ export class MapConfig {
             const horizontalCondition = currentBounds.south < point.lat && currentBounds.north > point.lat;
             return verticalCondition && horizontalCondition;
         });
-        console.log(filteredStations)
         return filteredStations;
     }
 }
@@ -288,6 +304,7 @@ export default ({ app }: any, inject: any) => {
         streetViewControl: false,
         zoomControl: false,
         disableDoubleClickZoom: true,
+        gestureHandling: "greedy",
         // scrollwheel: false,
         styles: [
             {
@@ -385,16 +402,7 @@ export default ({ app }: any, inject: any) => {
             },
             {
                 "featureType": "poi.business",
-                "elementType": "labels.text.fill",
-                "stylers": [
-                    {
-                        "visibility": "off"
-                    }
-                ]
-            },
-            {
-                "featureType": "poi.business",
-                "elementType": "labels.text.stroke",
+                "elementType": "labels",
                 "stylers": [
                     {
                         "visibility": "off"
@@ -431,6 +439,15 @@ export default ({ app }: any, inject: any) => {
             {
                 "featureType": "poi.park",
                 "elementType": "labels.icon",
+                "stylers": [
+                    {
+                        "visibility": "off"
+                    }
+                ]
+            },
+            {
+                "featureType": "landscape.man_made",
+                "elementType": "labels",
                 "stylers": [
                     {
                         "visibility": "off"

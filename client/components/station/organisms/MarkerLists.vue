@@ -103,7 +103,7 @@ export default Vue.extend({
     };
   },
   computed: {
-    ...mapGetters("home", [
+    ...mapGetters("station", [
       "selectedPrefectureItems",
       "selectedCityItems",
       "prefectures",
@@ -121,15 +121,15 @@ export default Vue.extend({
         return this.selectedPrefectureItems;
       },
       set(value) {
-        this.$store.dispatch("home/selectedPrefectureItems", value);
+        this.$store.dispatch("station/selectedPrefectureItems", value);
       },
     },
     selectCity: {
       get() {
-        return this.$store.getters["home/selectedCityItems"];
+        return this.$store.getters["station/selectedCityItems"];
       },
       set(value) {
-        this.$store.dispatch("home/selectedCityItems", value);
+        this.$store.dispatch("station/selectedCityItems", value);
       },
     },
     selectedPrefecture() {

@@ -1,8 +1,8 @@
 <template>
     <div>
         <div class="places" v-if="placesData">
-            <h2 class="text-center">{{placesData.name}}</h2>
-            <v-carousel hide-delimiters height="250px" v-if="photos.length !== 0">
+            <!-- <h2 class="text-center">{{placesData.name}}</h2> -->
+            <v-carousel hide-delimiters v-if="photos.length !== 0" :height="height">
                 <v-carousel-item v-for="(item,i) in photos" :key="i" :src="item"></v-carousel-item>
             </v-carousel>
             <div>
@@ -38,7 +38,7 @@
 <script lang="ts">
 import Vue from 'vue'
 export default Vue.extend({
-    props: ['placesData'],
+    props: ['placesData', 'height'],
     // data() {
     //     return {
     //         placesData: {

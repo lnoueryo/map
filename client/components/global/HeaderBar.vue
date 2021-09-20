@@ -2,7 +2,7 @@
     <div>
         <v-navigation-drawer v-model="drawer" :mini-variant="miniVariant" :clipped="clipped" width="300" fixed app>
             <v-list class="drawer-top">
-                <v-list-item v-for="(item, i) in filterItems" :key="i" :to="item.to" router exact>
+                <v-list-item v-for="(item, i) in items" :key="i" :to="item.to" router exact>
                 <v-list-item-action>
                     <v-icon>{{ item.icon }}</v-icon>
                 </v-list-item-action>
@@ -43,6 +43,11 @@ export default Vue.extend({
                     title: 'Home',
                     to: '/',
                 },
+                {
+                    icon: 'mdi-apps',
+                    title: 'Station',
+                    to: '/station',
+                },
                 // {
                 //     icon: 'mdi-chart-bubble',
                 //     title: 'Login',
@@ -62,7 +67,6 @@ export default Vue.extend({
             miniVariant: false,
             right: true,
             rightDrawer: false,
-            title: 'Vuetify.js',
         }
     },
     computed:{

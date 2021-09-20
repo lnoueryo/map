@@ -1,30 +1,46 @@
 <template>
   <div id="wrapper">
+    <div>
+      <right-drawer></right-drawer>
+    </div>
     <div id="container" :class="{ open: open }">
       <div class="main-view">
         <div>
-          <left-list></left-list>
+          <left-list v-if="smp"></left-list>
         </div>
         <div class="map-container">
-          <map-view></map-view>
+          <main-map></main-map>
         </div>
       </div>
+    </div>
+    <div>
+      <top-bar v-if="!smp"></top-bar>
+    </div>
+    <div>
+      <bottom v-if="!smp"></bottom>
     </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-const LeftList = () => import("../components/index/templates/LeftList.vue");
-const MapView = () => import("../components/index/templates/Map.vue");
+const RightDrawer = () =>
+  import("~/components/station/templates/RightDrawer.vue");
+const LeftList = () => import("~/components/station/templates/LeftList.vue");
+const MainMap = () => import("~/components/station/templates/MainMap.vue");
+const TopBar = () => import("~/components/station/templates/TopBar.vue");
+const Bottom = () => import("~/components/station/templates/Bottom.vue");
 interface DataType {
   open: boolean;
   lefList: boolean;
 }
 export default Vue.extend({
   components: {
+    RightDrawer,
     LeftList,
-    MapView,
+    MainMap,
+    TopBar,
+    Bottom,
   },
   data(): DataType {
     return {
@@ -34,10 +50,10 @@ export default Vue.extend({
   },
   computed: {
     smp() {
-      return this.$store.getters.windowSize.x < 500;
+      return this.$store.getters.windowSize.x > 500;
     },
   },
-  // beforeCreate() {
+  // beforeCreate(){
   //     this.$store.dispatch('switch/getCompanies', ['stations, cities']);
   // },
   mounted() {
@@ -55,7 +71,9 @@ export default Vue.extend({
 <style lang="scss" scoped>
 #wrapper {
   width: 100%;
-  height: calc(100vh - 100px);
+  height: 100%;
+  max-height: calc(100vh);
+  overflow: hidden;
   position: relative;
   #container {
     width: 100%;
@@ -65,15 +83,10 @@ export default Vue.extend({
     .main-view {
       display: flex;
       overflow: hidden;
+      max-height: calc(100%-200px);
       .map-container {
         position: relative;
         width: 100%;
-      }
-    }
-    @media screen and (max-width: 500px) {
-      .main-view {
-        //left-listを上げて、map-viewを下げる
-        display: block;
       }
     }
   }

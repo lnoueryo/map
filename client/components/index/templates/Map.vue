@@ -1,5 +1,7 @@
 <template>
   <div class="map-container">
+    <v-btn fixed right top style="z-index:5" :to="{name: 'detail-prefecture_id-city_code-id', params: {prefecture_id: '13', city_code: '13101', id: '1'}}">aa</v-btn>
+    <!-- <v-btn fixed right top style="z-index:5" :to="{path: '/detail/123/456/789', params: {abc: '13'}}">aa</v-btn> -->
     <map-top class="map-top"></map-top>
     <div id="map" ref="map" :class="{ 'show-line': chartSwitch }"></div>
     <div class="dot" v-if="dotSwitch"></div>
@@ -50,6 +52,9 @@ interface Spot {
   address: string;
   lat: string;
   lng: string;
+  prefecture_id: string;
+  city_code: string;
+  id: number;
 }
 
 export default Vue.extend({
@@ -150,7 +155,8 @@ export default Vue.extend({
     },
     spotMarkerFunction(marker: google.maps.Marker, spot: Spot) {
       marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-        this.$store.dispatch("info/spotDetail", spot);
+        // this.$store.dispatch("info/spotDetail", spot);
+        this.$router.push({name: 'detail-prefecture_id-city_code-id', params: {prefecture_id: spot.prefecture_id, city_code: spot.city_code, id: String(spot.id)}})
       });
     },
     checkQuery() {
