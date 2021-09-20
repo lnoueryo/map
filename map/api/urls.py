@@ -1,7 +1,8 @@
 from django.urls import path
 from map.api.views.wikipedia import WikiAPI
 from map.api.views.yahoo import (
-    ReverseGeocodeAPI
+    ReverseGeocodeAPI,
+    PlaceInfoAPI
 )
 from map.api.views.views import (
     TwitterAPI,
@@ -15,7 +16,8 @@ from map.api.views.views import (
 
 urlpatterns = [
     path('wiki/',WikiAPI.as_view(), name="wiki"),
-    path('search-by-reverse-geocode/', ReverseGeocodeAPI.as_view(), name="reverse-geocode"),
     path('twitter/', TwitterAPI.as_view(), name="twitter"),
     path('event/', EventAPI.as_view(), name="event"),
+    path('search-by-reverse-geocode/', ReverseGeocodeAPI.as_view(), name="reverse-geocode"),
+    path('search-by-place-info/', PlaceInfoAPI.as_view(), name="place-info"),
 ]

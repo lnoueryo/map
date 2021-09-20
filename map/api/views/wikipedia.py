@@ -13,6 +13,7 @@ from rest_framework.views import APIView
 class WikiAPI(APIView):
 
     def get(self, request):
+        print(request.GET.dict())
         title = (request.GET.dict())['name']
         url = f'https://ja.wikipedia.org/w/api.php?format=json&action=query&prop=revisions&titles={title}&rvprop=content&rvparse'
         try:

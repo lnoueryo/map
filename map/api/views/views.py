@@ -3,7 +3,7 @@ import requests
 import json
 import re
 import time
-from datetime import datetime, date, timedelta
+from datetime import datetime, date, timedelta, timezone
 from dateutil.relativedelta import relativedelta
 import urllib.request
 
@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from bs4.element import Comment
 from rest_framework.views import APIView
 import tweepy
+import pytz
 
 from django.conf import settings
 
@@ -38,24 +39,36 @@ class TwitterAPI(APIView):
     api = tweepy.API(auth)
     def get(self, request):
         title = (request.GET.dict())['name']
-        print(title)
-        tweets_obj = self.api.search(title, lang='ja', rpp=100, count=100, result_type='recent', tweet_mode='extended')
+        tweets_obj = self.api.search(title, lang='ja', rpp=80, count=100, result_type='recent', tweet_mode='extended')
         tweets = []
         for tweet_obj in tweets_obj:
             images = []
             if 'media' in tweet_obj.entities:
                 images = [image['media_url'] for image in  tweet_obj.entities['media']]
-            tweet = {
-                'id':  tweet_obj.id,
-                'name':  tweet_obj.user.screen_name,
-                'created_at':  tweet_obj.user.created_at,
-                'profile_image_url': tweet_obj.user.profile_image_url,
-                'followers_count':  tweet_obj.user.followers_count,
-                'friends_count':  tweet_obj.user.friends_count,
-                'text': tweet_obj.full_text,
-                'images': images
-            }
-            tweets.append(tweet)
+            if not "RT @" in tweet_obj.full_text[0:4]:
+                added_timezone = tweet_obj.created_at + timedelta(hours=9)
+                tweet = {
+                    'id':  tweet_obj.id,
+                    'name':  tweet_obj.user.screen_name,
+                    'created_at':  added_timezone,
+                    'profile_image_url': tweet_obj.user.profile_image_url,
+                    'followers_count':  tweet_obj.user.followers_count,
+                    'friends_count':  tweet_obj.user.friends_count,
+                    'text': tweet_obj.full_text,
+                    'images': images
+                }
+                tweets.append(tweet)
+            # tweet = {
+            #     'id':  tweet_obj.id,
+            #     'name':  tweet_obj.user.screen_name,
+            #     'created_at':  tweet_obj.created_at,
+            #     'profile_image_url': tweet_obj.user.profile_image_url,
+            #     'followers_count':  tweet_obj.user.followers_count,
+            #     'friends_count':  tweet_obj.user.friends_count,
+            #     'text': tweet_obj.full_text,
+            #     'images': images
+            # }
+            # tweets.append(tweet)
         tweets = sorted(tweets, key=lambda s: s['created_at'], reverse=True)
         return JsonResponse(tweets, safe=False)
 

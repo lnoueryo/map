@@ -21,7 +21,15 @@ from gmap.geohash import Geohash
 
 
 def execute(file):
-    new_city()
+    df_stations = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/stations.csv'))
+    stations_dict_list = id_to_str(df_stations.to_dict(orient='records'))
+    for stations_dict in stations_dict_list:
+        stations_dict['name'] = stations_dict['name'] + '駅'
+        stations_dict['city_code'] = stations_dict['prefecture_id'] + stations_dict['city_code']
+    df_stations = pd.DataFrame.from_dict(stations_dict_list, orient='columns')
+    df_stations = df_stations.set_index('id')
+    df_stations.to_csv(os.path.join(settings.BASE_DIR / f'data/csv/stations.csv'))
+    # new_city()
 
 def new_city():
     df_cities = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/cities.csv'))

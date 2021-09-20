@@ -52,7 +52,7 @@ def station():
         df = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/stations.csv'), index_col=0)
         now = datetime.now(timezone('Asia/Tokyo'))
         for i, row in df.iterrows():
-            if np.isnan(float(df.at[i, 'place_result'])):
+            if 'place_id' not in df.columns or np.isnan(float(df.at[i, 'place_result'])):
                 search_word = df.at[i, 'name']
                 df.at[i, 'place_id'] = ''
                 df.at[i, 'place_ids'] = ''

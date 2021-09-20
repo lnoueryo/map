@@ -17,14 +17,14 @@ def execute():
         process.wait()
         process.kill()
 
-        # process = Popen(settings.GCLOUD_BUILD, stdin=PIPE, stdout=PIPE, shell=True)
-        # print(process)
-        # time.sleep(210)
-        # process.kill()
+        process = Popen(settings.GCLOUD_BUILD, stdin=PIPE, stdout=PIPE, shell=True)
+        print(process)
+        time.sleep(210)
+        process.kill()
 
-        # process = Popen(settings.GCLOUD_DEPLOY, stdin=PIPE, stdout=PIPE, shell=True)
-        # process.wait()
-        # process.kill()
+        process = Popen(settings.GCLOUD_DEPLOY, stdin=PIPE, stdout=PIPE, shell=True)
+        process.wait()
+        process.kill()
     except Exception as e:
         print(e)
 
