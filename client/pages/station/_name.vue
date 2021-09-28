@@ -2,12 +2,20 @@
   <div id="wrapper">
     <div id="container" :class="{ open: open }">
       <div class="main-view">
+        <div>
+          <left-list></left-list>
+        </div>
         <div class="map-container">
           <map-view></map-view>
         </div>
-        <div ref="wiki" class="wiki" :style="{maxWidth: stationWikiInfo ? '330px' : '0',transition: 'all 1.5s'}">
+        <div ref="wiki" class="wiki" :style="{maxWidth: stationWikiInfo ? '330px' : '0', transition: stationWikiInfo ? 'all 1.5s' : 'all .5s'}" v-if="!smp">
           <div v-html="stationWikiInfo"></div>
         </div>
+        <half-modal :show="wikiReady" @hide="wikiReady = false" v-if="smp">
+          <div ref="wiki" class="wiki">
+            <div v-html="stationWikiInfo"></div>
+          </div>
+        </half-modal>
       </div>
     </div>
   </div>
@@ -15,7 +23,9 @@
 
 <script lang="ts">
 import Vue from "vue";
+const LeftList = () => import("~/components/station/templates/LeftList.vue");
 const MapView = () => import("~/components/station/templates/Map.vue");
+const HalfModal = () => import("~/components/global/HalfModal.vue");
 interface AroundStationInfo { "Name": string, "Uid": string, "Category": string, "Label": string, "Combined": string}
 interface Station { name: string, id: number, line_id: number, order: number, prefecture: string, lat: number, lng: number, company_id: number, city_code: string, geohash: string, company: Company }
 interface Company { id: number, name: string, address: string, founded: string, lines: Line[] };
@@ -27,11 +37,14 @@ export default Vue.extend({
       open: false,
       dialog: false,
       dialogPhoto: null,
-      copyStationInfo: null
+      copyStationInfo: null,
+      wikiReady: false
     }
   },
   components: {
     MapView,
+    LeftList,
+    HalfModal
   },
   beforeCreate() {
     this.$store.dispatch('station/params', this.$route.params);
@@ -61,6 +74,9 @@ export default Vue.extend({
     aroundStationInfo() {
       return this.$store.getters['info/aroundStationInfo'];
     },
+    smp() {
+      return this.$store.getters.windowSize.x < 500;
+    },
   },
   watch: {
     stationWikiInfo: {
@@ -72,6 +88,7 @@ export default Vue.extend({
             "infobox bordered"
           )[0] as HTMLTableElement;
           if (table) {
+            (this as any).wikiReady = true;
             table.style.width = "";
             table.style.margin = "auto";
           }

@@ -79,14 +79,32 @@ export default Vue.extend({
         (this as any).makePolylines();
         this.$mapConfig.resetMarkers((this as any).markers);
         this.$mapConfig.resetMarkers([(this as any).otherStaionsMarkers]);
-        (this as any).makeOtherStaionsMarkers(v.query, v.params)
+        if (this.filteredStation) (this as any).makeOtherStaionsMarkers(v.query, v.params)
       },
       immediate: true,
     },
   },
+  beforeCreate() {
+    this.$store.commit('info/stationInfo', null)
+  },
   async mounted() {
     this.$store.dispatch("station/query", this.$route.query);
     await (this as any).setMap();
+    let timer: NodeJS.Timer | null;
+    this.$mapConfig.map.addListener("bounds_changed", () => {
+      const bounds = this.$mapConfig.currentBounds();
+      const getMapCenter = this.$mapConfig.map.getCenter();
+      const mapCenter = { lat: getMapCenter.lat(), lng: getMapCenter.lng() };
+      const zoom = this.$mapConfig.map.getZoom();
+      if (timer !== null) clearTimeout(timer);
+      timer = setTimeout(() => {
+        this.$store.dispatch("station/getCity", {
+          mapCenter: mapCenter,
+          zoom: zoom,
+        });
+        this.$store.dispatch("station/getCurrentBounds", bounds);
+      }, 250);
+    });
     this.$mapConfig.map.setZoom(15)
     this.$mapConfig.map.panTo(
       new google.maps.LatLng(
@@ -125,18 +143,20 @@ export default Vue.extend({
       const stations = lines.map((line: Line) => {
           return line.stations;
       })
-      const otherStations = [].concat(...(stations as any));
-      let map = new Map(otherStations.map((otherStation: Station) => [otherStation.id, otherStation]));
-      const uniqueOtherStations = Array.from(map.values());
-      (this as any).otherStaionsMarkers = uniqueOtherStations.map((station: Station) => {
-        if(params.name !== station.name) {
-          const marker = this.$mapConfig.makeMarkerWithLabel(station, '', station.name);
-          marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-            this.$router.push({name: 'station-name', params: {name: station.name}})
-          })
-          return marker;
-        }
-      })
+      if (stations.length !== 0) {
+        const otherStations = [].concat(...(stations as any));
+        let map = new Map(otherStations.map((otherStation: Station) => [otherStation.id, otherStation]));
+        const uniqueOtherStations = Array.from(map.values());
+        (this as any).otherStaionsMarkers = uniqueOtherStations.map((station: Station) => {
+          if(params.name !== station.name) {
+            const marker = this.$mapConfig.makeMarkerWithLabel(station, '', station.name);
+            marker.addListener("click", (e: google.maps.MapMouseEvent) => {
+              this.$router.push({name: 'station-name', params: {name: station.name}})
+            })
+            return marker;
+          }
+        })
+      }
     },
     async makePolylines() {
       this.$mapConfig.resetPolyline((this as any).polylines);

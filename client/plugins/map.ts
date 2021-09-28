@@ -105,7 +105,8 @@ export class MapConfig {
             visible: true,
             labelContent: text,                   //ラベル文字
             labelAnchor: new google.maps.Point(labelWidth, -55),   //ラベル文字の基点
-            labelClass: 'labels',                        //CSSのクラス名                 //スタイル定義
+            labelClass: 'labels',
+            title: text,                      //CSSのクラス名                 //スタイル定義
         }) as any;
         return marker
     }
@@ -135,7 +136,7 @@ export class MapConfig {
             path: path.polygon,
             strokeColor: path.color,
             strokeOpacity: 0.9,
-            strokeWeight: 3
+            strokeWeight: 4
         });
         return polyline;
     }

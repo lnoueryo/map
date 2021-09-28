@@ -1,20 +1,11 @@
 <template>
   <div style="position: relative">
     <div class="left-list" :style="{ width: adjustWidth }">
-      <!-- <v-btn-toggle mandatory v-model="changeList" color="indigo" background-color="#2f2f2f">
-                <v-btn v-for="(button,i) in buttons" :key="i">
-                    <v-icon>mdi-{{button}}</v-icon>
-                </v-btn>
-            </v-btn-toggle> -->
       <div class="list-top">
         <search-items ref="searchItem"></search-items>
       </div>
       <div class="list-middle" :class="{ show: leftListSwitch }">
-        <keep-alive>
-          <transition name="fade">
-            <div :is="component"></div>
-          </transition>
-        </keep-alive>
+        <marker-lists></marker-lists>
       </div>
       <div class="resize" @mousedown="dragStart"></div>
     </div>
@@ -25,7 +16,6 @@
 <script lang="ts">
 interface DataType {
   width: number;
-  buttons: string[];
 }
 interface DomEvent extends Event {
   clientX: number;
@@ -34,15 +24,11 @@ interface DomEvent extends Event {
 import Vue from "vue";
 import { mapGetters } from "vuex";
 const MarkerLists = () => import("../organisms/MarkerLists.vue");
-const CityWiki = () => import("../organisms/CityWiki.vue");
-const StationWiki = () => import("../organisms/StationWiki.vue");
 const SearchItems = () => import("../organisms/SearchItems.vue");
-const Event = () => import("../organisms/Event.vue");
 const HalfModals = () => import("../organisms/HalfModals.vue");
+const StationWiki = () => import("../organisms/StationWiki.vue");
 const SearchBar = () => import("../../global/SearchBar.vue");
 const WikiInfo = () => import("../../global/WikiInfo.vue");
-const PlacesInfo = () => import("../../global/PlacesInfo.vue");
-const Twitter = () => import("../organisms/Twitter.vue");
 
 export default Vue.extend({
   components: {
@@ -50,22 +36,12 @@ export default Vue.extend({
     StationWiki,
     SearchBar,
     SearchItems,
-    Event,
     HalfModals,
     WikiInfo,
-    PlacesInfo,
-    Twitter,
   },
   data(): DataType {
     return {
       width: 345,
-      buttons: [
-        "train",
-        "information-outline",
-        "format-align-right",
-        "city",
-        "twitter",
-      ],
     };
   },
   computed: {
@@ -74,16 +50,6 @@ export default Vue.extend({
     },
     smp() {
       return this.$store.getters.windowSize.x < 500;
-    },
-    component() {
-      const componentTypes = [
-        "marker-lists",
-        "station-wiki",
-        "event",
-        "city-wiki",
-        "twitter",
-      ];
-      return componentTypes[(this as any).$store.getters["switch/changeList"]];
     },
     changeList: {
       get() {

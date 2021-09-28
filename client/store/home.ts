@@ -12,15 +12,16 @@ interface State {
     selectedMarker: City
     searchWord: string,
     addressElement: null | AddressElement[],
+    query: Query
 }
 interface Coordinate { lat: number, lng: number };
 interface Polygon { lat: number, lng: number }[];
 interface Bounds { north: number, south: number, west: number, east: number };
 interface AddressElement { Code: string, Name: string, Kana: string, Level: string }
 interface Prefecture { id: string, name: string, lat: number, lng: number, cities: City[] }
-interface City { name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: Spot[], polygons: Polygon[][] }
-interface Spot { name: string, place_id: string, address: string, lat: string, lng: string }
-
+interface City { name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: Spot[], polygons: Polygon[][], prefecture_id: string }
+interface Spot { name: string, place_id: string, address: string, lat: string, lng: string, city_code: string }
+interface Query { prefecture_id: string, city_code: string }
 const state = {
     fields: ['prefectures', 'cities', 'spots'],
     prefectures: prefectures,
@@ -31,6 +32,7 @@ const state = {
     selectedMarker: {},
     searchWord: null,
     addressElement: null,
+    query: {},
 };
 
 const getters = {
@@ -73,6 +75,28 @@ const getters = {
         })
     },
     addressElement: (state: State) => state.addressElement,
+    boundsFilteredLists: (state: State, getters: any) => {
+        let result;
+        if ('prefecture_id' in state.query && 'city_code' in state.query) {
+            result = getters.spots.filter((spot: Spot) => {
+                return spot.city_code == state.query.city_code;
+            })
+        } else if ('prefecture_id' in state.query) {
+            result = getters.cities.filter((city: City) => {
+                return city.prefecture_id == state.query.prefecture_id;
+            })
+        } else {
+            result = getters.prefectures;
+        }
+        return getters.boundsFilter(result);
+    },
+    showNumberOfMarkers: (state: State, getters: any): number => { //現在表示されているマーカーの数を返す
+        return getters.boundsFilteredLists.length;
+    },
+    searchSpots: (state: State, getters: any): Spot[] => { //検索バーに入った駅名がstationにあればオブジェクトを返す
+        const spots = getters.spots.filter((spot: Spot) => spot.name.indexOf(state.searchWord) > -1);
+        return state.searchWord ? spots : [];
+    },
 }
 
 const mutations = {
@@ -91,11 +115,17 @@ const mutations = {
     addressElement: (state: State, payload: AddressElement[]) => {
         state.addressElement = payload;
     },
+    query: (state: State, payload: Query) => {
+        state.query = payload;
+    },
 };
 
 const actions = {
     selectedPrefectureItems: (context: any, payload: Prefecture[]) => {
         context.commit('selectedPrefectureItems', payload)
+    },
+    query: (context: any, payload: Query) => {
+        context.commit('query', payload)
     },
     getCurrentBounds: (context: any, payload: Bounds) => {
         context.commit('currentBounds', payload)

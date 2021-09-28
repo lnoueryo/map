@@ -80,11 +80,8 @@ class PlaceInfoAPI(APIView):
         url = 'https://map.yahooapis.jp/placeinfo/V1/get'
         try:
             with requests.get(url, params=payload) as response:
-                print(response)
                 data = response.json()
-                print(data)
                 data = data['ResultSet']['Result']
-                print(data[0]['Category'])
                 return JsonResponse(data, safe=False)
         except urllib.error.URLError as e:
             raise e.reason

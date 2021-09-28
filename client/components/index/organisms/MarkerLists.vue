@@ -10,13 +10,13 @@
         "
       >
         <simple-lists
-          :items="prefectures"
+          :items="$store.getters['home/boundsFilter'](prefectures)"
           @item="prefecture = { ...prefecture, ...$event }"
           v-if="!$route.query.prefecture_id"
           >都道府県を選択してください</simple-lists
         >
         <simple-lists
-          :items="selectedPrefecture.cities"
+          :items="$store.getters['home/boundsFilter'](selectedPrefecture.cities)"
           @item="city = { ...city, ...$event }"
           v-if="$route.query.prefecture_id && !$route.query.city_code"
         >
@@ -25,7 +25,7 @@
           </div>
         </simple-lists>
         <simple-lists
-          :items="selectedCity.spots"
+          :items="$store.getters['home/boundsFilter'](selectedCity.spots)"
           @item="spot = { ...spot, ...$event }"
           v-if="$route.query.prefecture_id && $route.query.city_code"
         >

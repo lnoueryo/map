@@ -1,32 +1,23 @@
 import { $axios } from '~/utils/api';
-import prefectures from '~/assets/json/city.json';
-import population from '../assets/json/population.json'
 import joinCompanies from '../assets/json/company.json'
 import stations from '../assets/json/stations.json'
 import lines from '../assets/json/lines.json'
 import companies from '../assets/json/companies.json'
 import lineStations from '../assets/json/line_stations.json'
 import cities from '~/assets/json/old_city.json';
+import { includes } from 'cypress/types/lodash';
 interface State {
-    fields: ['stations'],
-    prefectures: City[],
-    population: { city: string, population: number[] },
     joinCompanies: Company[]
     companies: Company[],
     lines: Line[]
-    stations: Station
+    stations: Station[]
     lineStations: LineStations[]
     cities: City[],
     currentBounds: Bounds,
     addressElement: null | AddressElement[],
     params: Params | null
     query: Query
-    selectedCompanyItems: Company[],
-    selectedLineItems: Line[],
-    selectedCityItems: City[],
-    selectedMarker: Station,
     searchWord: string,
-    lineChartIndex: number,
 }
 interface Coordinate { lat: number, lng: number };
 interface Polygon { lat: number, lng: number }[];
@@ -43,9 +34,6 @@ interface LineStations { id: number, station_id: number, line_id: number }
 interface Params { prefecture_id: string, city_code: string, id: number, name: string, company_id: string }
 interface Query { company_id: string, line_id: string }
 const state = {
-    fields: ['stations'],
-    prefectures: prefectures,
-    population: population,
     joinCompanies: joinCompanies,
     companies: companies,
     lines: lines,
@@ -56,37 +44,70 @@ const state = {
     addressElement: null,
     params: null,
     query: {},
-    selectedCompanyItems: [],
-    selectedLineItems: [],
-    selectedCityItems: [],
-    selectedMarker: {},
     searchWord: null,
-    lineChartIndex: 0,
 };
 
 const getters = {
-    fields: (state: State) => state.fields,
-    population: (state: State) => state.population,
-    prefectures: (state: State) => state.prefectures,
+    params: (state: State) => state.params,
     joinCompanies: (state: State) => state.joinCompanies,
     companies: (state: State) => state.companies,
     lines: (state: State, getters: any) => {
         const lines = [].concat(...getters.joinCompanies.map((company: Company): Line[] => company.lines));
         return lines;
     },
-    // lines: (state: State, getters: any) => {
-    //     const lines = [].concat(...getters.joinCompanies.map((company: Company): Line[] => company.lines));
-    //     const filteredLines = getters.filteredLines(lines);
-    //     return filteredLines;
-    // },
     stations: (state: State) => state.stations,
-    cities: (state: State, getters: any) => {
-        const cities = [].concat(...getters.prefectures.map((prefecture: Prefecture): City[] => prefecture.cities));
-        return cities;
+    uniqueStations: (state: State, getters: any) => {
+        const map = new Map(getters.stations.map((station: Station) => [station.name, station]));
+        return Array.from(map.values());
     },
-    spots: (state: State, getters: any) => {
-        const spots = [].concat(...getters.cities.map((city: City): Spot[] => city.spots));
-        return spots;
+    filteredCompanyLines: (state: State, getters: any) => {
+        let companies;
+        if (getters.params?.name) {
+            const selectedStations = getters.stationInfo.filter((station: Station) => station.name == getters.params?.name)
+            const lineIds = selectedStations.map((station: Station) => {
+                return station.lines.map((line: Line) => {
+                    return line.id;
+                })
+            })
+            const joinCompanies = JSON.parse(JSON.stringify(getters.joinCompanies))
+            companies = joinCompanies.filter((company: Company) => {
+                return selectedStations.some((station: Station) => station.company_id == company.id)
+            }).map((company: Company) => {
+                company['lines'] = company.lines.filter((line) => {
+                    return lineIds.some((lineId: any) => {
+                        return lineId.includes(line.id);
+                    })
+                })
+                return company;
+            })
+        }
+        return companies
+    },
+    stationInfo: (state: State, getters: any) => {
+        return state.params ? getters.combineStationsWithLines
+            .filter((station: Station) => {
+                return state.params?.name == station.name;
+            }).map((station: any) => {
+                station['company'] = getters.companies.find((company: Company) => company.id == station.company_id)
+                return station
+            }) : null
+    },
+    boundsFilteredStations: (state: State, getters: any) => {
+        if (getters.stationInfo) {
+            const lines = [].concat(...getters.stationInfo.map((station: Station) => station.lines));
+            const filteredStations = [].concat(...lines.map((line: any) => line.stations));
+            const stations = filteredStations.filter((station: Station) => {
+                if('line_id' in state.query) {
+                    return String(station.line_id) == state.query.line_id;
+                } else if('company_id' in state.query) {
+                    return String(station.company_id) == (state.query as Query).company_id;
+                }
+                return true;
+            })
+            const map = new Map(stations.map((station: Station) => [station.name, station]));
+            return getters.boundsFilter(Array.from(map.values()))
+        }
+        return []
     },
     removeAddressElement: (state: State) => (elements: AddressElement[], zoom: number) => {
         let index: number;
@@ -108,34 +129,25 @@ const getters = {
             return station;
         })
     },
-    stationInfo: (state: State, getters: any) => {
-        return state.params ? getters.combineStationsWithLines
-            .filter((station: Station) => {
-                return state.params?.name == station.name;
-            }).map((station: any) => {
-                station['company'] = getters.companies.find((company: Company) => company.id == station.company_id)
-                return station
-            }) : null
-    },
     filteredStation: (state: State, getters: any) => {
         let stations = JSON.parse(JSON.stringify(getters.stationInfo))
         if ('company_id' in state.query) {
             const companyIdsArray = (state.query.company_id as string).split(',')
             stations = stations.filter((station: Station) => {
-              return companyIdsArray.includes(String(station.company_id));
+                return companyIdsArray.includes(String(station.company_id));
             })
-            if('line_id' in state.query) {
-              const lineIdsArray = (state.query.line_id as string).split(',')
-              const stationsWithLine = stations.map((station: Station) => {
-                const lines = station.lines.filter((line: Line) => {
-                  return lineIdsArray.includes(String(line.id));
+            if ('line_id' in state.query) {
+                const lineIdsArray = (state.query.line_id as string).split(',')
+                const stationsWithLine = stations.map((station: Station) => {
+                    const lines = station.lines.filter((line: Line) => {
+                        return lineIdsArray.includes(String(line.id));
+                    })
+                    if (lines.length !== 0) {
+                        station.lines = lines;
+                    }
+                    return station
                 })
-                if (lines.length !== 0) {
-                  station.lines = lines;
-                }
-                return station
-              })
-              if (stationsWithLine.length !== 0) stations = stationsWithLine;
+                if (stationsWithLine.length !== 0) stations = stationsWithLine;
             }
         }
         return stations;
@@ -147,85 +159,10 @@ const getters = {
     originalCities: (state: State, getters: any) => {
         return state.cities
     },
-    /*
-    会社->路線図の順でフィルタリングする
-    */
-    filteredLines: (state: State, getters: any) => (lines: Line[]) => {
-        let filteredLines = getters.companyFilter(lines);
-        filteredLines = getters.lineFilter(filteredLines);
-        filteredLines = getters.cityFilter(filteredLines);
-        return filteredLines;
-    },
-    /*
-    選択された会社のフィルター
-    選択されたcompanyのpkとlinesのcompany_idが一致したオブジェクトを返す
-    */
-    companyFilter: (state: State) => (lines: Line[]): Line[] => {
-        const companyIds = state.selectedCompanyItems.map((selectedCompanyItem) => { //選択された会社のid
-            return selectedCompanyItem.id
-        })
-        let selectedLines = state.selectedCompanyItems.length !== 0
-            ? lines.filter((line) => companyIds.includes(line.company_id))
-            : lines
-        return selectedLines;
-    },
-    /*
-    選択された路線図のフィルター
-    選択されたlineのpkとlinesのidが一致したオブジェクトを返す
-    */
-    lineFilter: (state: State) => (lines: Line[]) => {//選択された路線図のフィルター
-        const lineIds = state.selectedLineItems.map((selectedLineItem) => { //選択された路線図のid
-            return selectedLineItem.id
-        })
-        let selectedLines = state.selectedLineItems.length !== 0
-            ? lines.filter((line) => lineIds.includes(line.id))
-            : lines
-        return selectedLines;
-    },
-    /*
-    選択された地域のフィルター
-    選択された地域のコードとstationsのcity_codeが一致したオブジェクトを返す
-    二次元配列をmapで扱うためdeepcopyを使う
-    */
-    cityFilter: (state: State, getters: any) => (lines: Line[]) => {//選択された路線図のフィルター
-        const cityCodes = state.selectedCityItems.map((selectedCityItem) => { //選択された路線図のid
-            const code = selectedCityItem.city_code;
-            return code;
-        })
-        let copyLines: Line[] = JSON.parse(JSON.stringify(lines));
-        return getters.selectedCities.length == 0 ? copyLines : copyLines.map((line) => {
-            line.stations = line.stations.filter((station) => {
-                return cityCodes.includes(station.city_code);
-            })
-            return line;
-        })
-    },
-    cityFilterForCities: (state: State, getters: any) => (cities: City[]) => {//選択された路線図のフィルター
-        const cityCodes = state.selectedCityItems.map((selectedCityItem) => { //選択された路線図のid
-            const code = selectedCityItem.city_code;
-            return code;
-        })
-        let copyCities: City[] = JSON.parse(JSON.stringify(cities));
-        return getters.selectedCities.length == 0 ? copyCities : copyCities.filter((city) => {
-            return cityCodes.includes(city.city_code);
-        })
-    },
-    selectedCompanyItems: (state: State): Company[] => state.selectedCompanyItems,
-    selectedLineItems: (state: State): Line[] => state.selectedLineItems,
-    selectedCityItems: (state: State): City[] => state.selectedCityItems,
     searchWord: (state: State): string => state.searchWord,
     currentBounds: (state: State) => state.currentBounds,
-    selectedMarker: (state: State): Station => state.selectedMarker, //クリックされたマーカー(駅)のオブジェクトを返す
-    showNumberOfMarkers: (state: State, getters: any, rootState: any, rootGetters: any): number => { //現在表示されているマーカーの数を返す
-        const stationNum = [].concat(...getters.lines.map((line: Line) => {
-            return getters.boundsFilter(line.stations);
-        })).map((station: Station) => station.name).filter((name, index, array) => array.indexOf(name) === index).length;
-
-        const spotNum = [].concat(...getters.cities.map((city: City) => {
-            return getters.boundsFilter(city.spots);
-        })).map((spot: Spot) => spot.name).filter((name, index, array) => array.indexOf(name) === index).length;
-
-        return rootGetters['switch/markerSwitches'].stations && rootGetters['switch/markerSwitches'].spots ? stationNum + spotNum : rootGetters['switch/markerSwitches'].stations ? stationNum : spotNum;
+    showNumberOfMarkers: (state: State, getters: any): number => { //現在表示されているマーカーの数を返す
+        return getters.boundsFilteredStations.length;
     },
     boundsFilter: (state: State) => (points: Coordinate[]): Coordinate[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
         const filteredStations = points.filter((point) => {
@@ -236,17 +173,13 @@ const getters = {
         return filteredStations;
     },
     searchStations: (state: State, getters: any): Station[] => { //検索バーに入った駅名がstationにあればオブジェクトを返す
-        const stations = [].concat(...getters.lines.map((line: Line) => {
-            return line.stations;
-        })).filter((station: Station) => station.name.indexOf(state.searchWord) > -1);
+        const stations = getters.stations.filter((station: Station) => station.name.indexOf(state.searchWord) > -1);
         return state.searchWord ? getters.removeOverlap(stations) : [];
     },
     removeOverlap: (state: State) => (stations: Station[]) => { //重複した駅名を削除
         let map = new Map(stations.map(station => [station.name, station]));
         return Array.from(map.values());
     },
-    selectedCities: (state: State) => state.selectedCityItems, //ウィキから引っ張ってきたhtmlを返す
-    lineChartIndex: (state: State) => state.lineChartIndex,
 }
 
 const mutations = {
@@ -262,40 +195,11 @@ const mutations = {
     setCompanies: (state: State, payload: Company[]) => {
         payload.forEach(company => state.companies.push(company));
     },
-    selectedCompanyItems: (state: State, payload: Company[]) => {
-        state.selectedCompanyItems = payload;
-    },
-    selectedLineItems: (state: State, payload: Line[]) => {
-        state.selectedLineItems = payload;
-    },
-    selectedCityItems: (state: State, payload: City[]) => {
-        state.selectedCityItems = payload;
-    },
     currentBounds: (state: State, payload: Bounds) => {
         state.currentBounds = Object.assign({}, state.currentBounds, payload)
     },
-    selectMarker: (state: State, payload: Station) => {
-        state.selectedMarker = Object.assign({}, state.selectedMarker, payload);
-    },
     searchWord: (state: State, payload: string) => {
         state.searchWord = payload;
-    },
-    uncheck: (state: State, payload: Line[]) => {
-        state.selectedLineItems = payload.length == 1
-            ? state.selectedLineItems.filter((item) => item.company_id !== payload[0].id)
-            : []
-    },
-    selectCityItems: (state: State, payload: City) => {
-        const index = state.selectedCityItems.findIndex((selectCity) => {
-            return selectCity.city_code == payload.city_code;
-        });
-        index == -1 ? state.selectedCityItems.push(payload) : state.selectedCityItems.splice(index, 1)
-    },
-    lineChartIndex: (state: State, payload: number) => {
-        state.lineChartIndex = payload;
-    },
-    changeLineChartIndex: (state: State, payload: number) => {
-        state.lineChartIndex += payload;
     },
 };
 
@@ -319,42 +223,11 @@ const actions = {
     query: (context: any, payload: Params) => {
         context.commit('query', payload)
     },
-    selectedCompanyItems: (context: any, payload: { name: string, text: string }[]) => {
-        context.commit('selectedCompanyItems', payload)
-    },
-    selectedLineItems: (context: any, payload: { name: string, text: string }[]) => {
-        context.commit('selectedLineItems', payload)
-    },
     getCurrentBounds: (context: any, payload: Bounds) => {
         context.commit('currentBounds', payload)
     },
-    selectMarker: (context: any, payload: Station) => {
-        context.commit('selectMarker', payload)
-    },
     searchWord: (context: any, payload: string) => {
         context.commit('searchWord', payload)
-    },
-    uncheck: (context: any, payload: string) => {
-        context.commit('uncheck', payload)
-    },
-    searchCityCode: async (context: any, payload: google.maps.MapMouseEvent) => {
-        const latLng = { lat: payload.latLng?.lat(), lng: payload.latLng?.lng() };
-        const response = await $axios.$get('/api/search-by-reverse-geocode/', {params: latLng});
-        const city = context.getters.originalCities.find((city: City) => {
-            return city.city_code == response.Property.AddressElement[1].Code;
-        })
-        const index = context.state.selectedCityItems.findIndex((selectCity: City) => {
-            return selectCity.city_code == city.city_code;
-        });
-        if (index == -1) context.dispatch('info/getCityWikiInfo', { name: city.name }, { root: true })
-        // if (index == -1) context.dispatch('getCityWikiInfo', {name: city.name})
-        context.commit('selectCityItems', city);
-    },
-    lineChartIndex: async (context: any, payload: any) => {
-        const cityIndex = context.getters.population.findIndex((city: City) => {
-            return city.city == payload.Property.AddressElement[1].Name;
-        })
-        if (cityIndex !== -1) context.commit('lineChartIndex', cityIndex);
     },
 };
 

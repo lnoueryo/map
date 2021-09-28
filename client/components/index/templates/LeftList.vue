@@ -1,20 +1,11 @@
 <template>
   <div style="position: relative">
     <div class="left-list" :style="{ width: adjustWidth }">
-      <!-- <v-btn-toggle mandatory v-model="changeList" color="indigo" background-color="#2f2f2f">
-                <v-btn v-for="(button,i) in buttons" :key="i">
-                    <v-icon>mdi-{{button}}</v-icon>
-                </v-btn>
-            </v-btn-toggle> -->
       <div class="list-top">
         <search-items ref="searchItem"></search-items>
       </div>
       <div class="list-middle" :class="{ show: leftListSwitch }">
-        <keep-alive>
-          <transition name="fade">
-            <div :is="component"></div>
-          </transition>
-        </keep-alive>
+        <marker-lists></marker-lists>
       </div>
       <div class="resize" @mousedown="dragStart"></div>
     </div>
@@ -34,7 +25,6 @@ interface DomEvent extends Event {
 import Vue from "vue";
 import { mapGetters } from "vuex";
 const MarkerLists = () => import("../organisms/MarkerLists.vue");
-const CityWiki = () => import("../organisms/CityWiki.vue");
 const StationWiki = () => import("../organisms/StationWiki.vue");
 const SearchItems = () => import("../organisms/SearchItems.vue");
 const Event = () => import("../organisms/Event.vue");

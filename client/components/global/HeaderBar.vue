@@ -100,11 +100,11 @@ export default Vue.extend({
         justify-content: space-between;
     }
     .drawer-top {
-        padding-top: 64px;
+        padding-top: 64px!important;
     }
     @media screen and (max-width:768px) { 
         .drawer-top {
-            padding-top: 0px;
+            padding-top: 0px!important;
         }
     }
 </style>

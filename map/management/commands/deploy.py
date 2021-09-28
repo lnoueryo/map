@@ -19,7 +19,7 @@ def execute():
 
         process = Popen(settings.GCLOUD_BUILD, stdin=PIPE, stdout=PIPE, shell=True)
         print(process)
-        time.sleep(210)
+        time.sleep(300)
         process.kill()
 
         process = Popen(settings.GCLOUD_DEPLOY, stdin=PIPE, stdout=PIPE, shell=True)

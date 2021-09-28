@@ -19,10 +19,13 @@
     "test": "jest"
   },
   "dependencies": {
+    "@googlemaps/markerclustererplus": "^1.2.1",
     "@googlemaps/markerwithlabel": "^1.2.3",
     "@nuxtjs/axios": "^5.13.6",
     "@nuxtjs/pwa": "^3.3.5",
     "core-js": "^3.15.1",
+    "leaflet": "^1.7.1",
+    "leaflet.gridlayer.googlemutant": "^0.13.4",
     "ngeohash": "^0.6.3",
     "nuxt": "^2.15.7",
     "vuetify": "^2.5.5",

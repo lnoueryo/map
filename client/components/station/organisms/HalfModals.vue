@@ -1,18 +1,9 @@
 <template>
   <div>
     <div>
-      <!-- <v-btn absolute top left style="z-index: 10"  @click="abc = !abc">aaa</v-btn> -->
       <half-modal ref="wiki" :show="wikiReady" @hide="wikiReady = false">
         <wiki-info :wiki-data="cityWikiInfo"></wiki-info>
       </half-modal>
-      <!-- <half-modal ref="places" :show="placesReady" @hide="placesReady = false" difference="164px">
-                <div>
-                    <places-info :places-data="spotDetail"></places-info>
-                </div>
-                <div>
-                    <twitter></twitter>
-                </div>
-            </half-modal> -->
     </div>
   </div>
 </template>
@@ -59,15 +50,11 @@ interface DataType {
 import Vue from "vue";
 const HalfModal = () => import("../../global/HalfModal.vue");
 const WikiInfo = () => import("../../global/WikiInfo.vue");
-const PlacesInfo = () => import("../../global/PlacesInfo.vue");
-const Twitter = () => import("../organisms/Twitter.vue");
 import { mapGetters } from "vuex";
 export default Vue.extend({
   components: {
     HalfModal,
     WikiInfo,
-    PlacesInfo,
-    Twitter,
   },
   data(): DataType {
     return {

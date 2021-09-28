@@ -2,7 +2,7 @@
     <div>
         <div class="title"><slot></slot></div>
         <transition-group name="list" tag="div">
-            <div v-for="(item, i) in $store.getters['home/boundsFilter'](items)" :key="i" style="position:relative">
+            <div v-for="(item, i) in items" :key="i" style="position:relative">
                 <div>
                     <div class="item" style="width:100%;color:black" @click="onClickList(item)">
                         <div>{{item.name}}</div>

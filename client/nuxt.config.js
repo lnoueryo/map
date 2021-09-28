@@ -21,11 +21,16 @@ export default {
       { name: 'viewport', content: 'width=device-width, initial-scale=1' },
       { hid: 'description', name: 'description', content: '' },
     ],
-    link: [{ rel: 'icon', type: 'image/x-icon', href: '/logo.png' }],
+    link: [
+      { rel: 'icon', type: 'image/x-icon', href: '/logo.png' },
+      // { rel: 'stylesheet', integrity: 'sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==', href: 'https://unpkg.com/leaflet@1.7.1/dist/leaflet.css', crossorigin: '' },
+    ],
     script: [
-      { src: `https://maps.googleapis.com/maps/api/js?key=${process.env.NODE_ENV === 'production' ? process.env.PROD_API_KEY : process.env.DEV_API_KEY}&libraries=geometry,places&v=quarterly`, defer: false, body: true },
+      { src: `https://maps.googleapis.com/maps/api/js?key=${process.env.NODE_ENV === 'production' ? process.env.PROD_API_KEY : process.env.DEV_API_KEY}&libraries=geometry,places&v=quarterly`, defer: true, async: true, body: true },
       { src: 'https://polyfill.io/v3/polyfill.min.js?features=default', defer: true, body: true },
       { src: 'https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js', defer: true, body: true },
+      // { src: 'https://unpkg.com/leaflet@1.7.1/dist/leaflet-src.js', integrity: 'sha512-I5Hd7FcJ9rZkH7uD01G3AjsuzFy3gqz7HIJvzFZGFt2mrCS4Piw9bYZvCgUE0aiJuiZFYIJIwpbNnDIM6ohTrg==', crossorigin: '', defer: true, body: true },
+      // { src: 'https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js', defer: true, body: true },
     ]
   },
   publicRuntimeConfig: {

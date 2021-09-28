@@ -93,7 +93,7 @@ export default Vue.extend({
     width: 100%;
     height: 100%;
     position: relative;
-    padding-top: 56.25%;
+    padding-top: 75%;
     transition: all 0.5s;
   }
 }

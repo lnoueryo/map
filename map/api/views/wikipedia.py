@@ -52,7 +52,13 @@ class WikiAPI(APIView):
             table = soup.find('table', {"class":"mbox-small"})
             if table:
                 table.extract()
+            table = soup.find('table', {"class":"plainlinks"})
+            if table:
+                table.extract()
             div = soup.find('div', {"class":"mw-kartographer-container"})
+            if div:
+                div.extract()
+            div = soup.find('div', {"id":"toc"})
             if div:
                 div.extract()
             divs = soup.find_all('div', {"class":"dablink"})

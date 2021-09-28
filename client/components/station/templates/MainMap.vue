@@ -1,16 +1,15 @@
 <template>
   <div class="map-container">
     <map-top class="map-top"></map-top>
-    <line-chart class="line-chart" v-if="chartSwitch"></line-chart>
-    <div id="map" ref="map" :class="{ 'show-line': chartSwitch }"></div>
-    <div class="dot" v-if="dotSwitch"></div>
+    <div id="map" ref="map"></div>
+    <div class="dot"></div>
   </div>
 </template>
 
 <script lang="ts">
+import MarkerClusterer from '@googlemaps/markerclustererplus';
 import Vue from "vue";
 import { mapGetters } from "vuex";
-const LineChart = () => import("../organisms/LineChart.vue");
 const MapTop = () => import("../organisms/MapTop.vue");
 interface GMapWindow extends Window {
   google: any;
@@ -44,7 +43,7 @@ interface Line {
   stations: Station[];
 }
 interface DataType {
-  markers: { [key: string]: google.maps.Marker[][] };
+  markers: google.maps.Marker[][];
   polylines: google.maps.Polyline[];
   polygons: google.maps.Polygon[][];
   timer: null | NodeJS.Timer;
@@ -72,12 +71,11 @@ interface Cities {
 
 export default Vue.extend({
   components: {
-    LineChart,
     MapTop,
   },
   data(): DataType {
     return {
-      markers: {},
+      markers: [],
       polylines: [],
       polygons: [],
       timer: null,
@@ -85,42 +83,21 @@ export default Vue.extend({
   },
   computed: {
     ...mapGetters("station", [
-      "fields",
-      "lines",
-      "cities",
-      "selectedMarker",
-      "selectedCompanyItems",
-      "selectedCityItems",
-      "selectedLineItems",
-    ]),
-    ...mapGetters("switch", [
-      "markerSwitches",
-      "markerSwitch",
-      "lineSwitch",
-      "chartSwitch",
-      "dotSwitch",
+      'lines',
+      'uniqueStations',
+      'currentBounds',
+      'boundsFilteredStations'
     ]),
   },
   watch: {
-    markerSwitches: {
-      handler(v) {
-        console.log(v);
-        this.showMarkers();
-      },
-      deep: true,
-    },
-  },
-  beforeCreate() {
-    this.$store.dispatch("switch/makeSwitches");
-  },
-  created() {
-    this.fields.forEach((field: string) => {
-      this.markers[field] = [];
-    });
+    currentBounds: {
+      handler() {
+        this.$mapConfig.boundsFilterForMarker([(this as any).markers], true)
+      }
+    }
   },
   async mounted() {
-    await this.setMap();
-    this.setMarkers();
+    await this.setMap();;
     let timer: NodeJS.Timer | null;
 
     this.$mapConfig.map.addListener("bounds_changed", () => {
@@ -130,20 +107,16 @@ export default Vue.extend({
       const zoom = this.$mapConfig.map.getZoom();
       if (timer !== null) clearTimeout(timer);
       timer = setTimeout(() => {
-        this.showMarkers();
         this.$store.dispatch("station/getCity", {
           mapCenter: mapCenter,
           zoom: zoom,
         });
         this.$store.dispatch("station/getCurrentBounds", bounds);
       }, 250);
-      zoom > 13
-        ? this.$mapConfig.changeIcon(this.markers.stations, "stations", "big")
-        : this.$mapConfig.changeIcon(
-            this.markers.stations,
-            "stations",
-            "small"
-          );
+    });
+    this.setMarkers()
+    this.lines.forEach((line: any) => {
+      const polyline = this.$mapConfig.makePolyline(line)
     });
   },
   methods: {
@@ -153,11 +126,26 @@ export default Vue.extend({
       this.$mapConfig.map.setZoom(15);
     },
     async setMarkers() {
-      this.markers.stations = await this.$mapConfig.makeMarkers(
-        this.lines,
-        "stations",
-        this.stationMarkerFunction
-      );
+      this.markers = this.uniqueStations.map((station: Station) => {
+        const marker = this.$mapConfig.makeMarkerWithLabel(station, require('~/assets/img/station.png'), station.name)
+        marker.addListener("click", (e: google.maps.MapMouseEvent) => {
+          this.$router.push({name: 'station-name', params: {name: station.name}})
+        })
+        marker.setVisible(false)
+        return marker;
+      })
+      const markerCluster = new MarkerClusterer(this.$mapConfig.map, (this as any).markers, {
+        maxZoom: 13,
+        gridSize: 90,
+        imagePath:
+          "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
+      });
+      // google.maps.event.addListener(markerCluster, 'clusterclick', function(cluster: any) {
+      //     console.log(cluster.markers_);
+      //     cluster.markers_.forEach(function(e){
+      //         console.log(e.title);
+      //     });
+      // });
     },
     stationMarkerFunction(
       marker: google.maps.Marker,
@@ -176,57 +164,42 @@ export default Vue.extend({
       await this.$store.dispatch("station/searchCityCode", e);
       (this as any).addClickMapListeners();
     },
-    makeLineArray(lines: Line[]) {
-      if (
-        this.selectedLineItems.length !== 0 ||
-        this.selectedCompanyItems.length !== 0
-      ) {
-        this.$mapConfig.resetPolyline(this.polylines);
-        let paths: {
-          name: string;
-          color: string;
-          polygon: google.maps.LatLng[];
-        }[] = [];
-        lines.forEach((line: Line) => {
-          let polygon: google.maps.LatLng[] = [];
-          line.polygon.forEach((coordinate: LinePolyline) => {
-            polygon.push(
-              new window.google.maps.LatLng(coordinate.lat, coordinate.lng)
-            );
-          });
-          paths.push({ name: line.name, color: line.color, polygon: polygon });
-        });
-        const that = this;
-        paths.forEach((path) => {
-          const polyline = this.$mapConfig.makePolyline(path);
-          (this as any).polylines.push(polyline);
-          polyline.addListener("click", () => {
-            const latLngBounds = new window.google.maps.LatLngBounds();
-            polyline.getPath().forEach((latLng: google.maps.LatLng) => {
-              latLngBounds.extend(latLng);
-            });
-            that.$mapConfig.map.fitBounds(latLngBounds);
-          });
-        });
-      }
-    },
+    // makeLineArray(lines: Line[]) {
+    //   if (
+    //     this.selectedLineItems.length !== 0 ||
+    //     this.selectedCompanyItems.length !== 0
+    //   ) {
+    //     this.$mapConfig.resetPolyline(this.polylines);
+    //     let paths: {
+    //       name: string;
+    //       color: string;
+    //       polygon: google.maps.LatLng[];
+    //     }[] = [];
+    //     lines.forEach((line: Line) => {
+    //       let polygon: google.maps.LatLng[] = [];
+    //       line.polygon.forEach((coordinate: LinePolyline) => {
+    //         polygon.push(
+    //           new window.google.maps.LatLng(coordinate.lat, coordinate.lng)
+    //         );
+    //       });
+    //       paths.push({ name: line.name, color: line.color, polygon: polygon });
+    //     });
+    //     const that = this;
+    //     paths.forEach((path) => {
+    //       const polyline = this.$mapConfig.makePolyline(path);
+    //       (this as any).polylines.push(polyline);
+    //       polyline.addListener("click", () => {
+    //         const latLngBounds = new window.google.maps.LatLngBounds();
+    //         polyline.getPath().forEach((latLng: google.maps.LatLng) => {
+    //           latLngBounds.extend(latLng);
+    //         });
+    //         that.$mapConfig.map.fitBounds(latLngBounds);
+    //       });
+    //     });
+    //   }
+    // },
     clearTime() {
       if (this.timer) clearTimeout(this.timer);
-    },
-    showMarkers() {
-      if (this.markerSwitch) {
-        this.fields.forEach((field: string) => {
-          const markers = this.$mapConfig.boundsFilterForMarker(
-            this.markers[field],
-            this.markerSwitches[field]
-          ) as any;
-          this.$mapConfig.cityFilterForMarker(
-            markers,
-            this.polygons,
-            this.selectedCityItems
-          );
-        });
-      }
     },
   },
 });
@@ -295,14 +268,6 @@ export default Vue.extend({
       content: "";
       display: block;
       padding-top: 56.25%;
-    }
-  }
-  @media screen and (max-width: 500px) {
-    .map-top {
-      top: 50px;
-    }
-    .line-chart {
-      top: 100px;
     }
   }
 }

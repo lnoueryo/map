@@ -1,12 +1,26 @@
 <template>
   <div>
     <div class="d-flex">
-      <search-bar ref="searchBar" placeholder="駅を検索" v-model="searchWord">
-        <!-- <div class="menu" v-if="searchStations.length !== 0" style="background-color: white">
-                    <div @mouseup.stop.prevent="select(searchStation)" v-for="(searchStation, i) in filteredSearchStations" :key="i" class="list">
-                        <span>{{searchStation.name}}</span>
-                    </div>
-                </div> -->
+      <search-bar
+        ref="searchBar"
+        placeholder="観光地を検索"
+        v-model="searchWord"
+        @select="select(filteredSearchSpots[0])"
+      >
+        <div
+          class="menu"
+          v-if="searchSpots.length !== 0"
+          style="background-color: white"
+        >
+          <div
+            @mouseup.stop.prevent="select(searchSpot)"
+            v-for="(searchSpot, i) in filteredSearchSpots"
+            :key="i"
+            class="list"
+          >
+            <span>{{ searchSpot.name }}</span>
+          </div>
+        </div>
       </search-bar>
       <div>
         <v-btn
@@ -36,8 +50,7 @@
     </div>
     <div style="padding: 10px" v-if="pc">
       <span>現在の表示件数</span>
-      <b v-if="markerSwitch">{{ countMarkers }}</b>
-      <b v-else>0</b>
+      <b>{{ countMarkers }}</b>
       <span>件</span>
     </div>
   </div>
@@ -62,6 +75,17 @@ interface Station {
   lng: number;
   name: string;
 }
+interface Spot {
+  id: number;
+  name: string;
+  place_id: string;
+  address: string;
+  lat: number;
+  lng: number;
+  prefecture_id: string;
+  city_code: string;
+  geohash: string;
+}
 export default Vue.extend({
   components: {
     SearchBar,
@@ -73,7 +97,7 @@ export default Vue.extend({
     };
   },
   computed: {
-    ...mapGetters("switch", ["markerSwitch"]),
+    ...mapGetters("home", ['showNumberOfMarkers', 'searchSpots']),
     searchWord: {
       get() {
         return this.$store.getters["home/searchWord"];
@@ -97,30 +121,20 @@ export default Vue.extend({
     smp() {
       return this.$store.getters.windowSize.x < 500;
     },
+    filteredSearchSpots() {
+      return this.searchSpots.filter((_: any, index: number) => {
+        return index < 5;
+      });
+    },
   },
-  // watch: {
-  //     showNumberOfMarkers(newValue, OldValue) { //vuexから表示されている数の変化を検知
-  //         (this as any).count(newValue, OldValue);
-  //     },
-  // },
+  watch: {
+      showNumberOfMarkers(newValue, OldValue) { //vuexから表示されている数の変化を検知
+          (this as any).count(newValue, OldValue);
+      },
+  },
   methods: {
-    select(searchStation: Station) {
-      const searchBar = this.$refs.searchBar as any;
-      // const searchBar = this.$refs.searchBar as InstanceType<typeof SearchBar>;
-      searchBar.$data.blur = false;
-      const input = searchBar.$refs.input as HTMLInputElement;
-      input.blur();
-      if (searchStation) {
-        this.$store.dispatch("home/selectMarker", searchStation);
-        this.$store.dispatch("info/getStationInfo", {
-          name: searchStation.name,
-        });
-        this.$store.dispatch("info/getTwitterInfo", {
-          name: searchStation.name,
-        });
-      } else {
-        alert("見つかりませんでした");
-      }
+    select(searchSpot: Spot) {
+      this.$router.push({name: 'detail-prefecture_id-city_code-id', params: {prefecture_id: searchSpot.prefecture_id, city_code: searchSpot.city_code, id: String(searchSpot.id)}})
     },
     count(newValue: number, OldValue: number): void {
       const DURATION = 600;

@@ -1,7 +1,5 @@
 <template>
   <div class="map-container">
-    <v-btn fixed right top style="z-index:5" :to="{name: 'detail-prefecture_id-city_code-id', params: {prefecture_id: '13', city_code: '13101', id: '1'}}">aa</v-btn>
-    <!-- <v-btn fixed right top style="z-index:5" :to="{path: '/detail/123/456/789', params: {abc: '13'}}">aa</v-btn> -->
     <map-top class="map-top"></map-top>
     <div id="map" ref="map" :class="{ 'show-line': chartSwitch }"></div>
     <div class="dot" v-if="dotSwitch"></div>
@@ -89,10 +87,12 @@ export default Vue.extend({
         const bounds = sessionStorage.getItem("tokyo-map") as string;
         this.$mapConfig.focusMarker(JSON.parse(bounds), 11);
       }
+      this.$store.dispatch('home/query', to.query)
       this.checkQuery();
     },
   },
   beforeCreate() {
+    this.$store.dispatch('home/query', this.$route.query)
     this.$store.dispatch("switch/makeSwitches");
   },
   created() {
@@ -117,7 +117,7 @@ export default Vue.extend({
           zoom: zoom,
         });
         this.$store.dispatch("home/getCurrentBounds", bounds);
-      }, 1000);
+      }, 250);
     });
   },
   methods: {

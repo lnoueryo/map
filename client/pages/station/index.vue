@@ -1,46 +1,30 @@
 <template>
   <div id="wrapper">
-    <div>
-      <right-drawer></right-drawer>
-    </div>
     <div id="container" :class="{ open: open }">
       <div class="main-view">
         <div>
-          <left-list v-if="smp"></left-list>
+          <left-list></left-list>
         </div>
         <div class="map-container">
           <main-map></main-map>
         </div>
       </div>
     </div>
-    <div>
-      <top-bar v-if="!smp"></top-bar>
-    </div>
-    <div>
-      <bottom v-if="!smp"></bottom>
-    </div>
   </div>
 </template>
 
 <script lang="ts">
 import Vue from "vue";
-const RightDrawer = () =>
-  import("~/components/station/templates/RightDrawer.vue");
 const LeftList = () => import("~/components/station/templates/LeftList.vue");
 const MainMap = () => import("~/components/station/templates/MainMap.vue");
-const TopBar = () => import("~/components/station/templates/TopBar.vue");
-const Bottom = () => import("~/components/station/templates/Bottom.vue");
 interface DataType {
   open: boolean;
   lefList: boolean;
 }
 export default Vue.extend({
   components: {
-    RightDrawer,
     LeftList,
     MainMap,
-    TopBar,
-    Bottom,
   },
   data(): DataType {
     return {
@@ -50,21 +34,9 @@ export default Vue.extend({
   },
   computed: {
     smp() {
-      return this.$store.getters.windowSize.x > 500;
+      return this.$store.getters.windowSize.x < 500;
     },
-  },
-  // beforeCreate(){
-  //     this.$store.dispatch('switch/getCompanies', ['stations, cities']);
-  // },
-  mounted() {
-    this.$on("open", (this as any).drawer);
-  },
-  methods: {
-    drawer() {
-      //right-drawerが開いた時の処理
-      (this as any).open = !(this as any).open;
-    },
-  },
+  }
 });
 </script>
 
@@ -87,6 +59,12 @@ export default Vue.extend({
       .map-container {
         position: relative;
         width: 100%;
+      }
+    }
+    @media screen and (max-width: 500px) {
+      .main-view {
+        //left-listを上げて、map-viewを下げる
+        display: block;
       }
     }
   }

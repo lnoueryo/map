@@ -12,22 +12,22 @@
               <v-btn :to="{name: 'detail-prefecture_id-city_code-id', params: nextParams}">次</v-btn>
             </div> -->
           </div>
-          <div class="d-flex flex-wrap">
-            <map-view :stations="nearestStations"></map-view>
-            <v-carousel hide-delimiters v-if="photos.length !== 0" style="max-width: 550px;">
-                <v-carousel-item style="padding-bottom: 56.25%;" v-for="(item,i) in photos" :key="i" :src="item"></v-carousel-item>
+          <div class="d-flex flex-wrap" style="justify-content: space-around;">
+            <map-view class="my-4" :stations="nearestStations"></map-view>
+            <v-carousel class="my-4" hide-delimiters v-if="photos.length !== 0" style="max-width: 550px;" :height="smp?250:500">
+                <v-carousel-item v-for="(item,i) in photos" :key="i" :src="item" style="max-width: 550px;"></v-carousel-item>
             </v-carousel>
           </div>
-          <div class="d-flex flex-wrap">
-            <div style="max-width: 550px;">
-              <h3>詳細情報</h3>
+          <h3>詳細情報</h3>
+          <div class="d-flex flex-wrap" style="justify-content: space-around;">
+            <div class="my-4" style="max-width: 550px;width: 100%">
               <div>
                 <h4>住所</h4>
                 <span>{{spotInfo.address}}</span>
               </div>
               <div>
                 <h4>最寄り駅</h4>
-                <div v-for="(station, i) in nearestStations" :key="i">
+                <div class="pb-2" v-for="(station, i) in nearestStations" :key="i">
                   <div class="d-flex">
                     <div class="mr-2">
                       {{station.name}}
@@ -36,16 +36,17 @@
                       {{station.company.name}}
                     </div>
                   </div>
-                  <div class="d-flex flex-wrap">
-                    <div class="mr-2 my-1" style="padding: 0 8px;border-radius: 10px" :style="{backgroundColor: line.color}" v-for="(line, j) in station.lines" :key="j">
+                  <div class="d-flex flex-wrap pb-2">
+                    <div class="mr-2 my-1 chip" :style="{backgroundColor: line.color}" v-for="(line, j) in station.lines" :key="j" @click="toStation(line, station.name)">
                       {{line.name}}
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div style="max-width: 550px;width: 100%;">
-              <div v-for="(spot, i) in aroundSpotInfo" :key="i">
+            <div class="my-4" style="max-width: 550px;width: 100%;">
+              <h4>周辺施設</h4>
+              <div class="pb-1" v-for="(spot, i) in aroundSpotInfo" :key="i">
                 {{spot.Name}} : {{spot.Category}}
               </div>
             </div>
@@ -76,9 +77,9 @@
             </div>
           </div>
           <div>
-            <div v-if="twitterInfo.length !== 0">
-              <h2 class="text-center">Twitter</h2>
-              <div class="py-2" v-for="(twitter, i) in twitterInfo" :key="i">
+            <div class="py-2" v-if="twitterInfo.length !== 0">
+              <h2>Twitter</h2>
+              <div class="py-4" v-for="(twitter, i) in twitterInfo" :key="i">
                 <div class="px-1" style="display: flex">
                   <div>
                     <img class="avator" :src="twitter.profile_image_url" />
@@ -170,7 +171,7 @@ export default Vue.extend({
     aroundSpotInfo() {
       return this.$store.getters['info/aroundSpotInfo'].filter((spot: any) => {
         return spot.Category.indexOf('駅') == -1;
-      });
+      }).filter((spot: any, index: number) => index < 14);
     },
     // nextParams() {
     //   const spots = this.$store.getters['detail/prefectures']
@@ -184,7 +185,7 @@ export default Vue.extend({
     //   return this.$route.params;
     // }
     photos() {
-        if ((this as any).placesData) {
+        if ((this as any).placesData?.photos) {
             const photos = (this as any).placesData?.photos.map((photo: google.maps.places.PlacePhoto) => {
                 return photo.getUrl();
             })
@@ -194,7 +195,10 @@ export default Vue.extend({
     },
     twitterInfo() {
       return this.$store.getters['info/twitterInfo']
-    }
+    },
+    smp() {
+      return this.$store.getters.windowSize.x < 500;
+    },
   },
   created() {
     this.$store.dispatch('info/getTwitterInfo', (this as any).spotInfo)
@@ -218,6 +222,9 @@ export default Vue.extend({
       const expandedNeighbors = neighbors.map((neighbor: string[]) => gh.neighbors(neighbor));
       const uniqueExpandedNeighbors = Array.from(new Set(expandedNeighbors.flat()));
       return uniqueExpandedNeighbors;
+    },
+    toStation(line: Line, name: string) {
+      this.$router.push({name: 'station-name', params: {name: name}, query: {company_id: String(line.company_id), line_id: String(line.id)}})
     }
   }
 });
@@ -239,11 +246,14 @@ export default Vue.extend({
   }
 }
 .reviews-container {
-    padding: 10px;
+  padding: 10px;
+  background-color: #f7f7f7;
 }
 .places {
-    background-color: white;
-    color: black;
+  max-width: 1160px;
+  color: black;
+  display: flex;
+  justify-content: center;
 }
 /* レビュー */
 .reviews-top {
@@ -276,6 +286,18 @@ export default Vue.extend({
 .rating-container {
   margin-left: 10px;
   font-size: 15px;
+}
+.chip {
+  padding: 0 8px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all .5s;
+}
+.chip:hover {
+  opacity: .8
+}
+.chip:active {
+  opacity: .9
 }
 /* レート */
 .star5_rating {

@@ -10,27 +10,70 @@
         "
       >
         <simple-lists
-          :items="prefectures"
-          @item="prefecture = { ...prefecture, ...$event }"
-          v-if="!$route.query.prefecture_id"
-          >都道府県を選択してください</simple-lists
+          :items="$store.getters['station/boundsFilter'](uniqueStations)"
+          @item="selectStation($event)"
+          v-if="'name' in $route.params === false"
         >
-        <simple-lists
-          :items="selectedPrefecture.cities"
-          @item="city = { ...city, ...$event }"
-          v-if="$route.query.prefecture_id && !$route.query.city_code"
-        >
-          <div @click="getWiki(selectedPrefecture)">
-            {{ selectedPrefecture.name }}
+          <div>駅を選択</div>
+        </simple-lists>
+        <div v-else>
+          <router-link :to="{name: 'station'}" class="company-name" >駅</router-link>
+          <div
+            v-for="(company, i) in filteredCompanyLinesByparams"
+            :key="i"
+            style="position: relative"
+          >
+            <transition name="list">
+              <div>
+                <!-- <div v-if="isCheck(company.id, company.lines)"> -->
+                <label class="company-name" :for="company.name"
+                  ><input
+                    :id="company.name"
+                    type="checkbox"
+                    :value="company"
+                    style="display: none"
+                    @click="selectCompany(company)"
+                  />{{ company.name }}</label
+                >
+              </div>
+            </transition>
+            <div
+              v-for="(line, j) in company.lines"
+              :key="j"
+              style="position: relative"
+            >
+              <transition name="list">
+                <div
+                  v-if="
+                    $store.getters['station/boundsFilter'](line.stations)
+                      .length !== 0
+                  "
+                >
+                  <label
+                    class="line-name"
+                    :style="{ backgroundColor: line.color }"
+                    :for="line.name"
+                    @click="selectLine(company, line)"
+                  >
+                    {{ line.name }}
+                  </label>
+                </div>
+              </transition>
+              <transition-group name="list" tag="div">
+                <div
+                  class="station-list"
+                  style="width: 100%; color: black"
+                  v-for="(station, k) in $store.getters['station/boundsFilter'](
+                    line.stations
+                  )"
+                  :key="k"
+                >
+                  <div>{{ station.name }}</div>
+                </div>
+              </transition-group>
+            </div>
           </div>
-        </simple-lists>
-        <simple-lists
-          :items="selectedCity.spots"
-          @item="spot = { ...spot, ...$event }"
-          v-if="$route.query.prefecture_id && $route.query.city_code"
-        >
-          <div @click="getWiki(selectedCity)">{{ selectedCity.name }}</div>
-        </simple-lists>
+        </div>
       </div>
     </transition>
   </div>
@@ -38,6 +81,42 @@
 
 
 <script lang="ts">
+interface Polygon {
+  lat: number;
+  lng: number;
+}
+[];
+interface Company {
+  id: number;
+  name: string;
+  address: string;
+  founded: string;
+  lines: Line[];
+}
+interface Line {
+  id: number;
+  company_id: number;
+  name: string;
+  polygon: Polygon;
+  color: string;
+  stations: Station[];
+}
+interface Station {
+  name: string;
+  id: number;
+  line_id: number;
+  order: number;
+  prefecture: string;
+  lat: number;
+  lng: number;
+  company_id: number;
+  city_code: string;
+}
+interface Coordinate {
+  lat: number;
+  lng: number;
+}
+
 interface Prefecture {
   id: string;
   name: string;
@@ -78,18 +157,16 @@ interface DataType {
 }
 import Vue from "vue";
 const SimpleLists = () => import("../../global/SimpleLists.vue");
+const Lists = () => import("../../global/Lists.vue");
 const HalfModal = () => import("../../global/HalfModal.vue");
 const WikiInfo = () => import("../../global/WikiInfo.vue");
-const PlacesInfo = () => import("../../global/PlacesInfo.vue");
-const Twitter = () => import("../organisms/Twitter.vue");
 import { mapGetters } from "vuex";
 export default Vue.extend({
   components: {
     SimpleLists,
+    Lists,
     HalfModal,
     WikiInfo,
-    PlacesInfo,
-    Twitter,
   },
   data(): DataType {
     return {
@@ -103,60 +180,32 @@ export default Vue.extend({
     };
   },
   computed: {
-    ...mapGetters("station", [
-      "selectedPrefectureItems",
-      "selectedCityItems",
-      "prefectures",
-      "cities",
-      "spots",
-    ]),
-    ...mapGetters("switch", [
-      "markerSwitch",
-      "markerSwitches",
-      "leftListSwitch",
-    ]),
-    ...mapGetters("info", ["cityWikiInfo", "spotDetail"]),
-    selectPrefecture: {
-      get() {
-        return this.selectedPrefectureItems;
-      },
-      set(value) {
-        this.$store.dispatch("station/selectedPrefectureItems", value);
-      },
-    },
-    selectCity: {
-      get() {
-        return this.$store.getters["station/selectedCityItems"];
-      },
-      set(value) {
-        this.$store.dispatch("station/selectedCityItems", value);
-      },
-    },
-    selectedPrefecture() {
-      // const prefecture = this.prefectures.find((prefecture) => prefecture.id == this.$route.query.prefecture_id)
-      return this.prefectures.find(
-        (prefecture: Prefecture) =>
-          prefecture.id == this.$route.query.prefecture_id
+    ...mapGetters("station", ["uniqueStations", "filteredCompanyLines"]),
+    ...mapGetters("switch", ["leftListSwitch"]),
+    filteredCompanyLinesByparams() {
+      let filteredCompanyLines = JSON.parse(
+        JSON.stringify(this.filteredCompanyLines)
       );
+      if ("company_id" in this.$route.query) {
+        filteredCompanyLines = filteredCompanyLines.filter(
+          (company: Company) => {
+            return String(company.id) == this.$route.query.company_id;
+          }
+        );
+        if ("line_id" in this.$route.query) {
+          const lineIds = (this.$route.query.line_id as string).split(",");
+          filteredCompanyLines = filteredCompanyLines.map(
+            (company: Company) => {
+              company.lines = company.lines.filter((line) => {
+                return lineIds.includes(String(line.id));
+              });
+              return company;
+            }
+          );
+        }
+      }
+      return filteredCompanyLines;
     },
-    selectedCity() {
-      return this.cities.find(
-        (city: City) => city.city_code == this.$route.query.city_code
-      );
-    },
-  },
-  watch: {
-    prefecture(v) {
-      const query = { ...this.$route.query, ...{ prefecture_id: v.id } };
-      this.$router.push({ query: query });
-    },
-    city(v) {
-      const query = { ...this.$route.query, ...{ city_code: v.city_code } };
-      this.$router.push({ query: query });
-    },
-    spot(v) {
-      this.$router.push({name: 'detail-prefecture_id-city_code-id', params: {prefecture_id: v.prefecture_id, city_code: v.city_code, id: v.id}})
-    }
   },
   methods: {
     back() {
@@ -166,15 +215,51 @@ export default Vue.extend({
       delete query[queryArray.slice(-1)[0]];
       this.$router.push({ query: query });
     },
-    getWiki(obj: City | Prefecture) {
-      (this.$parent.$refs.modals as any).getWiki(obj);
+    makeStationArray(lines: Line[]) {
+      const stations: Coordinate[] = [];
+      lines.filter((line: { stations: Coordinate[] }) => {
+        const filterStations = this.$mapConfig.boundsFilter(line.stations);
+        filterStations.forEach((station: Coordinate) => {
+          stations.push(station);
+        });
+      });
+      return stations;
     },
-    // hideWiki() {
-    //     (this as any).wikiReady = false;
-    // },
-    // hidePlaces() {
-    //     (this as any).placesReady = false;
-    // }
+    selectCompany(company: Company) {
+      if('company_id' in this.$route.query) {
+        this.$router.push({
+          name: "station-name",
+          params: { name: this.$route.params.name },
+        });
+      } else {
+        this.$router.push({
+          name: "station-name",
+          params: { name: this.$route.params.name },
+          query: { company_id: String(company.id) },
+        });
+      }
+    },
+    selectLine(company: Company, line: Line) {
+      if('line_id' in this.$route.query) {
+        this.$router.push({
+          name: "station-name",
+          params: { name: this.$route.params.name },
+          query: { company_id: String(company.id) },
+        });
+      } else {
+        this.$router.push({
+          name: "station-name",
+          params: { name: this.$route.params.name },
+          query: { company_id: String(company.id), line_id: String(line.id) },
+        });
+      }
+    },
+    selectStation(station: Station) {
+      this.$router.push({
+        name: "station-name",
+        params: { name: station.name },
+      });
+    },
   },
 });
 </script>
@@ -253,5 +338,82 @@ export default Vue.extend({
     height: initial;
     max-height: calc(50vh - 55px);
   }
+}
+.middle-list {
+  overflow-y: scroll;
+  overflow-x: hidden;
+  height: 100vh;
+  max-height: calc(var(--vh, 1vh) * 100 - 213px);
+  transition: all 0.5s;
+  .company-name {
+    text-align: center;
+    border-radius: 5px;
+    color: white;
+    background-color: #363636;
+    width: 100%;
+    display: block;
+    padding: 10px;
+    transition: all 0.5s;
+    cursor: pointer;
+    text-decoration: none;
+  }
+  .company-name:hover {
+    opacity: 0.7;
+    transition: all 0.5s;
+  }
+  .company-name:active {
+    opacity: 0.9;
+    transition: all 0.5s;
+  }
+  .line-name {
+    text-align: center;
+    border-radius: 5px;
+    color: white;
+    width: 100%;
+    display: block;
+    padding: 10px;
+    transition: all 0.5s;
+    cursor: pointer;
+  }
+  .line-name:hover {
+    opacity: 0.7;
+    transition: all 0.5s;
+  }
+  .line-name:active {
+    opacity: 0.9;
+  }
+  .list-move {
+    transition: transform 1s;
+  }
+  .list-enter {
+    opacity: 0;
+    transform: translateX(256px);
+  }
+  .list-enter-active {
+    transition: all 1s;
+  }
+  .list-leave-active {
+    transition: all 1s;
+    position: absolute;
+  }
+  .list-leave-to /* .list-leave-active for below version 2.1.8 */ {
+    opacity: 0;
+    transform: translateX(256px);
+  }
+}
+.station-list {
+  padding: 10px;
+  background-color: white;
+  width: 100%;
+  transition: all 0.5s;
+  cursor: pointer;
+}
+.station-list:hover {
+  opacity: 0.7;
+  transition: all 0.5s;
+}
+.station-list:active {
+  opacity: 0.9;
+  transition: all 0.5s;
 }
 </style>
