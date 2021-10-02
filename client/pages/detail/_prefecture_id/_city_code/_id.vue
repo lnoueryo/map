@@ -4,16 +4,15 @@
       <v-container>
         <v-main v-if="spotInfo">
           <div>
-            <div>
+            <div v-if="!smp">
               <h2>{{ spotInfo.name }}</h2>
             </div>
-            <!-- <div>
-              <v-btn>戻る</v-btn>
-              <v-btn :to="{name: 'detail-prefecture_id-city_code-id', params: nextParams}">次</v-btn>
-            </div> -->
           </div>
           <div class="d-flex flex-wrap" style="justify-content: space-around;">
             <map-view class="my-4" :stations="nearestStations"></map-view>
+            <div v-if="smp">
+              <h2>{{ spotInfo.name }}</h2>
+            </div>
             <v-carousel class="my-4" hide-delimiters v-if="photos.length !== 0" style="max-width: 550px;" :height="smp?250:500">
                 <v-carousel-item v-for="(item,i) in photos" :key="i" :src="item" style="max-width: 550px;"></v-carousel-item>
             </v-carousel>
@@ -21,14 +20,14 @@
           <h3>詳細情報</h3>
           <div class="d-flex flex-wrap" style="justify-content: space-around;">
             <div class="my-4" style="max-width: 550px;width: 100%">
-              <div>
-                <h4>住所</h4>
+              <div class="mb-3">
+                <h4 class="mb-1">住所</h4>
                 <span>{{spotInfo.address}}</span>
               </div>
-              <div>
-                <h4>最寄り駅</h4>
-                <div class="pb-2" v-for="(station, i) in nearestStations" :key="i">
-                  <div class="d-flex">
+              <div class="mb-3">
+                <h4 class="mb-1">最寄り駅</h4>
+                <div class="pb-1" v-for="(station, i) in nearestStations" :key="i">
+                  <div class="d-flex mb-2">
                     <div class="mr-2">
                       {{station.name}}
                     </div>
@@ -36,8 +35,8 @@
                       {{station.company.name}}
                     </div>
                   </div>
-                  <div class="d-flex flex-wrap pb-2">
-                    <div class="mr-2 my-1 chip" :style="{backgroundColor: line.color}" v-for="(line, j) in station.lines" :key="j" @click="toStation(line, station.name)">
+                  <div class="d-flex flex-wrap pb-2 py-2" style="font-size: 14px">
+                    <div class="mr-2 mb-3 chip" :style="{backgroundColor: line.color}" v-for="(line, j) in station.lines" :key="j" @click="toStation(line, station.name)">
                       {{line.name}}
                     </div>
                   </div>
@@ -45,13 +44,20 @@
               </div>
             </div>
             <div class="my-4" style="max-width: 550px;width: 100%;">
-              <h4>周辺施設</h4>
-              <div class="pb-1" v-for="(spot, i) in aroundSpotInfo" :key="i">
-                {{spot.Name}} : {{spot.Category}}
+              <h4 class="mb-1">周辺施設</h4>
+              <div class="d-flex flex-wrap" style="font-size: 14px">
+                <div class="py-1 px-4 mr-4 mb-4" :style="{backgroundColor: spot.color, borderRadius: '5px'}" v-for="(spot, i) in aroundSpotInfo" :key="i">
+                  <div class="text-center">
+                    <v-icon>mdi-{{spot.icon}}</v-icon>
+                  </div>
+                  <div>
+                    {{spot.Name}}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-          <div class="places" v-if="placesData">
+          <div class="places my-4" v-if="placesData">
             <div class="reviews-container" v-if="placesData.reviews">
               <div class="reviews-top">
                 <div class="average-score">{{placesData.rating}}</div>
@@ -59,26 +65,29 @@
               </div>
               <div>
                 <div class="review" v-for="(review, i) in placesData.reviews" :key="i">
-                    <div class="d-flex">
+                  <div class="d-flex mb-4">
                     <img class="avatar" :src="review.profile_photo_url">
                     <div class="rating-container">
-                        <div>{{review.author_name}}</div>
-                        <div>
+                      <div>{{review.author_name}}</div>
+                      <div>
                         <span class="star5_rating" :data-rate="review.rating"></span>
                         <span>{{review.relative_time_description}}</span>
-                        </div>
+                      </div>
                     </div>
-                    </div>
-                    <div>
+                  </div>
+                  <div>
                     <p class="review-comment">{{review.text}}</p>
-                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
           <div>
-            <div class="py-2" v-if="twitterInfo.length !== 0">
-              <h2>Twitter</h2>
+            <div class="py-4" v-if="twitterInfo.length !== 0">
+              <div class="d-flex">
+                <v-icon class="mr-2" size="32" color="#1d9bf0">mdi-twitter</v-icon>
+                <h2>Twitter</h2>
+              </div>
               <div class="py-4" v-for="(twitter, i) in twitterInfo" :key="i">
                 <div class="px-1" style="display: flex">
                   <div>
@@ -86,7 +95,7 @@
                   </div>
                   <div class="px-1">
                     <div>{{ twitter.name }}</div>
-                    <div>{{ changeTime(twitter.created_at) }}</div>
+                    <div style="color: #536471">{{ changeTime(twitter.created_at) }}</div>
                     <div class="py-1" style="font-size: 14px">
                       <span v-html="twitter.text"></span>
                     </div>
@@ -134,7 +143,30 @@ export default Vue.extend({
   data() {
     return {
       dialog: false,
-      dialogPhoto: null
+      dialogPhoto: null,
+      excludedArray: ['駅', '地点名', 'トンネル', '観光地', '道路名', '滝', '海', '川', '道路'],
+      categoryArray: [
+        {category: ['ホテル', '民宿', '旅館'], color: '#0079b3', icon: 'bed'},
+        {category: ['レストラン', 'サイゼリヤ', 'マクドナルド', 'モスバーガー', 'フレッシュネスバーガー', '飲食', '松屋', 'すき家', 'CoCo壱番屋', '餃子の王将', '丸亀製麺', 'デニーズ', 'ロイヤルホスト', '吉野家'], color: '#00bae8', icon: 'silverware-fork-knife'},
+        {category: ['ローソン', 'ファミリーマート', 'セブン-イレブン', 'ヤマザキデイリーストアー', 'コンビニ'], color: '#89d2e5', icon: 'store-24-hour'},
+        {category: ['公園'], color: '#5ae7b3', icon: 'pine-tree'},
+        {category: ['校', '学'], color: '#89e5d0', icon: 'school'},
+        {category: ['図書館'], color: '#be69f3', icon: 'library'},
+        {category: ['役所'], color: '#be69f3', icon: 'warehouse'},
+        {category: ['信用金庫', '銀行'], color: '#be69f3', icon: 'bank'},
+        {category: ['郵便'], color: '#be69f3', icon: 'mailbox'},
+        {category: ['温泉'], color: '#0079b3', icon: 'bathtub'},
+        {category: ['神社'], color: '#0079b3', icon: 'crosshairs-gps'},
+        {category: ['書店'], color: '#00bae8', icon: 'book'},
+        {category: ['警察'], color: '#be69f3', icon: 'car-emergency'},
+        {category: ['消防'], color: '#be69f3', icon: 'fire-truck'},
+        {category: ['病院'], color: '#be69f3', icon: 'hospital-box'},
+        {category: ['エネオス', '出光', '昭和シェル石油', 'コスモ石油'], color: '#fd70b8', icon: 'gas-station'},
+        {category: ['保育', '幼稚園'], color: '#89e5d0', icon: 'baby-face'},
+      ],
+      nameArray: [
+        {category: ['公園'], color: '#5ae7b3', icon: 'pine-tree'},
+      ]
     }
   },
   components: {
@@ -168,22 +200,6 @@ export default Vue.extend({
         return station;
       })
     },
-    aroundSpotInfo() {
-      return this.$store.getters['info/aroundSpotInfo'].filter((spot: any) => {
-        return spot.Category.indexOf('駅') == -1;
-      }).filter((spot: any, index: number) => index < 14);
-    },
-    // nextParams() {
-    //   const spots = this.$store.getters['detail/prefectures']
-    //         .find((prefecture) => {
-    //             return this.$route.params.prefecture_id == prefecture.id;
-    //         })
-    //         .cities.find((city: City) => {
-    //             return this.$route.params.city_code == city.city_code;
-    //         }).spots;
-    //   console.log(spots)
-    //   return this.$route.params;
-    // }
     photos() {
         if ((this as any).placesData?.photos) {
             const photos = (this as any).placesData?.photos.map((photo: google.maps.places.PlacePhoto) => {
@@ -198,6 +214,13 @@ export default Vue.extend({
     },
     smp() {
       return this.$store.getters.windowSize.x < 500;
+    },
+    aroundSpotInfo() {
+      return this.$store.getters['info/aroundSpotInfo'].filter((spot: any) => {
+        return this.excludedArray.some((key) => spot.Category.includes(key)) === false;
+      }).filter((spot: any, index: number) => index < 14).map((spot) => {
+        return this.addInfo(spot);
+      });
     },
   },
   created() {
@@ -225,6 +248,21 @@ export default Vue.extend({
     },
     toStation(line: Line, name: string) {
       this.$router.push({name: 'station-name', params: {name: name}, query: {company_id: String(line.company_id), line_id: String(line.id)}})
+    },
+    addInfo(spot) {
+      const name = spot.Name;
+      const category = spot.Category;
+      let spotAddInfo = this.nameArray.find((nameInfo) => {
+        return nameInfo.category.some((key) => name.includes(key));
+      })
+      spotAddInfo = this.categoryArray.find((spotInfo) => {
+        return spotInfo.category.some((key) => category.includes(key));
+      }) ?? spotAddInfo
+      console.log(spotAddInfo)
+      if(spot.Name.indexOf('店') > -1) Object.assign(spot, {category: '', color: '#be69f3', icon: 'store'})
+      if('icon' in spot === false) Object.assign(spot, {category: '', color: '#be69f3', icon: 'square-medium'})
+      console.log(spot)
+      return spotAddInfo ? Object.assign(spot, spotAddInfo) : spot;
     }
   }
 });
@@ -247,11 +285,13 @@ export default Vue.extend({
 }
 .reviews-container {
   padding: 10px;
-  background-color: #f7f7f7;
+  // background-color: #f7f7f7;
+  width: 100%;
+  border-radius: 5px;
 }
 .places {
   max-width: 1160px;
-  color: black;
+  // color: black;
   display: flex;
   justify-content: center;
 }
