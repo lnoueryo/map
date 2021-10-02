@@ -61,7 +61,7 @@ const getters = {
         return Array.from(map.values());
     },
     filteredCompanyLines: (state: State, getters: any) => {
-        let companies;
+        let companies = [];
         if (getters.params?.name) {
             const selectedStations = getters.stationInfo.filter((station: Station) => station.name == getters.params?.name)
             const lineIds = selectedStations.map((station: Station) => {
@@ -84,13 +84,13 @@ const getters = {
         return companies
     },
     stationInfo: (state: State, getters: any) => {
-        return state.params ? getters.combineStationsWithLines
+        return getters.params ? getters.combineStationsWithLines
             .filter((station: Station) => {
                 return state.params?.name == station.name;
             }).map((station: any) => {
                 station['company'] = getters.companies.find((company: Company) => company.id == station.company_id)
                 return station
-            }) : null
+            }) : []
     },
     boundsFilteredStations: (state: State, getters: any) => {
         if (getters.stationInfo) {
@@ -131,6 +131,7 @@ const getters = {
     },
     filteredStation: (state: State, getters: any) => {
         let stations = JSON.parse(JSON.stringify(getters.stationInfo))
+        console.log(stations)
         if ('company_id' in state.query) {
             const companyIdsArray = (state.query.company_id as string).split(',')
             stations = stations.filter((station: Station) => {
@@ -162,7 +163,8 @@ const getters = {
     searchWord: (state: State): string => state.searchWord,
     currentBounds: (state: State) => state.currentBounds,
     showNumberOfMarkers: (state: State, getters: any): number => { //現在表示されているマーカーの数を返す
-        return getters.boundsFilteredStations.length;
+        console.log(getters.boundsFilter(getters.uniqueStations).length)
+        return getters.params?.name == 'station' ? getters.boundsFilter(getters.uniqueStations).length : getters.boundsFilteredStations.length;
     },
     boundsFilter: (state: State) => (points: Coordinate[]): Coordinate[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
         const filteredStations = points.filter((point) => {

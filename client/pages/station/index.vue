@@ -36,6 +36,9 @@ export default Vue.extend({
     smp() {
       return this.$store.getters.windowSize.x < 500;
     },
+  },
+  beforeCreate() {
+    this.$store.dispatch('station/params', this.$route)
   }
 });
 </script>
