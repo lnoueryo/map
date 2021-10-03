@@ -11,11 +11,11 @@
         <div ref="wiki" class="wiki" :style="{maxWidth: stationWikiInfo ? '330px' : '0', transition: stationWikiInfo ? 'all 1.5s' : 'all .5s'}" v-if="!smp">
           <div v-html="stationWikiInfo"></div>
         </div>
-        <half-modal :show="wikiReady" @hide="wikiReady = false" v-if="smp">
+        <!-- <half-modal :show="wikiReady" @hide="wikiReady = false" v-if="smp">
           <div ref="wiki" class="wiki">
             <div v-html="stationWikiInfo"></div>
           </div>
-        </half-modal>
+        </half-modal> -->
       </div>
     </div>
   </div>
@@ -78,31 +78,24 @@ export default Vue.extend({
       return this.$store.getters.windowSize.x < 500;
     },
   },
-  watch: {
-    stationWikiInfo: {
-      handler() {
-        this.$nextTick(() => {
-          const wiki = this.$refs.wiki as HTMLDivElement;
-          wiki.scrollTop = 0;
-          const table = wiki.getElementsByClassName(
-            "infobox bordered"
-          )[0] as HTMLTableElement;
-          if (table) {
-            (this as any).wikiReady = true;
-            table.style.width = "";
-            table.style.margin = "auto";
-          }
-        });
-      },
-    },
-  },
-  created() {
-    // this.$store.commit('info/stationInfo', null)
-    // console.log((this as any).stationInfo);
-    // this.copyStationInfo = JSON.parse(JSON.stringify((this as any).stationInfo));
-    // if('lines' in this.copyStationInfo && this.copyStationInfo['lines']) delete this.copyStationInfo['lines'];
-    // this.$store.dispatch('info/getTwitterInfo', this.copyStationInfo)
-  },
+  // watch: {
+  //   stationWikiInfo: {
+  //     handler() {
+  //       this.$nextTick(() => {
+  //         const wiki = this.$refs.wiki as HTMLDivElement;
+  //         if(wiki)　wiki.scrollTop = 0;
+  //         const table = wiki.getElementsByClassName(
+  //           "infobox bordered"
+  //         )[0] as HTMLTableElement;
+  //         if (table) {
+  //           (this as any).wikiReady = true;
+  //           table.style.width = "";
+  //           table.style.margin = "auto";
+  //         }
+  //       });
+  //     },
+  //   },
+  // },
   methods: {
     roundHalf(num: number) {
         return Math.round(num * 2) / 2;

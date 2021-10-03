@@ -213,7 +213,7 @@ export default Vue.extend({
   position: relative;
   width: 100%;
   height: 100vh;
-  max-height: calc(var(--vh, 1vh) * 100 - 65px);
+  max-height: calc(var(--vh, 1vh) * 100 - 56px);
   .line-chart {
     position: absolute;
     top: 40px;
@@ -246,6 +246,7 @@ export default Vue.extend({
     position: relative;
     // padding-top: 56.25%;
     transition: all 0.5s;
+    max-height: 100vh;
   }
   .show-line {
     opacity: 0.4;
@@ -273,10 +274,10 @@ export default Vue.extend({
       padding-top: 56.25%;
     }
   }
-  @media screen and (max-width: 500px) {
-    .map-container {
-      max-height: calc(var(--vh, 1vh) * 100 - 120px);
-    }
-  }
+  // @media screen and (max-width: 500px) {
+  //   .map-container {
+  //     max-height: calc(var(--vh, 1vh) * 100 - 120px);
+  //   }
+  // }
 }
 </style>

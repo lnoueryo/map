@@ -271,4 +271,9 @@ export default Vue.extend({
     }
   }
 }
+  @media screen and(max-width: 500px) {
+    .map-container {
+      max-height: calc(var(--vh, 1vh) * 100 - 56px);
+    }
+  }
 </style>
