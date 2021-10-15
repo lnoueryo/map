@@ -2,7 +2,7 @@
     <div>
         <v-navigation-drawer v-model="drawer" :mini-variant="miniVariant" :clipped="clipped" width="300" fixed app>
             <v-list class="drawer-top">
-                <v-list-item v-for="(item, i) in items" :key="i" :to="item.to" router exact>
+                <v-list-item v-for="(item, i) in items" :key="i" :to="item.to" router exact @click.stop="drawer = !drawer">
                 <v-list-item-action>
                     <v-icon>{{ item.icon }}</v-icon>
                 </v-list-item-action>
@@ -42,6 +42,11 @@ export default Vue.extend({
                     icon: 'mdi-apps',
                     title: 'Home',
                     to: '/',
+                },
+                {
+                    icon: 'mdi-apps',
+                    title: 'Spot',
+                    to: '/spot',
                 },
                 {
                     icon: 'mdi-apps',

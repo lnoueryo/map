@@ -11,16 +11,16 @@ def execute():
         if os.getcwd() == 'D:\project\map\gmap\client':
             os.chdir('../')
 
-        process = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', '-m', 'pip', 'freeze', '>', 'requirements.txt'], stdin=PIPE, stdout=PIPE, shell=True)
-        process = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', 'manage.py', 'collectstatic'], stdin=PIPE, stdout=PIPE, shell=True)
-        print(process)
-        process.wait()
-        process.kill()
+        # process = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', '-m', 'pip', 'freeze', '>', 'requirements.txt'], stdin=PIPE, stdout=PIPE, shell=True)
+        # process = Popen(['echo' , 'yes', '&', 'echo', 'yes' '|', 'python3', 'manage.py', 'collectstatic'], stdin=PIPE, stdout=PIPE, shell=True)
+        # print(process)
+        # process.wait()
+        # process.kill()
 
-        process = Popen(settings.GCLOUD_BUILD, stdin=PIPE, stdout=PIPE, shell=True)
-        print(process)
-        time.sleep(300)
-        process.kill()
+        # process = Popen(settings.GCLOUD_BUILD, stdin=PIPE, stdout=PIPE, shell=True)
+        # print(process)
+        # time.sleep(300)
+        # process.kill()
 
         process = Popen(settings.GCLOUD_DEPLOY, stdin=PIPE, stdout=PIPE, shell=True)
         process.wait()

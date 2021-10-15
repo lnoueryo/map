@@ -45,8 +45,10 @@ session.mount('http://', HTTPAdapter(max_retries=retries))
 # logger = logging.getLogger('server.cron')
 
 def execute():
-    station()
-
+    # station()
+    payload = {'input': '東京駅', 'inputtype': 'textquery', 'fields': 'place_id', 'key': settings.GOOGLE['GOOGLE_MAPS']['API_KEY']}
+    response = requests.get(f'https://maps.googleapis.com/maps/api/place/findplacefromtext/json', params=payload)
+    print(response.json())
 def station():
     try:
         df = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/stations.csv'), index_col=0)
@@ -64,8 +66,10 @@ def station():
             if one_year_later < now:
                 search_word = df.at[i, 'name']
                 df = get_place_id(df, i, search_word)
+            search_word = df.at[i, 'name']
+            df = get_place_id(df, i, search_word)
         df.to_csv(os.path.join(settings.BASE_DIR / f'data/csv/stations.csv'))
-    except Exception:
+    except Exception as e:
         logger.log(logging.ERROR, traceback.format_exc())
         print(traceback.format_exc())
 
@@ -92,6 +96,7 @@ def get_place_id(df, i, search_word):
         now = datetime.now(timezone('Asia/Tokyo'))
         df.at[i, 'place_date'] = now.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
         return df
+
 def create_json():
     with open(os.path.join(settings.BASE_DIR / f'data/json/stations.json'), mode='r', encoding='utf-8') as f:
         stations = json.loads(f.read())

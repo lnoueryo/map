@@ -79,6 +79,7 @@ export default Vue.extend({
         (this as any).makePolylines();
         this.$mapConfig.resetMarkers((this as any).markers);
         this.$mapConfig.resetMarkers([(this as any).otherStaionsMarkers]);
+        console.log(this.filteredStation)
         if (this.filteredStation) (this as any).makeOtherStaionsMarkers(v.query, v.params)
       },
       immediate: true,
@@ -120,7 +121,7 @@ export default Vue.extend({
       this.$mapConfig.placesService();
       (this as any).makeMarkers();
       (this as any).makePolylines();
-      this.$store.dispatch("info/getStationInfo", (this as any).station);
+      // this.$store.dispatch("info/getStationInfo", (this as any).station);
     },
     async makeMarkers() {
       (this as any).markers = await this.$mapConfig.makeMarkers(
@@ -145,11 +146,11 @@ export default Vue.extend({
       })
       if (stations.length !== 0) {
         const otherStations = [].concat(...(stations as any));
-        let map = new Map(otherStations.map((otherStation: Station) => [otherStation.id, otherStation]));
+        let map = new Map(otherStations.map((otherStation: Station) => [otherStation?.id, otherStation]));
         const uniqueOtherStations = Array.from(map.values());
         (this as any).otherStaionsMarkers = uniqueOtherStations.map((station: Station) => {
-          if(params.name !== station.name) {
-            const marker = this.$mapConfig.makeMarkerWithLabel(station, '', station.name);
+          if(params.name !== station?.name) {
+            const marker = this.$mapConfig.makeMarkerWithLabel(station, '', station?.name);
             marker.addListener("click", (e: google.maps.MapMouseEvent) => {
               this.$router.push({name: 'station-name', params: {name: station.name}})
             })
@@ -189,12 +190,39 @@ export default Vue.extend({
       // this.polylines = await this.$mapConfig.makePolyline();
     },
     onClickMarker(marker: google.maps.Marker, station: Station) {
-      marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-        if ('company_id' in this.$route.query) {
-          this.$router.push({
-            name: 'station-name',
-            params: { name: station.name },
+      var latlng = new google.maps.LatLng(station.lat,station.lng);
+      var infowindow = new google.maps.InfoWindow({
+        content: ' ',
+        position: latlng
+      });
+      infowindow.setContent(
+                  `<div>
+                  <h4 style="color: black">${station.company.name}</h4>
+                  <h2 style="color: black">${station.name}</h2>
+                    <a id="line" style="position: relative;display: inline-block;font-weight: bold;padding: 0.25em 0.5em;text-decoration: none;color: #00BCD4;background-color: #ECECEC;transition: .4s;"><i class="fa fa-caret-right"></i> 全路線表示</a>
+                    <a id="station-detail" style="position: relative;display: inline-block;font-weight: bold;padding: 0.25em 0.5em;text-decoration: none;color: #00BCD4;background-color: #ECECEC;transition: .4s;">詳細</a>
+                  </div>`);
+      infowindow.addListener('domready', () => {
+          document.getElementById('line')?.addEventListener('click', () => {
+            this.$router.push({
+              name: 'station-name',
+              params: { name: station.name },
+            });
           });
+          document.getElementById('station-detail')?.addEventListener('click', () => {
+            this.$router.push({
+              name: 'station-name-detail-company_id',
+              params: { name: station.name, company_id: String(this.$route.query.company_id) },
+            });
+          });
+      });
+      marker.addListener("click", (e: google.maps.MapMouseEvent) => {
+      google.maps.event.addListenerOnce(this.$mapConfig.map, "click", (e: google.maps.MapMouseEvent) => {
+        infowindow.close()
+      });
+        if ('company_id' in this.$route.query) {
+          infowindow.close()
+          infowindow.open(this.$mapConfig.map, marker);
         } else {
           this.$router.push({
             name: 'station-name',
@@ -206,6 +234,7 @@ export default Vue.extend({
     },
   },
 });
+
 </script>
 
 <style lang="scss" scoped>
@@ -280,4 +309,5 @@ export default Vue.extend({
   //   }
   // }
 }
+
 </style>

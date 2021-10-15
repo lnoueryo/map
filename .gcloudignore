@@ -19,7 +19,6 @@ gmap/settings/local.py
 map/__pycache__
 map/migrations/__pycache__
 map/api/__pycache__
-data/*
 log/*
 old_client/*
 terraform/*

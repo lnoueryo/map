@@ -6,7 +6,8 @@ from map.api.views.yahoo import (
 )
 from map.api.views.views import (
     TwitterAPI,
-    EventAPI
+    EventAPI,
+    HouseModel
 )
 # from map.api.views import (
 #     WikiAPI,
@@ -20,4 +21,5 @@ urlpatterns = [
     path('event/', EventAPI.as_view(), name="event"),
     path('search-by-reverse-geocode/', ReverseGeocodeAPI.as_view(), name="reverse-geocode"),
     path('search-by-place-info/', PlaceInfoAPI.as_view(), name="place-info"),
+    path('house-model/', HouseModel.as_view(), name="house-model"),
 ]

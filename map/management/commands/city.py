@@ -24,6 +24,7 @@ def execute(file):
     if file == 'json':
         create()
         new_city()
+        address()
     elif file == 'csv':
         create_json()
         new_city_json()
@@ -87,6 +88,12 @@ def change_spots():
     json_file_path = os.path.join(settings.BASE_DIR / f'data/json/spots.json')
     with open(json_file_path, mode='w+', encoding='utf-8') as f:
             json.dump(spots, f, ensure_ascii=False, indent=2)
+
+def address():
+    df_addresses = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/addresses.csv'))
+    addresses_dict_list = id_to_str(df_addresses.to_dict(orient='records'))
+    with open(os.path.join(settings.BASE_DIR / f'data/json/addresses.json'), mode='w+', encoding='utf-8') as f:
+        json.dump(addresses_dict_list, f, ensure_ascii=False, indent=2)
 
 def create_json():
     """

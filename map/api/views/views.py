@@ -12,13 +12,45 @@ from bs4.element import Comment
 from rest_framework.views import APIView
 import tweepy
 import pytz
+from gmap.house_model import HouseModel
 
 from django.conf import settings
 
+class HouseModel(APIView):
+
+    def get(self, request):
+        '''
+        house_info_dict = {
+            'prefecture_id': 13,
+            'city_code': 102,
+            'layout': '1K',
+            'area': 10.16,
+            'age': 24,
+            'distance': 5,
+            'station': '東京駅',
+            'direction': '南東',
+            'options': {
+                'bicycle': 1,
+                'bike': 0,
+                'washlet': 1,
+                'dryer': 1,
+                'floor_heating': 0,
+                'washroom': 0,
+                'loft': 0,
+                'furniture': 0,
+                'appliance': 0,
+                'autolock': 0,
+            }
+        }
+        '''
+        print(request.GET.dict())
+        # house_info_dict = request.GET
+        # hm = HouseModel(house_info_dict)
+        # result = hm.analysis()
+        return 'result'
 class ReverseGeocodeAPI(APIView):
 
     def post(self, request):
-        print()
         endpoint = 'https://map.yahooapis.jp/geoapi/V1/reverseGeoCoder?output=json&appid=' + settings.YAHOO['API_KEY'] + '&'
         dict = json.loads(request.body)
         lat = 'lat=' + str(dict['lat'])

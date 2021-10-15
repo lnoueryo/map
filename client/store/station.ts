@@ -93,6 +93,7 @@ const getters = {
             }) : []
     },
     boundsFilteredStations: (state: State, getters: any) => {
+        console.log(getters.stationInfo)
         if (getters.stationInfo) {
             const lines = [].concat(...getters.stationInfo.map((station: Station) => station.lines));
             const filteredStations = [].concat(...lines.map((line: any) => line.stations));
@@ -100,11 +101,11 @@ const getters = {
                 if('line_id' in state.query) {
                     return String(station.line_id) == state.query.line_id;
                 } else if('company_id' in state.query) {
-                    return String(station.company_id) == (state.query as Query).company_id;
+                    return String(station?.company_id) == (state.query as Query).company_id;
                 }
                 return true;
             })
-            const map = new Map(stations.map((station: Station) => [station.name, station]));
+            const map = new Map(stations.map((station: Station) => [station?.name, station]));
             return getters.boundsFilter(Array.from(map.values()))
         }
         return []
@@ -131,7 +132,6 @@ const getters = {
     },
     filteredStation: (state: State, getters: any) => {
         let stations = JSON.parse(JSON.stringify(getters.stationInfo))
-        console.log(stations)
         if ('company_id' in state.query) {
             const companyIdsArray = (state.query.company_id as string).split(',')
             stations = stations.filter((station: Station) => {

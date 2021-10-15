@@ -1,16 +1,33 @@
 <template>
-  <div id="wrapper">
-    <div id="container" :class="{ open: open }">
-      <div class="main-view">
-        <div>
-          <left-list></left-list>
-        </div>
-        <div class="map-container">
-          <map-view></map-view>
-        </div>
+  <v-main>
+    <v-container>
+      <div class="d-flex">
+        <v-card
+          class="mx-auto my-12"
+          max-width="374"
+          v-for="(cardItem, i) in cardItems"
+          :key="i"
+          :to="cardItem.page"
+        >
+
+          <v-img
+            height="250"
+            src="https://cdn.vuetifyjs.com/images/cards/cooking.png"
+          ></v-img>
+
+          <v-card-title>{{cardItem.title}}</v-card-title>
+
+          <v-card-text>
+
+            <div class="text-subtitle-1">
+              {{cardItem.description}}
+            </div>
+
+          </v-card-text>
+        </v-card>
       </div>
-    </div>
-  </div>
+    </v-container>
+  </v-main>
 </template>
 
 <script lang="ts">
@@ -20,6 +37,7 @@ const MapView = () => import("../components/index/templates/Map.vue");
 interface DataType {
   open: boolean;
   lefList: boolean;
+  cardItems: {title: string, description: string, page: {name: string}}[]
 }
 export default Vue.extend({
   components: {
@@ -30,6 +48,10 @@ export default Vue.extend({
     return {
       open: false,
       lefList: false,
+      cardItems: [
+        {title: '観光地検索', description: '気になるロケーションの観光地を探そう', page: {name: 'spot'}},
+        {title: '駅検索', description: '駅とその周辺情報を調べよう', page: {name: 'station'}},
+      ]
     };
   },
   computed: {
