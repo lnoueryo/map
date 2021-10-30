@@ -36,27 +36,9 @@ export default Vue.extend({
     MapView,
     LeftList,
   },
-  beforeCreate() {
-    this.$store.dispatch('station/params', this.$route.params);
-  },
   computed: {
     stationInfo() {
-      return this.$store.getters['station/stationInfo'];
-    },
-    nearestStations() {
-      const nearestStations = this.$store.getters['station/combineStationsWithLines'].filter((station: Station) => {
-        return station.geohash.includes((this as any).stationInfo.geohash.slice(0, -1));
-      });
-      return nearestStations.map((station: Station) => {
-        const company = this.$store.getters['station/companies'].find((company: Company) => {
-          return company.id == station.company_id;
-        })
-        station['company'] = company;
-        return station;
-      })
-    },
-    aroundStationInfo() {
-      return this.$store.getters['info/aroundStationInfo'];
+      return this.$store.getters['station/particularStations'];
     },
     smp() {
       return this.$store.getters.windowSize.x < 500;

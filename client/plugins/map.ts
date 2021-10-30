@@ -96,8 +96,8 @@ export class MapConfig {
         return marker
     }
     makeMarkerWithLabel(obj: { lat: number, lng: number }, icon: string = '', text: string = '') {
-        // const MarkerWithLabel = require('MarkerWithLabel')(google.maps);
         const labelWidth = -12 - 4.5 * text.length
+
         const marker = new MarkerWithLabel({
             map: this.map,
             position: new google.maps.LatLng(obj.lat, obj.lng),
@@ -110,24 +110,18 @@ export class MapConfig {
         }) as any;
         return marker
     }
-    makeMarkers(json: {}[], key: string, func: any) {
-        const zoom = this.map.getZoom();
+    makeMarkers(json: [], key: string, func: any) {
         let icon = ''
         const isIcon = this.markerIcons[key] || null;
         if (isIcon) {
             // icon = (zoom > 9) ? this.markerIcons[key].big : this.markerIcons[key].small;
             icon = this.markerIcons[key].big;
         }
-        const markers: google.maps.Marker[][] = [];
-        json.forEach((obj: { [key: string]: [] }) => {
-            const lineMarkerArray: google.maps.Marker[] = [];
-            obj[key].forEach((value: { lat: number, lng: number, name: string }) => {
-                let marker = this.makeMarkerWithLabel(value, icon, value.name);
-                func(marker, value)
-                lineMarkerArray.push(marker);
-            });
-            markers.push(lineMarkerArray)
-        });
+        const markers = json.map((obj: {lat: number, lng: number, name: string}) => {
+            let marker = this.makeMarker(obj, icon, obj.name);
+            func(marker, obj)
+            return marker
+        })
         return markers;
     }
     makePolyline(path: { color: string, polygon: google.maps.LatLng[] }) {
@@ -159,14 +153,12 @@ export class MapConfig {
             polyline.setMap(null);
         });
     }
-    async resetMarkers(payload: google.maps.Marker[][]) {
-        payload.forEach((markers) => {
-            markers.forEach((marker) => {
-                if (marker) marker.setMap(null);
-            })
+    async resetMarkers(payload: google.maps.Marker[]) {
+        payload.forEach((marker) => {
+            marker.setMap(null)
         })
     }
-    resetAllMarkers(payload: { [key: string]: google.maps.Marker[][] }) {
+    resetAllMarkers(payload: google.maps.Marker[][]) {
         const allMarkers = (Object.values(payload))
         allMarkers.forEach((markers) => {
             this.resetMarkers(markers)

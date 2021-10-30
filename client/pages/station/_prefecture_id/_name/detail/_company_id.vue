@@ -1,124 +1,124 @@
 <template>
   <div>
-      <v-container>
-        <v-main v-if="spot">
-          <div>
-            <div v-if="!smp">
-              <h2>{{ spot.name }}</h2>
-            </div>
+    <v-container>
+      <v-main v-if="mainStation">
+        <div>
+          <div v-if="!smp">
+            <h2>{{ mainStation.name }}</h2>
           </div>
-          <div class="d-flex flex-wrap" style="justify-content: space-around;">
-            <map-view class="my-4" :stations="nearestStations"></map-view>
-            <div v-if="smp">
-              <h2>{{ spot.name }}</h2>
-            </div>
-            <v-carousel class="my-4" hide-delimiters v-if="photos.length !== 0" style="max-width: 550px;" :height="smp?250:500">
-                <v-carousel-item v-for="(item,i) in photos" :key="i" :src="item" style="max-width: 550px;" @click="dialogPhoto=item;dialog=true;"></v-carousel-item>
-            </v-carousel>
+        </div>
+        <div class="d-flex flex-wrap" style="justify-content: space-around;">
+          <map-view class="my-4" :stations="nearestStations" v-if="nearestStations"></map-view>
+          <div v-if="smp">
+            <h2>{{ mainStation.name }}</h2>
           </div>
-          <h3>詳細情報</h3>
-          <div class="d-flex flex-wrap justify-space-around">
-            <div class="my-4" style="max-width: 550px;width: 100%">
-              <div class="mb-3">
-                <h4 class="mb-1">住所</h4>
-                <span>{{spot.address}}</span>
+          <v-carousel class="my-4" hide-delimiters v-if="photos.length !== 0" style="max-width: 550px;" :height="smp?250:500">
+              <v-carousel-item v-for="(item,i) in photos" :key="i" :src="item" style="max-width: 550px;" @click="dialogPhoto=item;dialog=true;"></v-carousel-item>
+          </v-carousel>
+        </div>
+        <h3>詳細情報</h3>
+        <div class="d-flex flex-wrap justify-space-around">
+          <div class="my-4" style="max-width: 550px;width: 100%">
+            <div class="mb-3">
+              <h4 class="mb-1">住所</h4>
+              <span>{{mainStation.address}}</span>
+            </div>
+            <div class="mb-3" v-if="nearestStations.length !== 0">
+              <h4 class="mb-1">最寄り駅</h4>
+              <div class="pb-1" v-for="(station, i) in nearestStations" :key="i">
+                <div class="d-flex mb-2">
+                  <div class="mr-2">
+                    {{station.name}}
+                  </div>
+                  <div>
+                    {{station.company.name}}
+                  </div>
+                </div>
+                <div class="d-flex flex-wrap pb-2 py-2" style="font-size: 14px">
+                  <div class="mr-2 mb-3 chip" :style="{backgroundColor: line.color}" v-for="(line, j) in station.lines" :key="j" @click="toStation(line, station.name)">
+                    {{line.name}}
+                  </div>
+                </div>
               </div>
-              <div class="mb-3">
-                <h4 class="mb-1">最寄り駅</h4>
-                <div class="pb-1" v-for="(station, i) in nearestStations" :key="i">
-                  <div class="d-flex mb-2">
-                    <div class="mr-2">
-                      {{station.name}}
-                    </div>
+            </div>
+          </div>
+          <div class="my-4" style="max-width: 550px;width: 100%;">
+            <h4 class="mb-1">周辺施設</h4>
+            <div class="d-flex flex-wrap" style="font-size: 14px">
+              <div class="py-1 px-4 mr-4 mb-4" :style="{backgroundColor: spot.color, borderRadius: '5px'}" v-for="(spot, i) in aroundSpotInfo" :key="i">
+                <div class="text-center">
+                  <v-icon>mdi-{{spot.icon}}</v-icon>
+                </div>
+                <div>
+                  {{spot.Name}}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="places my-4" v-if="placesData">
+          <div class="reviews-container" v-if="placesData.reviews">
+            <div class="reviews-top">
+              <div class="average-score">{{placesData.rating}}</div>
+              <span class="star5_rating" :data-rate="roundHalf(placesData.rating)"></span>
+            </div>
+            <div>
+              <div class="review" v-for="(review, i) in placesData.reviews" :key="i">
+                <div class="d-flex mb-4">
+                  <img class="avatar" :src="review.profile_photo_url">
+                  <div class="rating-container">
+                    <div>{{review.author_name}}</div>
                     <div>
-                      {{station.company.name}}
-                    </div>
-                  </div>
-                  <div class="d-flex flex-wrap pb-2 py-2" style="font-size: 14px">
-                    <div class="mr-2 mb-3 chip" :style="{backgroundColor: line.color}" v-for="(line, j) in station.lines" :key="j" @click="toStation(line, station.name)">
-                      {{line.name}}
+                      <span class="star5_rating" :data-rate="review.rating"></span>
+                      <span>{{review.relative_time_description}}</span>
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
-            <div class="my-4" style="max-width: 550px;width: 100%;">
-              <h4 class="mb-1">周辺施設</h4>
-              <div class="d-flex flex-wrap" style="font-size: 14px">
-                <div class="py-1 px-4 mr-4 mb-4" :style="{backgroundColor: spot.color, borderRadius: '5px'}" v-for="(spot, i) in aroundSpot" :key="i">
-                  <div class="text-center">
-                    <v-icon>mdi-{{spot.icon}}</v-icon>
-                  </div>
-                  <div>
-                    {{spot.Name}}
-                  </div>
+                <div>
+                  <p class="review-comment">{{review.text}}</p>
                 </div>
               </div>
             </div>
           </div>
-          <div class="places my-4" v-if="placesData">
-            <div class="reviews-container" v-if="placesData.reviews">
-              <div class="reviews-top">
-                <div class="average-score">{{placesData.rating}}</div>
-                <span class="star5_rating" :data-rate="roundHalf(placesData.rating)"></span>
-              </div>
-              <div>
-                <div class="review" v-for="(review, i) in placesData.reviews" :key="i">
-                  <div class="d-flex mb-4">
-                    <img class="avatar" :src="review.profile_photo_url">
-                    <div class="rating-container">
-                      <div>{{review.author_name}}</div>
-                      <div>
-                        <span class="star5_rating" :data-rate="review.rating"></span>
-                        <span>{{review.relative_time_description}}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div>
-                    <p class="review-comment">{{review.text}}</p>
+        </div>
+        <div>
+          <div class="py-4" v-if="twitterInfo.length !== 0">
+            <div class="d-flex">
+              <v-icon class="mr-2" size="32" color="#1d9bf0">mdi-twitter</v-icon>
+              <h2>Twitter</h2>
+            </div>
+            <div class="py-4" v-for="(twitter, i) in twitterInfo" :key="i">
+              <div class="px-1" style="display: flex">
+                <div>
+                  <img class="avator" :src="twitter.profile_image_url" />
+                </div>
+                <div class="px-1">
+                  <div>{{ twitter.name }}</div>
+                  <div style="color: #536471">{{ changeTime(twitter.created_at) }}</div>
+                  <div class="py-1" style="font-size: 14px">
+                    <span v-html="twitter.text"></span>
                   </div>
                 </div>
+              </div>
+              <div v-if="twitter.images.length !== 0">
+                <v-carousel
+                  hide-delimiters
+                  :show-arrows="twitter.images.length !== 1"
+                  height="250px"
+                >
+                  <v-carousel-item
+                    v-for="(image, j) in twitter.images"
+                    :key="j"
+                    :src="image"
+                    @click="dialogPhoto=image;dialog=true;"
+                  ></v-carousel-item>
+                </v-carousel>
               </div>
             </div>
           </div>
-          <div>
-            <div class="py-4" v-if="twitterInfo.length !== 0">
-              <div class="d-flex">
-                <v-icon class="mr-2" size="32" color="#1d9bf0">mdi-twitter</v-icon>
-                <h2>Twitter</h2>
-              </div>
-              <div class="py-4" v-for="(twitter, i) in twitterInfo" :key="i">
-                <div class="px-1" style="display: flex">
-                  <div>
-                    <img class="avator" :src="twitter.profile_image_url" />
-                  </div>
-                  <div class="px-1">
-                    <div>{{ twitter.name }}</div>
-                    <div style="color: #536471">{{ changeTime(twitter.created_at) }}</div>
-                    <div class="py-1" style="font-size: 14px">
-                      <span v-html="twitter.text"></span>
-                    </div>
-                  </div>
-                </div>
-                <div v-if="twitter.images.length !== 0">
-                  <v-carousel
-                    hide-delimiters
-                    :show-arrows="twitter.images.length !== 1"
-                    height="250px"
-                  >
-                    <v-carousel-item
-                      v-for="(image, j) in twitter.images"
-                      :key="j"
-                      :src="image"
-                      @click="dialogPhoto=image;dialog=true;"
-                    ></v-carousel-item>
-                  </v-carousel>
-                </div>
-              </div>
-            </div>
-          </div>
-        </v-main>
-      </v-container>
+        </div>
+      </v-main>
+    </v-container>
     <v-dialog
       v-model="dialog"
       width="800"
@@ -129,14 +129,19 @@
 </template>
 
 <script lang="ts">
-import Vue from "vue";
-const MapView = () => import("~/components/spot/templates/SpotMap.vue");
+import Vue from 'vue'
+const gh = require('ngeohash');
+const MapView = () => import("~/components/station/templates/DetailMap.vue");
+interface AroundSpotInfo { "Name": string, "Uid": string, "Category": string, "Label": string, "Combined": string}
 interface Station { name: string, id: number, line_id: number, order: number, prefecture: string, lat: number, lng: number, company_id: number, city_code: string, geohash: string, company: Company }
 interface Company { id: number, name: string, address: string, founded: string, lines: Line[] };
 interface Line { id: number, company_id: number, name: string, polygon: Polygon, color: string, stations: Station[] };
 interface Polygon { lat: number, lng: number }[];
 interface Spot {Name: string, Category: string}
 export default Vue.extend({
+  components: {
+    MapView
+  },
   data() {
     return {
       dialog: false,
@@ -166,18 +171,27 @@ export default Vue.extend({
       ]
     }
   },
-  components: {
-    MapView,
-  },
   computed: {
-    spot() {
-      return this.$store.getters['spot/spot'];
+    mainStation() {
+      return this.$store.getters['station/particularStations'].find((station: Station) => {
+        return String(station.company_id) == this.$route.params.company_id;
+      })
     },
     placesData() {
       return this.$store.getters['info/spotDetail'];
     },
     nearestStations() {
-      return (this as any).spot?.stations || [];
+      const expandNeighborArea = this.expandNeighborArea((this as any).mainStation.geohash)
+      let nearestStations = this.$store.getters['station/particularStations'].filter((station: Station) => {
+        return expandNeighborArea.includes(station.geohash);
+      });
+      if (nearestStations.length == 0) {
+        nearestStations = this.$store.getters['station/particularStations'].filter((station: Station) => {
+          return gh.neighbors((this as any).spotInfo.geohash.slice(0, -1)).includes(station.geohash.slice(0, -1));
+        });
+      }
+      console.log(nearestStations)
+      return nearestStations;
     },
     photos() {
         if ((this as any).placesData?.photos) {
@@ -194,7 +208,7 @@ export default Vue.extend({
     smp() {
       return this.$store.getters.windowSize.x < 500;
     },
-    aroundSpot() {
+    aroundSpotInfo() {
       return this.$store.getters['info/aroundSpot'].filter((spot: any) => {
         return this.excludedArray.some((key) => spot.Category.includes(key)) === false;
       }).filter((spot: any, index: number) => index < 14).map((spot: Spot) => {
@@ -203,8 +217,8 @@ export default Vue.extend({
     },
   },
   created() {
-    this.$store.dispatch('spot/getSpot', this.$route.params);
-    this.$store.dispatch('spot/params', this.$route.params);
+    this.$store.dispatch('station/params', this.$route.params);
+    this.$store.dispatch('station/getParticularStations', this.$route.params);
   },
   methods: {
     roundHalf(num: number) {
@@ -220,6 +234,12 @@ export default Vue.extend({
       const changedDate = `${year}-${month}-${day} ${hours}:${minutes}`;
       return changedDate;
     },
+    expandNeighborArea(geohash: string) {
+      const neighbors = gh.neighbors(geohash)
+      const expandedNeighbors = neighbors.map((neighbor: string[]) => gh.neighbors(neighbor));
+      const uniqueExpandedNeighbors = Array.from(new Set(expandedNeighbors.flat()));
+      return uniqueExpandedNeighbors;
+    },
     toStation(line: Line, name: string) {
       this.$router.push({name: 'station-name', params: {name: name}, query: {company_id: String(line.company_id), line_id: String(line.id)}})
     },
@@ -229,19 +249,17 @@ export default Vue.extend({
       let spotAddInfo = this.nameArray.find((nameInfo) => {
         return nameInfo.category.some((key) => name.includes(key));
       })
-      spotAddInfo = this.categoryArray.find((spot) => {
-        return spot.category.some((key) => category.includes(key));
+      spotAddInfo = this.categoryArray.find((spotInfo) => {
+        return spotInfo.category.some((key) => category.includes(key));
       }) ?? spotAddInfo
-      console.log(spotAddInfo)
       if(spot.Name.indexOf('店') > -1) Object.assign(spot, {category: '', color: '#be69f3', icon: 'store'})
       if('icon' in spot === false) Object.assign(spot, {category: '', color: '#be69f3', icon: 'square-medium'})
       console.log(spot)
       return spotAddInfo ? Object.assign(spot, spotAddInfo) : spot;
     }
   }
-});
+})
 </script>
-
 <style lang="scss" scoped>
 .map-container {
   position: relative;

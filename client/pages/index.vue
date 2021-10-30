@@ -1,7 +1,7 @@
 <template>
   <v-main>
     <v-container>
-      <div class="d-flex">
+      <div class="d-flex flex-wrap">
         <v-card
           class="mx-auto my-12"
           max-width="374"
@@ -32,18 +32,12 @@
 
 <script lang="ts">
 import Vue from "vue";
-const LeftList = () => import("../components/index/templates/LeftList.vue");
-const MapView = () => import("../components/index/templates/Map.vue");
 interface DataType {
   open: boolean;
   lefList: boolean;
   cardItems: {title: string, description: string, page: {name: string}}[]
 }
 export default Vue.extend({
-  components: {
-    LeftList,
-    MapView,
-  },
   data(): DataType {
     return {
       open: false,
@@ -51,6 +45,7 @@ export default Vue.extend({
       cardItems: [
         {title: '観光地検索', description: '気になるロケーションの観光地を探そう', page: {name: 'spot'}},
         {title: '駅検索', description: '駅とその周辺情報を調べよう', page: {name: 'station'}},
+        {title: '都道府県情報', description: '都道府県情報を調べよう', page: {name: 'prefecture'}},
       ]
     };
   },
@@ -59,9 +54,6 @@ export default Vue.extend({
       return this.$store.getters.windowSize.x < 500;
     },
   },
-  // beforeCreate() {
-  //     this.$store.dispatch('switch/getCompanies', ['stations, cities']);
-  // },
   mounted() {
     this.$on("open", (this as any).drawer);
   },

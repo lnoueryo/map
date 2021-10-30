@@ -16,20 +16,18 @@
           >都道府県を選択してください</simple-lists
         >
         <simple-lists
-          :items="$store.getters['spot/boundsFilter'](selectedPrefecture.cities)"
+          :items="$store.getters['spot/boundsFilter'](cities)"
           @item="city = { ...city, ...$event }"
           v-if="$route.query.prefecture_id && !$route.query.city_code"
         >
-          <div @click="getWiki(selectedPrefecture)">
-            {{ selectedPrefecture.name }}
-          </div>
+        {{filterPrefectures.name}}
         </simple-lists>
         <simple-lists
-          :items="$store.getters['spot/boundsFilter'](selectedCity.spots)"
+          :items="$store.getters['spot/boundsFilter'](spots)"
           @item="spot = { ...spot, ...$event }"
           v-if="$route.query.prefecture_id && $route.query.city_code"
         >
-          <div @click="getWiki(selectedCity)">{{ selectedCity.name }}</div>
+        {{filterPrefectures.name}}
         </simple-lists>
       </div>
     </transition>
@@ -49,8 +47,7 @@ interface Prefecture {
 interface City {
   name: string;
   wiki: string;
-  city_code: string;
-  province: string;
+  id: string;
   lat: string;
   lng: string;
   city: string;
@@ -96,58 +93,33 @@ export default Vue.extend({
   },
   computed: {
     ...mapGetters("spot", [
-      "selectedPrefectureItems",
-      "selectedCityItems",
-      "prefectures",
-      "cities",
-      "spots",
+      "filterPrefectures",
     ]),
     ...mapGetters("switch", [
-      "markerSwitch",
-      "markerSwitches",
       "leftListSwitch",
     ]),
     ...mapGetters("info", ["cityWikiInfo", "spotDetail"]),
-    selectPrefecture: {
-      get() {
-        return this.selectedPrefectureItems;
-      },
-      set(value) {
-        this.$store.dispatch("spot/selectedPrefectureItems", value);
-      },
+    prefectures() {
+      return this.filterPrefectures || [];
     },
-    selectCity: {
-      get() {
-        return this.$store.getters["spot/selectedCityItems"];
-      },
-      set(value) {
-        this.$store.dispatch("spot/selectedCityItems", value);
-      },
+    cities() {
+      return this.filterPrefectures?.cities || [];
     },
-    selectedPrefecture() {
-      // const prefecture = this.prefectures.find((prefecture) => prefecture.id == this.$route.query.prefecture_id)
-      return this.prefectures.find(
-        (prefecture: Prefecture) =>
-          prefecture.id == this.$route.query.prefecture_id
-      );
-    },
-    selectedCity() {
-      return this.cities.find(
-        (city: City) => city.city_code == this.$route.query.city_code
-      );
+    spots() {
+      return this.filterPrefectures?.spots || [];
     },
   },
   watch: {
     prefecture(v) {
       const query = { ...this.$route.query, ...{ prefecture_id: v.id } };
-      this.$router.push({ query: query });
+      this.$router.push({name: 'spot', query: query});
     },
     city(v) {
       const query = { ...this.$route.query, ...{ city_code: v.city_code } };
-      this.$router.push({ query: query });
+      this.$router.push({name: 'spot', query: query});
     },
     spot(v) {
-      this.$router.push({name: 'detail-prefecture_id-city_code-id', params: {prefecture_id: v.prefecture_id, city_code: v.city_code, id: v.id}})
+      this.$router.push({name: 'spot-detail-prefecture_id-city_code-id', params: {prefecture_id: v.prefecture_id, city_code: v.city_code, id: v.id}})
     }
   },
   methods: {

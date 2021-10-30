@@ -2,36 +2,32 @@
   <div>
     <v-content>
       <v-container>
-        <v-main v-if="city">
+        <v-main v-if="Object.keys(city).length !== 0">
           <div>
+              <h1>{{ city.name }}</h1>
             <div class="d-flex justify-space-between align-center py-2">
-              <h1>{{ analysisData.name }}</h1>
-              <div>
-                <v-btn @click="page(1)" outline>次</v-btn>
-                <v-btn @click="page(-1)">戻る</v-btn>
-              </div>
             </div>
             <h2 class="py-2">基本情報</h2>
             <v-card>
-            <div class="d-flex tabs">
-              <h2 class="tab" :class="{'active': tabsKey == 0}" @click="tabsKey = 0">人口</h2>
-              <h2 class="tab" :class="{'active': tabsKey == 1}" @click="tabsKey = 1">職業</h2>
-              <h2 class="tab" :class="{'active': tabsKey == 2}" @click="tabsKey = 2">施設</h2>
-            </div>
-            <div class="content">
-              <transition name="fade" mode="out-in">
-                <tabs :tabItems="populationItems" :tabValues="population" unit="人" v-if="tabsKey == 0" key="0"></tabs>
-                <tabs :tabItems="occupationItems" :tabValues="occupation" unit="人" v-if="tabsKey == 1" key="1"></tabs>
-                <tabs :tabItems="facilityItems" :tabValues="facility" unit="件" v-if="tabsKey == 2" key="2"></tabs>
-              </transition>
-            </div>
+              <div class="d-flex tabs">
+                <h2 class="tab" :class="{'active': tabsKey == 0}" @click="tabsKey = 0">人口</h2>
+                <h2 class="tab" :class="{'active': tabsKey == 1}" @click="tabsKey = 1">職業</h2>
+                <h2 class="tab" :class="{'active': tabsKey == 2}" @click="tabsKey = 2">施設</h2>
+              </div>
+              <div class="content">
+                <transition name="fade" mode="out-in">
+                  <tabs :tabItems="populationItems" :tabValues="city.population" unit="人" v-if="tabsKey == 0 && city.population" key="0"></tabs>
+                  <tabs :tabItems="occupationItems" :tabValues="city.occupation" unit="人" v-if="tabsKey == 1" key="1"></tabs>
+                  <tabs :tabItems="facilityItems" :tabValues="city.facility" unit="件" v-if="tabsKey == 2" key="2"></tabs>
+                </transition>
+              </div>
             </v-card>
             <h2 class="py-2">賃貸</h2>
             <div>
               <div class="price-title">
-                <h2>{{analysisData.name}}全体の賃貸価格</h2>
+                <h2>{{city.name}}全体の賃貸価格</h2>
                 <div class="ac-content">
-                  <city :analysisData="analysisData"></city>
+                  <city :analysisData="city"></city>
                 </div>
               </div>
             </div>
@@ -43,8 +39,9 @@
                 </v-btn>
               </h2>
               <div class="ac-content">
-                <layout :analysisData="analysisData" :style="layoutSwitch ? {maxHeight: '100%', height: '10000px', transition: 'all 1s'} : {height: 0, transition: 'all 1s'}"></layout>
-                <!-- <layout :analysisData="analysisData" :style="layoutSwitch ? {maxHeight: '100%', transform: 'translateY(0%)', transition: 'all 1s'} : {maxHeight: 0, transform: 'translateY(-100%)', transition: 'all 1s'}"></layout> -->
+                <div :style="layoutSwitch ? {maxHeight: '100%', height: `${$refs.layout.$el.getBoundingClientRect().height}px`, transition: 'all 1s'} : {height: 0, transition: 'all 1s'}">
+                  <layout ref="layout" :analysisData="city"></layout>
+                </div>
               </div>
             </div>
             <div class="price-title">
@@ -55,7 +52,9 @@
                 </v-btn>
               </h2>
               <div class="ac-content">
-                <town :analysisData="analysisData" :style="addressSwitch ? {maxHeight: '100%', height: '10000px', transition: 'all 1s'} : {height: 0, transition: 'all 1s'}"></town>
+                <div :style="addressSwitch ? {maxHeight: '100%', height: `${$refs.town.$el.getBoundingClientRect().height}px`, transition: 'all 1s'} : {height: 0, transition: 'all 1s'}">
+                  <town ref="town" :analysisData="city"></town>
+                </div>
               </div>
             </div>
             <h2 class="py-2">観光地</h2>
@@ -69,33 +68,18 @@
             </div>
             <h2 class="py-2">駅</h2>
             <div class="price-title">
-              <div class="pa-4" v-for="(company, i) in combineCompaniesWithStations" :key="i">
+              <div class="pa-4" v-for="(company, i) in companies" :key="i">
                 <div>{{company.name}}</div>
                 <div class="d-flex flex-wrap">
                   <div class="py-2 pr-2" v-for="(station, j) in company.stations" :key="j">
                     <div>
-                      <router-link class="anchor" :to="{name: 'station-name-detail-company_id', params: {name: station.name, company_id: company.id}}">{{station.name}}</router-link>
+                      <router-link class="anchor" :to="{name: 'station-prefecture_id-name-detail-company_id', params: {prefecture_id: station.prefecture_id, name: station.name, company_id: company.id}}">{{station.name}}</router-link>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-          <!-- <div class="d-flex flex-wrap justify-space-around">
-            <div class="my-4" style="max-width: 550px;width: 100%;">
-              <h4 class="mb-1">周辺施設</h4>
-              <div class="d-flex flex-wrap" style="font-size: 14px">
-                <div class="py-1 px-4 mr-4 mb-4" :style="{backgroundColor: spot.color, borderRadius: '5px'}" v-for="(spot, i) in aroundcity" :key="i">
-                  <div class="text-center">
-                    <v-icon>mdi-{{spot.icon}}</v-icon>
-                  </div>
-                  <div>
-                    {{spot.Name}}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div> -->
         </v-main>
       </v-container>
     </v-content>
@@ -110,7 +94,7 @@
 
 <script>
 import {mapGetters} from 'vuex'
-import analysisData from '~/assets/json/analyzed_column_json/13.json'
+// import analysisData from '~/assets/json/analyzed_column_json/13.json'
 const Tabs = () => import('~/components/prefecture/template/Tabs.vue');
 const Town = () => import('~/components/prefecture/template/Town.vue');
 const Layout = () => import('~/components/prefecture/template/Layout.vue');
@@ -131,33 +115,40 @@ export default {
   },
   computed: {
     ...mapGetters('prefecture', [
-      'cities',
-      'addresses',
-      'facilities',
-      'occupations',
-      'populations',
-      'combineStationsWithLines',
-      'companies',
-      'stations',
-      'analysisData',
+      'city',
     ]),
-    combineCompaniesWithStations() {
-      const companies = JSON.parse(JSON.stringify(this.companies))
-      return companies.map((company) => {
-        company['stations'] = this.stations.filter((station) => {
-          return station.city_code == this.$route.params.city_code && company.id == station.company_id;
+    companies() {
+      if(Object.keys(this.city).length !== 0) {
+        const city = JSON.parse(JSON.stringify(this.city))
+        const overlappedCompanies = city.stations.map((station) => {
+          return station.company;
+        });
+        const map = new Map(overlappedCompanies.map(overlappedCompany => [overlappedCompany.id, overlappedCompany]));
+        let companies = Array.from(map.values());
+        companies = companies.map((company) => {
+          company['stations'] = city.stations.filter((station) => {
+            delete station['company']
+            return company.id == station.company_id;
+          })
+          return company
         })
-        return company
-      }).filter((company) => company.stations.length !== 0)
+        return companies || []
+      }
     },
+    // combineCompaniesWithStations() {
+    //   const companies = JSON.parse(JSON.stringify(this.companies))
+    //   return companies.map((company) => {
+    //     company['stations'] = this.stations.filter((station) => {
+    //       return station.city_code == this.$route.params.city_code && company.id == station.company_id;
+    //     })
+    //     return company
+    //   }).filter((company) => company.stations.length !== 0)
+    // },
     prefectureId() {
       return this.$route.params.prefecture_id;
     },
     cityCode() {
       return this.$route.params.city_code;
-    },
-    analysisData(){
-      return analysisData.find((data) => data.city_code == this.cityCode)
     },
     columnItems() {
       return [
@@ -244,30 +235,17 @@ export default {
     tabUnits(){
       return ['人', '人', '件']
     },
-    city() {
-      return this.cities.find((city) => {
-        return city.city_code == this.$route.params.city_code;
-      })
-    },
     selectedAddress() {
-      return this.addresses.filter((address) => {
-        return address.city_code == this.$route.params.city_code;
-      })
+      return this.city.towns;
     },
     facility() {
-      return this.facilities.find((facility) => {
-        return facility.city_code == this.$route.params.city_code;
-      })
+      return this.city.facilities;
     },
     occupation() {
-      return this.occupations.find((occupation) => {
-        return occupation.city_code == this.$route.params.city_code;
-      })
+      return this.city.occupations
     },
     population() {
-      return this.populations.find((population) => {
-        return population.city_code == this.$route.params.city_code;
-      })
+      return this.city.populations;
     },
     tabValues() {
       return [this.population, this.occupation, this.facility]
@@ -276,13 +254,7 @@ export default {
       return [this.populationItems, this.occupationItems, this.facilityItems]
     },
     stations() {
-      return this.combineStationsWithLines.filter((station) => {
-        return station.city_code == this.$route.params.city_code;
-      })
-      .map((station) => {
-        station['company'] = this.companies.find((company) => company.id == station.company_id)
-        return station
-      })
+      return this.city.stations;
     },
     smp() {
       return this.$store.getters.windowSize.x < 500
@@ -290,6 +262,14 @@ export default {
     tablet() {
       return this.$store.getters.windowSize.x < 768
     },
+  },
+  watch: {
+    layoutSwitch() {
+      console.log(this.$refs.layout.$el.getBoundingClientRect())
+    }
+  },
+  created() {
+    this.$store.dispatch('prefecture/getCity', this.$route.params)
   },
   methods: {
     round(num) {

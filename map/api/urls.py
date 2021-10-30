@@ -7,7 +7,14 @@ from map.api.views.yahoo import (
 from map.api.views.views import (
     TwitterAPI,
     EventAPI,
-    HouseModel
+    HouseModel,
+    CompanyAPI,
+    PrefectureCityAPI,
+    PrefectureAPI,
+    SpotAPI,
+    StationAPI,
+    LineAPI,
+    CityAPI
 )
 # from map.api.views import (
 #     WikiAPI,
@@ -22,4 +29,11 @@ urlpatterns = [
     path('search-by-reverse-geocode/', ReverseGeocodeAPI.as_view(), name="reverse-geocode"),
     path('search-by-place-info/', PlaceInfoAPI.as_view(), name="place-info"),
     path('house-model/', HouseModel.as_view(), name="house-model"),
+    path('company/', CompanyAPI.as_view(), name="company"),
+    path('prefecture/city/', PrefectureCityAPI.as_view(), name="prefecture"),
+    path('spot/', SpotAPI.as_view(), name="spot"),
+    path('station/', StationAPI.as_view(), name="station"),
+    path('line/', LineAPI.as_view(), name="line"),
+    path('prefecture/', PrefectureAPI.as_view(), name="prefecture-station"),
+    path('city/', CityAPI.as_view(), name="city"),
 ]

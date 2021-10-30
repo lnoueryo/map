@@ -17,7 +17,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'map',
-    'corsheaders'
+    'corsheaders',
+    'aldjemy'
 ]
 
 MIDDLEWARE = [
@@ -70,13 +71,6 @@ WSGI_APPLICATION = 'gmap.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': str(BASE_DIR / 'db.sqlite3'),#windowsで必要な設定
-    }
-}
 
 
 # Password validation

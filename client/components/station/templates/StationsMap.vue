@@ -21,7 +21,7 @@ interface Polygon {
 }
 interface Station {
   id: number;
-  prefecture: string;
+  prefecture_id: string;
   name: string;
   lat: number;
   lng: number;
@@ -96,28 +96,13 @@ export default Vue.extend({
       }
     }
   },
+  created() {
+    this.$store.dispatch('station/getStations', this.$route.params);
+    this.$store.dispatch('station/getLines', this.$route.params);
+  },
   async mounted() {
-    await this.setMap();;
-    let timer: NodeJS.Timer | null;
-
-    this.$mapConfig.map.addListener("bounds_changed", () => {
-      const bounds = this.$mapConfig.currentBounds();
-      const getMapCenter = this.$mapConfig.map.getCenter();
-      const mapCenter = { lat: getMapCenter.lat(), lng: getMapCenter.lng() };
-      const zoom = this.$mapConfig.map.getZoom();
-      if (timer !== null) clearTimeout(timer);
-      timer = setTimeout(() => {
-        this.$store.dispatch("station/getCity", {
-          mapCenter: mapCenter,
-          zoom: zoom,
-        });
-        this.$store.dispatch("station/getCurrentBounds", bounds);
-      }, 250);
-    });
-    this.setMarkers()
-    this.lines.forEach((line: any) => {
-      const polyline = this.$mapConfig.makePolyline(line)
-    });
+    await this.setMap();
+    this.addMapEvent()
   },
   methods: {
     async setMap() {
@@ -125,11 +110,46 @@ export default Vue.extend({
       this.$mapConfig.makeMap(mapEl as HTMLElement);
       this.$mapConfig.map.setZoom(15);
     },
+    addMapEvent() {
+    let timer: NodeJS.Timer | null;
+
+    this.$mapConfig.map.addListener('bounds_changed', () => {
+      const bounds = this.$mapConfig.currentBounds();
+      const getMapCenter = this.$mapConfig.map.getCenter();
+      const mapCenter = { lat: getMapCenter.lat(), lng: getMapCenter.lng() };
+      const zoom = this.$mapConfig.map.getZoom();
+      if (timer !== null) clearTimeout(timer);
+        timer = setTimeout(() => {
+          this.$store.dispatch('station/getCity', {
+            mapCenter: mapCenter,
+            zoom: zoom,
+          });
+          this.$store.dispatch('station/getCurrentBounds', bounds);
+        }, 250);
+      });
+      let stationTimer = setInterval(() => {
+        if(this.uniqueStations.length !== 0) {
+          console.log(this.uniqueStations)
+          clearInterval(stationTimer);
+          this.setMarkers()
+        }
+      }, 250);
+      let lineTimer = setInterval(() => {
+        if(this.lines.length !== 0) {
+          console.log(this.lines)
+          clearInterval(lineTimer);
+          this.lines.forEach((line: any) => {
+            const polyline = this.$mapConfig.makePolyline(line)
+          });
+        }
+      }, 250);
+    },
     async setMarkers() {
       this.markers = this.uniqueStations.map((station: Station) => {
         const marker = this.$mapConfig.makeMarkerWithLabel(station, require('~/assets/img/station.png'), station.name)
         marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-          this.$router.push({name: 'station-name', params: {name: station.name}})
+          this.$router.push({name: 'station-prefecture_id-name', params: {prefecture_id: '13', name: station.name}})
+          // this.$router.push({name: 'station-prefectuere_id-name', params: {prefecture_id: station.prefecture_id, name: station.name}})
         })
         marker.setVisible(false)
         return marker;
@@ -140,6 +160,7 @@ export default Vue.extend({
         imagePath:
           "https://developers.google.com/maps/documentation/javascript/examples/markerclusterer/m",
       });
+      this.$mapConfig.boundsFilterForMarker([(this as any).markers], true)
       // google.maps.event.addListener(markerCluster, 'clusterclick', function(cluster: any) {
       //     console.log(cluster.markers_);
       //     cluster.markers_.forEach(function(e){
@@ -164,40 +185,6 @@ export default Vue.extend({
       await this.$store.dispatch("station/searchCityCode", e);
       (this as any).addClickMapListeners();
     },
-    // makeLineArray(lines: Line[]) {
-    //   if (
-    //     this.selectedLineItems.length !== 0 ||
-    //     this.selectedCompanyItems.length !== 0
-    //   ) {
-    //     this.$mapConfig.resetPolyline(this.polylines);
-    //     let paths: {
-    //       name: string;
-    //       color: string;
-    //       polygon: google.maps.LatLng[];
-    //     }[] = [];
-    //     lines.forEach((line: Line) => {
-    //       let polygon: google.maps.LatLng[] = [];
-    //       line.polygon.forEach((coordinate: LinePolyline) => {
-    //         polygon.push(
-    //           new window.google.maps.LatLng(coordinate.lat, coordinate.lng)
-    //         );
-    //       });
-    //       paths.push({ name: line.name, color: line.color, polygon: polygon });
-    //     });
-    //     const that = this;
-    //     paths.forEach((path) => {
-    //       const polyline = this.$mapConfig.makePolyline(path);
-    //       (this as any).polylines.push(polyline);
-    //       polyline.addListener("click", () => {
-    //         const latLngBounds = new window.google.maps.LatLngBounds();
-    //         polyline.getPath().forEach((latLng: google.maps.LatLng) => {
-    //           latLngBounds.extend(latLng);
-    //         });
-    //         that.$mapConfig.map.fitBounds(latLngBounds);
-    //       });
-    //     });
-    //   }
-    // },
     clearTime() {
       if (this.timer) clearTimeout(this.timer);
     },

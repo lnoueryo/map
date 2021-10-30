@@ -25,19 +25,19 @@ export default Vue.extend({
     ...mapGetters('station', [
       'combineStationsWithLines'
     ]),
-    mainStations() {
-      return this.$store.getters['station/combineStationsWithLines'].filter((station: Station) => {
-        return station.name == this.$route.params.name;
-      })
-    },
     mainStation() {
-      return this.$data.mainStations.find((station: Station) => {
-        return String(station.company_id) == this.$route.params.company_id;
+      return this.$store.getters['station/particularStations'].find((station: Station) => {
+        return String(station.company.id) == this.$route.params.company_id;
       })
     },
   },
-  async mounted() {
-    await (this as any).setMap();
+  mounted() {
+    let timer = setInterval(async() => {
+      if(this.mainStation.name == this.$route.params.name) {
+        clearInterval(timer)
+        await (this as any).setMap();
+      }
+    },250)
   },
   methods: {
     async setMap() {
@@ -48,7 +48,8 @@ export default Vue.extend({
       this.$mapConfig.makeMap(mapEl as HTMLDivElement);
       this.$mapConfig.placesService();
       this.$store.dispatch('info/spotDetail', mainStation);
-      this.$store.dispatch("info/getAroundSpotInfo", { ...mainStation });
+      this.$store.dispatch("info/getAroundSpot", { ...mainStation });
+      this.$store.dispatch('info/getTwitterInfo', mainStation);
       const marker = this.$mapConfig.makeMarkerWithLabel(
         (this as any).mainStation,
         "",
@@ -62,26 +63,6 @@ export default Vue.extend({
             (e.latLng as any).lng()
           )
         );
-      });
-      (this as any).stations.forEach((station: Station) => {
-        const marker = this.$mapConfig.makeMarker(
-          station,
-          require("~/assets/img/station.png"),
-          station.name
-        );
-        this.$mapConfig.createInfoWindow(
-          marker,
-          `${station.company.name}<br>${station.name}`
-        );
-        marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-          this.$router.push({name: 'station-name', params: {name: station.name}, query: {company_id: String(station.company.id)}})
-        });
-        // let infoWindow = new google.maps.InfoWindow({content: `<h3 style="color:black">${station.name}</h3>`});;
-        // marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-        //   const tempMap = infoWindow.getMap();
-        //   if (tempMap) infoWindow.close();
-        //   else infoWindow.open(this.$mapConfig.map, marker);
-        // });
       });
       this.$mapConfig.map.setZoom(15);
       this.$mapConfig.map.setCenter(

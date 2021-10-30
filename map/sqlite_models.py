@@ -1,5 +1,6 @@
 import json
 import ast
+import datetime
 import sqlalchemy as sa
 from sqlalchemy.orm import backref, sessionmaker, relationship
 from sqlalchemy import (Table, Column, Integer, String, ForeignKey, DateTime, text, Float)
@@ -7,11 +8,15 @@ from sqlalchemy.dialects.mysql.base import BIGINT, LONGTEXT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.functions import current_timestamp
 from datetime import timedelta
-import pymysql
-
-engine = sa.create_engine('mysql+pymysql://root:admin@35.200.4.154', pool_recycle=3600) # connect to server
-# engine.execute("CREATE DATABASE tap_map") #create db
-engine.execute("USE tap_map") # select new db
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.sql.sqltypes import Text
+from sqlalchemy.dialects import sqlite
+from sqlalchemy.dialects import mysql
+TextType = Text()
+TextType = TextType.with_variant(mysql.LONGTEXT(), 'mysql')
+TextType = TextType.with_variant(sqlite.TEXT(), 'sqlite')
+engine = create_engine('sqlite:///db.sqlite3', echo=True)
 Session = sessionmaker(bind=engine)
 session = Session()
 Base = declarative_base()
@@ -44,8 +49,8 @@ class Company(Base):
     name = Column(String(20))
     address = Column(String(20))
     founded = Column(String(20))
-    created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
+    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     lines = relationship("Line", backref="companies")
 
     def to_dict(self):
@@ -81,11 +86,11 @@ class Line(Base):
     company_id = Column(BIGINT, ForeignKey('companies.id'))
     prefecture_id = Column(String(3), ForeignKey('prefectures.id'), nullable=True)
     name = Column(String(20))
-    polygon = Column(LONGTEXT)
+    polygon = Column(TextType)
     color = Column(String(20))
     company = relationship('Company')
-    created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
+    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     stations = relationship(
         'Station',
         secondary=LineStation.__tablename__,
@@ -134,13 +139,13 @@ class Station(Base):
     prefecture_id = Column(String(3), ForeignKey('prefectures.id'))
     city_code = Column(String(6), ForeignKey('cities.id'))
     place_id = Column(String(50))
-    place_ids = Column(LONGTEXT, nullable=True)
+    place_ids = Column(TextType, nullable=True)
     place_result = Column(String(255))
     geohash = Column(String(10))
     lat = Column(Float)
     lng = Column(Float)
-    created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
+    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     lines = relationship(
         'Line',
         secondary='lines_stations',
@@ -201,8 +206,8 @@ class Prefecture(Base):
     name = Column(String(20))
     lat = Column(Float)
     lng = Column(Float)
-    created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
+    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     cities = relationship(
         'City',
         backref='prefectures',
@@ -338,11 +343,11 @@ class City(Base):
     name = Column(String(20))
     lat = Column(Float)
     lng = Column(Float)
-    polygons = Column(LONGTEXT)
-    layouts = Column(LONGTEXT)
-    columns = Column(LONGTEXT)
-    created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    polygons = Column(TextType)
+    layouts = Column(TextType)
+    columns = Column(TextType)
+    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
+    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     stations = relationship(
         'Station',
         backref='cities',
@@ -418,7 +423,7 @@ class Facility(Base):
     __tablename__ = 'facilities'
 
     # 個々のカラムを定義
-    id = Column(BIGINT, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     city_code = Column(String(6), ForeignKey('cities.id'))
     name = Column(String(10))
     community_center = Column(Integer)
@@ -439,8 +444,8 @@ class Facility(Base):
     junior_high_school = Column(Integer)
     high_school = Column(Integer)
     occupation_area = Column(Float)
-    created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
+    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     city = relationship('City')
 
 
@@ -480,7 +485,7 @@ class Occupation(Base):
     __tablename__ = 'occupations'
 
     # 個々のカラムを定義
-    id = Column(BIGINT, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     city_code = Column(String(6), ForeignKey('cities.id'))
     name = Column(String(10))
     taxpayers = Column(Integer)
@@ -503,8 +508,8 @@ class Occupation(Base):
     doctor = Column(Integer)
     dentist = Column(Integer)
     pharmacist = Column(Integer)
-    created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
+    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     city = relationship('City')
 
     def to_dict(self):
@@ -545,7 +550,7 @@ class Population(Base):
     __tablename__ = 'populations'
 
     # 個々のカラムを定義
-    id = Column(BIGINT, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     city_code = Column(String(6), ForeignKey('cities.id'))
     name = Column(String(10))
     population = Column(Integer)
@@ -568,8 +573,8 @@ class Population(Base):
     divorces = Column(Integer)
     area = Column(Float)
     resident_area = Column(Float)
-    created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
+    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     city = relationship('City')
 
     def to_dict(self):
@@ -620,8 +625,8 @@ class Spot(Base):
     geohash = Column(String(10))
     lat = Column(Float)
     lng = Column(Float)
-    created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
+    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     city = relationship('City')
 
     def to_dict(self):
@@ -664,7 +669,7 @@ class Town(Base):
     __tablename__ = 'towns'
 
     # 個々のカラムを定義
-    id = Column(BIGINT, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     prefecture_id = Column(String(3), ForeignKey('prefectures.id'))
     city_code = Column(String(6), ForeignKey('cities.id'))
     name = Column(String(20))
@@ -673,10 +678,10 @@ class Town(Base):
     geohash = Column(String(10))
     lat = Column(Float)
     lng = Column(Float)
-    layouts = Column(LONGTEXT)
-    columns = Column(LONGTEXT)
-    created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    layouts = Column(TextType)
+    columns = Column(TextType)
+    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
+    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     def to_dict(self):
         town_dict = {

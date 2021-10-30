@@ -37,9 +37,6 @@ export default Vue.extend({
       return this.$store.getters.windowSize.x < 500;
     },
   },
-  // beforeCreate() {
-  //     this.$store.dispatch('switch/getCompanies', ['stations, cities']);
-  // },
   mounted() {
     this.$on("open", (this as any).drawer);
   },

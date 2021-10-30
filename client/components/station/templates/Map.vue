@@ -13,7 +13,7 @@ interface Station {
   id: number;
   line_id: number;
   order: number;
-  prefecture: string;
+  prefecture_id: string;
   lat: number;
   lng: number;
   company_id: number;
@@ -35,13 +35,22 @@ interface Polygon {
   lng: number;
 }
 [];
-interface Params { prefecture_id: string, city_code: string, id: number, name: string, company_id: string }
-interface Query { company_id: string, line_id: string }
+interface Params {
+  prefecture_id: string;
+  city_code: string;
+  id: number;
+  name: string;
+  company_id: string;
+}
+interface Query {
+  company_id: string;
+  line_id: string;
+}
 interface DataType {
   station: Station | null;
-  markers: google.maps.Marker[][]
-  otherStaionsMarkers: google.maps.Marker[]
-  polylines: google.maps.Polyline[]
+  markers: google.maps.Marker[][];
+  otherStaionsMarkers: google.maps.Marker[];
+  polylines: google.maps.Polyline[];
 }
 export default Vue.extend({
   data(): DataType {
@@ -53,16 +62,18 @@ export default Vue.extend({
     };
   },
   computed: {
-    ...mapGetters("station", ["stationInfo", "filteredStation"]),
+    ...mapGetters("station", ["particularStations"]),
     filterStation() {
-      (this as any).station = JSON.parse(
-        JSON.stringify(this.filteredStation[0])
-      );
-      delete (this as any).station["lines"];
+      if (this.filteredStation !== 0) {
+        (this as any).station = JSON.parse(
+          JSON.stringify(this.filteredStation[0])
+        );
+        delete (this as any).station["lines"];
+      }
       return this.filteredStation;
     },
     nearestSpots() {
-      const neighbors = (this as any).filterStation.forEach(
+      const neighbors = (this as any).particularStations.forEach(
         (station: Station) => {
           gh.neighbors(station.geohash);
         }
@@ -75,158 +86,377 @@ export default Vue.extend({
     $route: {
       async handler(v) {
         await this.$store.dispatch("station/query", v.query);
+        this.$mapConfig.resetMarkers((this as any).markers);
+        this.$mapConfig.resetMarkers((this as any).otherStaionsMarkers);
         (this as any).makeMarkers();
         (this as any).makePolylines();
-        this.$mapConfig.resetMarkers((this as any).markers);
-        this.$mapConfig.resetMarkers([(this as any).otherStaionsMarkers]);
-        console.log(this.filteredStation)
-        if (this.filteredStation) (this as any).makeOtherStaionsMarkers(v.query, v.params)
       },
-      immediate: true,
+      immediate: false,
     },
   },
-  beforeCreate() {
-    this.$store.commit('info/stationInfo', null)
+  created() {
+    this.$store.dispatch("station/getParticularStations", this.$route.params);
+    this.$store.dispatch("station/query", this.$route.query);
   },
   async mounted() {
-    this.$store.dispatch("station/query", this.$route.query);
     await (this as any).setMap();
-    let timer: NodeJS.Timer | null;
-    this.$mapConfig.map.addListener("bounds_changed", () => {
-      const bounds = this.$mapConfig.currentBounds();
-      const getMapCenter = this.$mapConfig.map.getCenter();
-      const mapCenter = { lat: getMapCenter.lat(), lng: getMapCenter.lng() };
-      const zoom = this.$mapConfig.map.getZoom();
-      if (timer !== null) clearTimeout(timer);
-      timer = setTimeout(() => {
-        this.$store.dispatch("station/getCity", {
-          mapCenter: mapCenter,
-          zoom: zoom,
-        });
-        this.$store.dispatch("station/getCurrentBounds", bounds);
-      }, 250);
-    });
-    this.$mapConfig.map.setZoom(15)
-    this.$mapConfig.map.panTo(
-      new google.maps.LatLng(
-        (this as any).filterStation[0].lat,
-        (this as any).filterStation[0].lng
-      )
-    );
+    let timer = setInterval(() => {
+      if (this.particularStations.length !== 0) {
+        clearInterval(timer);
+        (this as any).addMapEvent();
+        (this as any).makeMarkers();
+        (this as any).makePolylines();
+      }
+    }, 250);
   },
   methods: {
     async setMap() {
       const mapEl = this.$refs.map;
       this.$mapConfig.makeMap(mapEl as HTMLDivElement);
-      this.$mapConfig.placesService();
-      (this as any).makeMarkers();
-      (this as any).makePolylines();
-      // this.$store.dispatch("info/getStationInfo", (this as any).station);
+    },
+    addMapEvent() {
+      let timer: NodeJS.Timer | null;
+      this.$mapConfig.map.addListener("bounds_changed", () => {
+        const bounds = this.$mapConfig.currentBounds();
+        const getMapCenter = this.$mapConfig.map.getCenter();
+        const mapCenter = { lat: getMapCenter.lat(), lng: getMapCenter.lng() };
+        const zoom = this.$mapConfig.map.getZoom();
+        if (timer !== null) clearTimeout(timer);
+        timer = setTimeout(() => {
+          this.$store.dispatch("station/getCity", {
+            mapCenter: mapCenter,
+            zoom: zoom,
+          });
+          this.$store.dispatch("station/getCurrentBounds", bounds);
+        }, 250);
+      });
+      this.$mapConfig.map.setZoom(15);
+      this.$mapConfig.map.panTo(
+        new google.maps.LatLng(
+          (this as any).particularStations[0].lat,
+          (this as any).particularStations[0].lng
+        )
+      );
     },
     async makeMarkers() {
-      (this as any).markers = await this.$mapConfig.makeMarkers(
-        [{ stations: this.filterStation }],
-        "stations",
-        (this as any).onClickMarker
-      );
-      // this.$mapConfig.map.setZoom(15);
+      if ("company_id" in this.$route.query) {
+        this.particularStations.forEach((mainStation) => {
+          if (String(mainStation.company.id) == this.$route.query.company_id) {
+            const marker = this.$mapConfig.makeMarkerWithLabel(
+              mainStation,
+              require("~/assets/img/station.png"),
+              mainStation.name
+            );
+            this.onClickMarker(marker, mainStation)
+            this.markers.push(marker);
+            if ("line_id" in this.$route.query) {
+              mainStation.lines.forEach((line) => {
+                if (String(this.$route.query.line_id) == line.id) {
+                  line.stations.forEach((station) => {
+                    if (station.name !== this.particularStations[0].name) {
+                      const marker = this.$mapConfig.makeMarkerWithLabel(
+                        station,
+                        "",
+                        station.name
+                      );
+                      marker.addListener("click", (e: google.maps.MapMouseEvent) => {
+                        this.$router.push({
+                          name: "station-prefecture_id-name",
+                          params: { prefecture_id: station.prefecture_id, name: station.name },
+                        });
+                      });
+                      (this as any).otherStaionsMarkers.push(marker);
+                    }
+                  });
+                }
+              });
+            } else {
+              mainStation.lines.forEach((line) => {
+                line.stations.forEach((station) => {
+                  if (station.name !== this.particularStations[0].name) {
+                    const marker = this.$mapConfig.makeMarkerWithLabel(
+                      station,
+                      "",
+                      station.name
+                    );
+                    marker.addListener("click", (e: google.maps.MapMouseEvent) => {
+                      this.$router.push({
+                        name: "station-prefecture_id-name",
+                        params: { prefecture_id: station.prefecture_id, name: station.name },
+                      });
+                    });
+                    (this as any).otherStaionsMarkers.push(marker);
+                  }
+                });
+              });
+            }
+          }
+        });
+      } else {
+        this.particularStations.forEach((mainStation) => {
+          const marker = this.$mapConfig.makeMarkerWithLabel(
+            mainStation,
+            require("~/assets/img/station.png"),
+            mainStation.name
+          );
+          marker.addListener("click", (e: google.maps.MapMouseEvent) => {
+            this.$router.push({
+              name: "station-prefecture_id-name",
+              params: { prefecture_id: mainStation.prefecture_id, name: mainStation.name },
+              query: {company_id: mainStation.company.id}
+            });
+          });
+          this.markers.push(marker);
+          if ("line_id" in this.$route.query) {
+            mainStation.lines.forEach((line) => {
+              if (String(this.$route.query.line_id) == line.id) {
+                line.stations.forEach((station) => {
+                  if (station.name !== this.particularStations[0].name) {
+                    const marker = this.$mapConfig.makeMarkerWithLabel(
+                      station,
+                      "",
+                      station.name
+                    );
+                    marker.addListener("click", (e: google.maps.MapMouseEvent) => {
+                      this.$router.push({
+                        name: "station-prefecture_id-name",
+                        params: { prefecture_id: station.prefecture_id, name: station.name },
+                      });
+                    });
+                    (this as any).otherStaionsMarkers.push(marker);
+                  }
+                });
+              }
+            });
+          } else {
+            mainStation.lines.forEach((line) => {
+              line.stations.forEach((station) => {
+                if (station.name !== this.particularStations[0].name) {
+                  const marker = this.$mapConfig.makeMarkerWithLabel(
+                    station,
+                    "",
+                    station.name
+                  );
+                  marker.addListener("click", (e: google.maps.MapMouseEvent) => {
+                    console.log(station)
+                    this.$router.push({
+                      name: "station-prefecture_id-name",
+                      params: { prefecture_id: station.prefecture_id, name: station.name },
+                    });
+                  });
+                  (this as any).otherStaionsMarkers.push(marker);
+                }
+              });
+            });
+          }
+        });
+      }
+
+      // if ("line_id" in this.$route.query) {
+      //   this.particularStations.forEach((mainStation) => {
+      //     mainStation.lines.forEach((line) => {
+      //       if (String(this.$route.query.line_id) == line.id) {
+      //         line.stations.forEach((station) => {
+      //           if (station.name !== this.particularStations[0].name) {
+      //             const marker = this.$mapConfig.makeMarkerWithLabel(
+      //               station,
+      //               "",
+      //               station.name
+      //             );
+      //             (this as any).otherStaionsMarkers.push(marker);
+      //           }
+      //         });
+      //       }
+      //     });
+      //   });
+      // } else {
+      //   this.particularStations.forEach((mainStation) => {
+      //     mainStation.lines.forEach((line) => {
+      //       line.stations.forEach((station) => {
+      //         if (station.name !== this.particularStations[0].name) {
+      //           const marker = this.$mapConfig.makeMarkerWithLabel(
+      //             station,
+      //             "",
+      //             station.name
+      //           );
+      //           (this as any).otherStaionsMarkers.push(marker);
+      //         }
+      //       });
+      //     });
+      //   });
+      // }
     },
     makeOtherStaionsMarkers(query: Query, params: Params) {
-      let lines
-      if('line_id' in query) {
-        const lineIds = query.line_id.split(',')
-        lines = [].concat(...this.filteredStation[0].lines.map((line: Line) => {
-          if(lineIds.includes(String(line.id))) return line;
-        }));
+      let lines;
+      if ("line_id" in query) {
+        const lineIds = query.line_id.split(",");
+        lines = [].concat(
+          ...this.filteredStation[0].lines.map((line: Line) => {
+            if (lineIds.includes(String(line.id))) return line;
+          })
+        );
       } else {
-        lines = [].concat(...this.filteredStation.map((station: Station) => station.lines));
+        lines = [].concat(
+          ...this.filteredStation.map((station: Station) => station.lines)
+        );
       }
       const stations = lines.map((line: Line) => {
-          return line.stations;
-      })
+        return line.stations;
+      });
       if (stations.length !== 0) {
         const otherStations = [].concat(...(stations as any));
-        let map = new Map(otherStations.map((otherStation: Station) => [otherStation?.id, otherStation]));
+        let map = new Map(
+          otherStations.map((otherStation: Station) => [
+            otherStation?.id,
+            otherStation,
+          ])
+        );
         const uniqueOtherStations = Array.from(map.values());
-        (this as any).otherStaionsMarkers = uniqueOtherStations.map((station: Station) => {
-          if(params.name !== station?.name) {
-            const marker = this.$mapConfig.makeMarkerWithLabel(station, '', station?.name);
-            marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-              this.$router.push({name: 'station-name', params: {name: station.name}})
-            })
-            return marker;
+        (this as any).otherStaionsMarkers = uniqueOtherStations.map(
+          (station: Station) => {
+            if (params.name !== station?.name) {
+              const marker = this.$mapConfig.makeMarkerWithLabel(
+                station,
+                "",
+                station?.name
+              );
+              marker.addListener("click", (e: google.maps.MapMouseEvent) => {
+                this.$router.push({
+                  name: "station-prefecture_id-name",
+                  params: {
+                    prefecture_id: station.prefecture_id,
+                    name: station.name,
+                  },
+                });
+              });
+              return marker;
+            }
           }
-        })
+        );
       }
+    },
+    addPolylineEvent(polyline, station, line) {
+      polyline.addListener("click", () => {
+        if ("line_id" in this.$route.query) {
+          this.$router.push({
+            name: "station-prefecture_id-name",
+            params: {
+              prefecture_id: station.prefecture_id,
+              name: station.name,
+            },
+            query: { company_id: String(station.company_id) },
+          });
+        } else {
+          this.$router.push({
+            name: "station-prefecture_id-name",
+            params: {
+              prefecture_id: station.prefecture_id,
+              name: station.name,
+            },
+            query: {
+              company_id: String(station.company_id),
+              line_id: String(line.id),
+            },
+          });
+        }
+      });
     },
     async makePolylines() {
       this.$mapConfig.resetPolyline((this as any).polylines);
-      (this as any).polylines = (this as any).filterStation.map((station: Station) => {
-        const polylines = station.lines.map((line: Line) => {
-          const polyline = this.$mapConfig.makePolyline(line);
-          polyline.addListener("click", () => {
-            if ('line_id' in this.$route.query) {
-              this.$router.push({
-                name: 'station-name',
-                params: { name: station.name },
-                query: { company_id: String(station.company_id) },
+      if('company_id' in this.$route.query) {
+        (this as any).polylines = (this as any).particularStations.map(
+          (mainStation: Station) => {
+            if(String(mainStation.company.id) == this.$route.query.company_id) {
+              const polylines = mainStation.lines.map((line: Line) => {
+                if ("line_id" in this.$route.query) {
+                  if(String(line.id) == this.$route.query.line_id) {
+                    console.log(String(line.id),this.$route.query.line_id)
+                    const polyline = this.$mapConfig.makePolyline(line);
+                    this.addPolylineEvent(polyline, mainStation, line)
+                    return polyline;
+                  }
+                } else {
+                  const polyline = this.$mapConfig.makePolyline(line);
+                  this.addPolylineEvent(polyline, mainStation, line);
+                  return polyline;
+                }
               });
-            } else {
-              this.$router.push({
-                name: 'station-name',
-                params: { name: station.name },
-                query: {
-                  company_id: String(station.company_id),
-                  line_id: String(line.id),
-                },
-              });
+              return polylines;
             }
-          });
-          return polyline;
-        });
-        return polylines;
-      });
-      (this as any).polylines = Array.from(new Set((this as any).polylines.flat()));
-      // this.polylines = await this.$mapConfig.makePolyline();
+          }
+        );
+      } else {
+        (this as any).polylines = (this as any).particularStations.map(
+          (mainStation: Station) => {
+            const polylines = mainStation.lines.map((line: Line) => {
+              if ("line_id" in this.$route.query) {
+                if(String(line.id) == this.$route.query.line_id) {
+                const polyline = this.$mapConfig.makePolyline(line);
+                this.addPolylineEvent(polyline, mainStation, line)
+                return polyline;
+                }
+              } else {
+                const polyline = this.$mapConfig.makePolyline(line);
+                this.addPolylineEvent(polyline, mainStation, line);
+                return polyline;
+              }
+            });
+          return polylines;
+          })
+      }
+      (this as any).polylines = Array.from(
+        new Set((this as any).polylines.flat())
+      ).filter((polyline) => polyline !== undefined);
     },
     onClickMarker(marker: google.maps.Marker, station: Station) {
-      var latlng = new google.maps.LatLng(station.lat,station.lng);
+      var latlng = new google.maps.LatLng(station.lat, station.lng);
       var infowindow = new google.maps.InfoWindow({
-        content: ' ',
-        position: latlng
+        content: " ",
+        position: latlng,
       });
       infowindow.setContent(
-                  `<div>
+        `<div>
                   <h4 style="color: black">${station.company.name}</h4>
                   <h2 style="color: black">${station.name}</h2>
                     <a id="line" style="position: relative;display: inline-block;font-weight: bold;padding: 0.25em 0.5em;text-decoration: none;color: #00BCD4;background-color: #ECECEC;transition: .4s;"><i class="fa fa-caret-right"></i> 全路線表示</a>
                     <a id="station-detail" style="position: relative;display: inline-block;font-weight: bold;padding: 0.25em 0.5em;text-decoration: none;color: #00BCD4;background-color: #ECECEC;transition: .4s;">詳細</a>
-                  </div>`);
-      infowindow.addListener('domready', () => {
-          document.getElementById('line')?.addEventListener('click', () => {
-            this.$router.push({
-              name: 'station-name',
-              params: { name: station.name },
-            });
+                  </div>`
+      );
+      infowindow.addListener("domready", () => {
+        document.getElementById("line")?.addEventListener("click", () => {
+          this.$router.push({
+            name: "station-prefecture_id-name",
+            params: { prefecture_id: station.prefecture_id, name: station.name },
           });
-          document.getElementById('station-detail')?.addEventListener('click', () => {
+        });
+        document
+          .getElementById("station-detail")
+          ?.addEventListener("click", () => {
             this.$router.push({
-              name: 'station-name-detail-company_id',
-              params: { name: station.name, company_id: String(this.$route.query.company_id) },
+              name: "station-prefecture_id-name-detail-company_id",
+              params: {
+                prefecture_id: station.prefecture_id,
+                name: station.name,
+                company_id: String(this.$route.query.company_id),
+              },
             });
           });
       });
       marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-      google.maps.event.addListenerOnce(this.$mapConfig.map, "click", (e: google.maps.MapMouseEvent) => {
-        infowindow.close()
-      });
-        if ('company_id' in this.$route.query) {
-          infowindow.close()
+        google.maps.event.addListenerOnce(
+          this.$mapConfig.map,
+          "click",
+          (e: google.maps.MapMouseEvent) => {
+            infowindow.close();
+          }
+        );
+        if ("company_id" in this.$route.query) {
+          infowindow.close();
           infowindow.open(this.$mapConfig.map, marker);
         } else {
           this.$router.push({
-            name: 'station-name',
-            params: { name: station.name },
+            name: "station-prefecture_id-name",
+            params: { prefecture_id: station.prefecture_id,name: station.name },
             query: { company_id: String(station.company_id) },
           });
         }
@@ -234,7 +464,6 @@ export default Vue.extend({
     },
   },
 });
-
 </script>
 
 <style lang="scss" scoped>
@@ -309,5 +538,4 @@ export default Vue.extend({
   //   }
   // }
 }
-
 </style>

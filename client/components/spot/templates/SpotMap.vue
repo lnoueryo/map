@@ -22,24 +22,28 @@ interface Station {
 export default Vue.extend({
   props: ["stations"],
   computed: {
-    ...mapGetters('detail', [
-      'spotInfo'
+    ...mapGetters('spot', [
+      'spot'
     ])
   },
-  async mounted() {
-    await (this as any).setMap();
+  mounted() {
+    let timer = setInterval(() => {
+      if(this.spot) {
+        clearInterval(timer);
+        (this as any).setMap();
+      }
+    }, 250)
   },
   methods: {
     async setMap() {
       const mapEl = this.$refs.map;
       this.$mapConfig.makeMap(mapEl as HTMLDivElement);
       this.$mapConfig.placesService();
-      this.$store.dispatch('info/spotDetail', this.spotInfo);
-      this.$store.dispatch("info/getAroundSpotInfo", { ...(this as any).spotInfo });
+      this.$store.dispatch('info/spotDetail', this.spot);
       const marker = this.$mapConfig.makeMarkerWithLabel(
-        (this as any).spotInfo,
+        (this as any).spot,
         "",
-        (this as any).spotInfo.name
+        (this as any).spot.name
       );
       marker.addListener("click", (e: google.maps.MapMouseEvent) => {
         this.$mapConfig.map.setZoom(15);
@@ -61,7 +65,7 @@ export default Vue.extend({
           `${station.company.name}<br>${station.name}`
         );
         marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-          this.$router.push({name: 'station-name', params: {name: station.name}, query: {company_id: String(station.company.id)}})
+          this.$router.push({name: 'station-prefecture_id-name', params: {prefecture_id: station.prefecture_id, name: station.name}, query: {company_id: String(station.company.id)}})
         });
         // let infoWindow = new google.maps.InfoWindow({content: `<h3 style="color:black">${station.name}</h3>`});;
         // marker.addListener("click", (e: google.maps.MapMouseEvent) => {
@@ -73,8 +77,8 @@ export default Vue.extend({
       this.$mapConfig.map.setZoom(15);
       this.$mapConfig.map.setCenter(
         new google.maps.LatLng(
-          (this as any).spotInfo.lat,
-          (this as any).spotInfo.lng
+          (this as any).spot.lat,
+          (this as any).spot.lng
         )
       );
     },

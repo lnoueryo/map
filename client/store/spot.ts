@@ -1,10 +1,8 @@
 import { $axios } from '~/utils/api';
-import prefectures from '~/assets/json/city.json';
-import population from '../assets/json/population.json'
 
 interface State {
     fields: string[]
-    prefectures: City[],
+    prefectures: Prefecture[],
     population: { city: string, population: number[] },
     selectedPrefectureItems: Prefecture[],
     selectedCityItems: City[],
@@ -13,34 +11,30 @@ interface State {
     searchWord: string,
     addressElement: null | AddressElement[],
     query: Query
+    params: Params | null,
+    spot: Spot
 }
 interface Coordinate { lat: number, lng: number };
 interface Polygon { lat: number, lng: number }[];
 interface Bounds { north: number, south: number, west: number, east: number };
 interface AddressElement { Code: string, Name: string, Kana: string, Level: string }
 interface Prefecture { id: string, name: string, lat: number, lng: number, cities: City[] }
-interface City { name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: Spot[], polygons: Polygon[][], prefecture_id: string }
+interface City { id: string, name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: Spot[], polygons: Polygon[][], prefecture_id: string }
 interface Spot { name: string, place_id: string, address: string, lat: string, lng: string, city_code: string }
 interface Query { prefecture_id: string, city_code: string }
+interface Spot { id: number, name: string, place_id: string, address: string, lat: string, lng: string }
+interface Params { prefecture_id: string, city_code: string, id: number }
 const state = {
-    fields: ['prefectures', 'cities', 'spots'],
-    prefectures: prefectures,
-    population: population,
-    selectedPrefectureItems: [],
-    selectedCityItems: [],
+    prefectures: [],
     currentBounds: { south: 0, north: 0, east: 0, west: 0 },
-    selectedMarker: {},
     searchWord: null,
     addressElement: null,
     query: {},
+    params: null,
+    spot: {}
 };
 
 const getters = {
-    fields: (state: State) => state.fields,
-    /*
-    フィルタリングされていない人口情報を返す
-    */
-    population: (state: State) => state.population,
     prefectures: (state: State) => state.prefectures,
     cities: (state: State, getters: any) => {
         const cities = [].concat(...getters.prefectures.map((prefecture: Prefecture): City[] => prefecture.cities));
@@ -50,10 +44,18 @@ const getters = {
         const spots = [].concat(...getters.cities.map((city: City): Spot[] => city?.spots));
         return spots;
     },
-    selectedPrefectureItems: (state: State): Prefecture[] => state.selectedPrefectureItems,
-    selectedCityItems: (state: State): City[] => state.selectedCityItems,
+    query: (state: State) => state.query,
+    filterPrefectures: (state: State) => {
+        let result = JSON.parse(JSON.stringify(state.prefectures));
+        if('prefecture_id' in state.query && result.length !== 0) {
+            result = result.find((prefecture: Prefecture) => prefecture.id == state.query.prefecture_id);
+            if('city_code' in state.query) {
+                result = result.cities.find((city: City) => city.id == state.query.city_code);
+            }
+        }
+        return result;
+    },
     searchWord: (state: State): string => state.searchWord,
-    selectedMarker: (state: State): City => state.selectedMarker, //クリックされたマーカー(駅)のオブジェクトを返す
     boundsFilter: (state: State) => (points: Coordinate[]): Coordinate[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
         const filteredStations = points.filter((point) => {
             const verticalCondition = state.currentBounds.west < point.lng && state.currentBounds.east > point.lng;
@@ -62,7 +64,6 @@ const getters = {
         });
         return filteredStations;
     },
-    selectedCities: (state: State) => state.selectedCityItems, //ウィキから引っ張ってきたhtmlを返す
     removeAddressElement: (state: State) => (elements: AddressElement[], zoom: number) => {
         let index: number;
         if (8 <= zoom && 10 > zoom) index = 1;
@@ -97,17 +98,13 @@ const getters = {
         const spots = getters.spots.filter((spot: Spot) => spot?.name.indexOf(state.searchWord) > -1);
         return state.searchWord && spots ? spots : [];
     },
+    // detail-page
+    spot: (state: State, getters: any) => state.spot,
 }
 
 const mutations = {
-    selectedPrefectureItems: (state: State, payload: Prefecture[]) => {
-        state.selectedPrefectureItems = payload;
-    },
     currentBounds: (state: State, payload: Bounds) => {
         state.currentBounds = { ...state.currentBounds, ...payload }
-    },
-    selectMarker: (state: State, payload: City) => {
-        state.selectedMarker = { ...state.selectedMarker, ...payload };
     },
     searchWord: (state: State, payload: string) => {
         state.searchWord = payload;
@@ -118,28 +115,25 @@ const mutations = {
     query: (state: State, payload: Query) => {
         state.query = payload;
     },
+    prefectures: (state: State, payload: Prefecture[]) => {
+        state.prefectures = payload;
+    },
+    // detail-page
+    params: (state: State, payload: Params) => {
+        state.params = payload;
+    },
+    spot: (state: State, payload: Spot) => {
+        state.spot = payload;
+    }
 };
 
 const actions = {
-    selectedPrefectureItems: (context: any, payload: Prefecture[]) => {
-        context.commit('selectedPrefectureItems', payload)
-    },
-    query: (context: any, payload: Query) => {
-        context.commit('query', payload)
-    },
-    getCurrentBounds: (context: any, payload: Bounds) => {
-        context.commit('currentBounds', payload)
-    },
-    selectMarker: (context: any, payload: City) => {
-        context.commit('selectMarker', payload)
-    },
-    searchWord: (context: any, payload: string) => {
-        context.commit('searchWord', payload)
+    getPrefectures: async (context: any) => {
+        const response = await $axios.$get('/api/prefecture/city/');
+        context.commit('prefectures', response)
     },
     getCity: async (context: any, payload: { mapCenter: Coordinate, zoom: number }) => {
         const response = await $axios.$get('/api/search-by-reverse-geocode/', { params: payload.mapCenter });
-        // const response = await $axios.$post('/api/search-by-reverse-geocode/', payload.mapCenter);
-        console.log(response)
         let AddressElement;
         if (response.Property) {
             try {
@@ -149,6 +143,25 @@ const actions = {
             }
             context.commit('addressElement', AddressElement);
         }
+    },
+    query: (context: any, payload: Query) => {
+        context.commit('query', payload)
+    },
+    getCurrentBounds: (context: any, payload: Bounds) => {
+        context.commit('currentBounds', payload)
+    },
+    searchWord: (context: any, payload: string) => {
+        context.commit('searchWord', payload)
+    },
+    params: (context: any, payload: Params) => {
+        context.commit('params', payload)
+    },
+    getSpot: async (context: any, payload: {prefecture_id: string, city_code: string, id: string}) => {
+        const response = await $axios.$get('/api/spot/', { params: {id: payload.id} });
+        context.commit('spot', response)
+        const twitterQuery = {name: response.name, lat: response.lat, lng: response.lng}
+        context.dispatch('info/getTwitterInfo', twitterQuery, {root: true})
+        context.dispatch("info/getAroundSpot", twitterQuery, {root: true});
     },
 };
 

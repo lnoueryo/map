@@ -9,41 +9,29 @@
       </div>
       <div class="resize" @mousedown="dragStart"></div>
     </div>
-    <half-modals ref="modals"></half-modals>
   </div>
 </template>
 
 <script lang="ts">
 interface DataType {
   width: number;
-  buttons: string[];
 }
 interface DomEvent extends Event {
   clientX: number;
   clientY: number;
 }
 import Vue from "vue";
-import { mapGetters } from "vuex";
 const MarkerLists = () => import("../organisms/MarkerLists.vue");
-const HalfModals = () => import("../organisms/HalfModals.vue");
 const SearchItems = () => import("../organisms/SearchItems.vue");
 
 export default Vue.extend({
   components: {
     MarkerLists,
     SearchItems,
-    HalfModals,
   },
   data(): DataType {
     return {
       width: 345,
-      buttons: [
-        "train",
-        "information-outline",
-        "format-align-right",
-        "city",
-        "twitter",
-      ],
     };
   },
   computed: {
@@ -52,24 +40,6 @@ export default Vue.extend({
     },
     smp() {
       return this.$store.getters.windowSize.x < 500;
-    },
-    component() {
-      const componentTypes = [
-        "marker-lists",
-        "station-wiki",
-        "event",
-        "city-wiki",
-        "twitter",
-      ];
-      return componentTypes[(this as any).$store.getters["switch/changeList"]];
-    },
-    changeList: {
-      get() {
-        return (this as any).$store.getters["switch/changeList"];
-      },
-      set(newValue) {
-        (this as any).$store.dispatch("switch/changeList", newValue);
-      },
     },
     leftListSwitch() {
       return this.$store.getters["switch/leftListSwitch"];

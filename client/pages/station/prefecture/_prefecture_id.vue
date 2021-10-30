@@ -6,7 +6,7 @@
           <left-list></left-list>
         </div>
         <div class="map-container">
-          <prefectures-map></prefectures-map>
+          <stations-map></stations-map>
         </div>
       </div>
     </div>
@@ -16,7 +16,7 @@
 <script lang="ts">
 import Vue from "vue";
 const LeftList = () => import("~/components/station/templates/LeftList.vue");
-const PrefecturesMap = () => import("~/components/station/templates/PrefecturesMap.vue");
+const StationsMap = () => import("~/components/station/templates/StationsMap.vue");
 interface DataType {
   open: boolean;
   lefList: boolean;
@@ -24,7 +24,7 @@ interface DataType {
 export default Vue.extend({
   components: {
     LeftList,
-    PrefecturesMap,
+    StationsMap,
   },
   data(): DataType {
     return {

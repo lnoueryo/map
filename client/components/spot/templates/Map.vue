@@ -1,8 +1,8 @@
 <template>
   <div class="map-container">
     <map-top class="map-top"></map-top>
-    <div id="map" ref="map" :class="{ 'show-line': chartSwitch }"></div>
-    <div class="dot" v-if="dotSwitch"></div>
+    <div id="map" ref="map"></div>
+    <div class="dot"></div>
   </div>
 </template>
 
@@ -19,11 +19,11 @@ interface Polygon {
   lng: number;
 }
 interface DataType {
-  markers: { [key: string]: google.maps.Marker[][] };
+  markers: google.maps.Marker[][];
   polygons: google.maps.Polygon[][];
   timer: null | NodeJS.Timer;
+  selectMarkerCoordinate: {lat: number | null, lng: number | null}
 }
-// interface City {prefecture_id: string, city_code: number, city: string, polygons: Polygon[][]}
 interface Prefecture {
   id: string;
   name: string;
@@ -33,8 +33,7 @@ interface Prefecture {
 }
 
 interface City {
-  city_code: string;
-  province: string;
+  id: string;
   lat: string;
   lng: string;
   city: string;
@@ -61,24 +60,17 @@ export default Vue.extend({
   },
   data(): DataType {
     return {
-      markers: {},
+      markers: [],
       polygons: [],
       timer: null,
+      selectMarkerCoordinate: {lat: null, lng: null}
     };
   },
   computed: {
-    ...mapGetters("spot", [
-      "fields",
-      "prefectures",
-      "selectedMarker",
-      "selectedCityItems",
-    ]),
-    ...mapGetters("switch", [
-      "markerSwitches",
-      "markerSwitch",
-      "lineSwitch",
-      "chartSwitch",
-      "dotSwitch",
+    ...mapGetters('spot', [
+      'prefectures',
+      'filterPrefectures',
+      'query',
     ]),
   },
   watch: {
@@ -88,37 +80,27 @@ export default Vue.extend({
         this.$mapConfig.focusMarker(JSON.parse(bounds), 11);
       }
       this.$store.dispatch('spot/query', to.query)
-      this.checkQuery();
     },
+    filterPrefectures: {
+      handler(v) {
+        if(v !== 0 && this.$mapConfig.map) {
+          this.$mapConfig.resetMarkers(this.markers);
+          this.selectMarkers()
+        }
+      },
+      immediate: false
+    }
   },
-  beforeCreate() {
-    this.$store.dispatch('spot/query', this.$route.query)
-    this.$store.dispatch("switch/makeSwitches");
-  },
-  created() {
-    this.fields.forEach((field: string) => {
-      this.markers[field] = [];
-    });
-  },
-  async mounted() {
-    await this.setMap();
-    this.checkQuery();
-    let timer: NodeJS.Timer | null;
-
-    this.$mapConfig.map.addListener("bounds_changed", () => {
-      const bounds = this.$mapConfig.currentBounds();
-      const getMapCenter = this.$mapConfig.map.getCenter();
-      const mapCenter = { lat: getMapCenter.lat(), lng: getMapCenter.lng() };
-      const zoom = this.$mapConfig.map.getZoom();
-      if (timer !== null) clearTimeout(timer);
-      timer = setTimeout(() => {
-        this.$store.dispatch("spot/getCity", {
-          mapCenter: mapCenter,
-          zoom: zoom,
-        });
-        this.$store.dispatch("spot/getCurrentBounds", bounds);
-      }, 250);
-    });
+  async created() {
+    this.$store.dispatch('spot/query', this.$route.query);
+    await this.$store.dispatch('spot/getPrefectures');
+    let timer = setInterval(async() => {
+      if(google) {
+        clearInterval(timer)
+        await this.setMap();
+        this.selectMarkers();
+      }
+    })
   },
   methods: {
     async setMap() {
@@ -136,20 +118,48 @@ export default Vue.extend({
       this.$mapConfig.mapOptions(mapOptions);
       this.$mapConfig.makeMap(mapEl as HTMLElement);
       this.$mapConfig.placesService();
-      // this.onClickMap()
+      this.addMapEvent()
+    },
+    addMapEvent() {
+      let timer: NodeJS.Timer | null;
+
+      this.$mapConfig.map.addListener("bounds_changed", () => {
+        const bounds = this.$mapConfig.currentBounds();
+        const getMapCenter = this.$mapConfig.map.getCenter();
+        const mapCenter = { lat: getMapCenter.lat(), lng: getMapCenter.lng() };
+        const zoom = this.$mapConfig.map.getZoom();
+        if (timer !== null) clearTimeout(timer);
+        timer = setTimeout(() => {
+          this.$store.dispatch("spot/getCity", {
+            mapCenter: mapCenter,
+            zoom: zoom,
+          });
+          this.$store.dispatch("spot/getCurrentBounds", bounds);
+        }, 250);
+      });
+    },
+    selectMarkers() {
+      const query = this.query;
+      query?.prefecture_id && query.city_code
+        ? this.selectCityMarker(query)
+        : query?.prefecture_id
+        ? this.setCityMarkers(query.prefecture_id)
+        : this.setPrefectureMarkers();
     },
     prefectureMarkerFunction(
       marker: google.maps.Marker,
       prefecture: Prefecture
     ) {
       marker.addListener("click", async (e: google.maps.MapMouseEvent) => {
+        this.$mapConfig.resetMarkers(this.markers)
         this.$router.push({name: 'spot', query: {prefecture_id: prefecture.id}});
       });
     },
     cityMarkerFunction(marker: google.maps.Marker, city: City) {
       marker.addListener("click", async (e: google.maps.MapMouseEvent) => {
+        this.$mapConfig.resetMarkers(this.markers)
         this.$router.push(
-          {name: 'spot', query: {prefecture_id: this.$route.query.prefecture_id, city_code: city.city_code}}
+          {name: 'spot', query: {prefecture_id: this.$route.query.prefecture_id, city_code: city.id}}
         );
       });
     },
@@ -158,18 +168,10 @@ export default Vue.extend({
         this.$router.push({name: 'spot-detail-prefecture_id-city_code-id', params: {prefecture_id: spot.prefecture_id, city_code: spot.city_code, id: String(spot.id)}})
       });
     },
-    checkQuery() {
-      const query = this.$route.query;
-      query?.prefecture_id && query.city_code
-        ? this.selectCityMarker(query as any)
-        : query?.prefecture_id
-        ? this.setCityMarkers(query.prefecture_id as any)
-        : this.setPrefectureMarkers();
-    },
     async setPrefectureMarkers() {
-      this.$mapConfig.resetAllMarkers(this.markers);
-      this.markers.prefectures = await this.$mapConfig.makeMarkers(
-        [{ prefectures: this.prefectures }],
+      this.$mapConfig.resetMarkers(this.markers);
+      this.markers = await this.$mapConfig.makeMarkers(
+        this.filterPrefectures,
         "prefectures",
         this.prefectureMarkerFunction
       );
@@ -179,31 +181,23 @@ export default Vue.extend({
       this.$mapConfig.mapOptions(mapOtions);
     },
     setCityMarkers(id: string) {
-      this.$mapConfig.resetAllMarkers(this.markers);
-      const prefecture = this.prefectures.find(
-        (prefecture: Prefecture) => prefecture.id == id
-      );
-      this.markers.cities = this.$mapConfig.makeMarkers(
-        [prefecture],
+      this.markers = this.$mapConfig.makeMarkers(
+        this.filterPrefectures.cities,
         "cities",
         this.cityMarkerFunction
       );
       if ("click" in this.$route.query) return;
       const zoom = 11;
-      this.$mapConfig.focusMarker(prefecture, zoom);
+      this.$mapConfig.focusMarker(this.filterPrefectures, zoom);
     },
     selectCityMarker(query: { city_code: string }) {
-      this.$mapConfig.resetAllMarkers(this.markers);
-      const city = this.prefectures
-        .reduce((a: Prefecture, b: Prefecture) => a.cities.concat(b.cities))
-        .cities.find((x: City) => x.city_code == query.city_code);
-      this.markers.spots = this.$mapConfig.makeMarkers(
-        [city],
+      this.markers = this.$mapConfig.makeMarkers(
+        this.filterPrefectures.spots,
         "spots",
         this.spotMarkerFunction
       );
       const zoom = 14;
-      this.$mapConfig.focusMarker(city, zoom);
+      this.$mapConfig.focusMarker(this.filterPrefectures, zoom);
     },
     clearTime() {
       if (this.timer) clearTimeout(this.timer);

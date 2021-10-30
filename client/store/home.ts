@@ -138,8 +138,6 @@ const actions = {
     },
     getCity: async (context: any, payload: { mapCenter: Coordinate, zoom: number }) => {
         const response = await $axios.$get('/api/search-by-reverse-geocode/', { params: payload.mapCenter });
-        // const response = await $axios.$post('/api/search-by-reverse-geocode/', payload.mapCenter);
-        console.log(response)
         let AddressElement;
         if (response.Property) {
             try {

@@ -9,7 +9,6 @@
       </div>
       <div class="resize" @mousedown="dragStart"></div>
     </div>
-    <half-modals ref="modals"></half-modals>
   </div>
 </template>
 
@@ -22,13 +21,10 @@ interface DomEvent extends Event {
   clientY: number;
 }
 import Vue from "vue";
-import { mapGetters } from "vuex";
 const MarkerLists = () => import("../organisms/MarkerLists.vue");
 const SearchItems = () => import("../organisms/SearchItems.vue");
-const HalfModals = () => import("../organisms/HalfModals.vue");
 const StationWiki = () => import("../organisms/StationWiki.vue");
 const SearchBar = () => import("../../global/SearchBar.vue");
-const WikiInfo = () => import("../../global/WikiInfo.vue");
 
 export default Vue.extend({
   components: {
@@ -36,8 +32,6 @@ export default Vue.extend({
     StationWiki,
     SearchBar,
     SearchItems,
-    HalfModals,
-    WikiInfo,
   },
   data(): DataType {
     return {

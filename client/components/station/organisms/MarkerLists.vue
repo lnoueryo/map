@@ -19,26 +19,26 @@
         <div v-else>
           <router-link :to="{name: 'station'}" class="company-name" >駅</router-link>
           <div
-            v-for="(company, i) in filteredCompanyLinesByparams"
+            v-for="(mainStation, i) in filteredCompanyLinesByparams"
             :key="i"
             style="position: relative"
           >
             <transition name="list">
               <div>
                 <!-- <div v-if="isCheck(company.id, company.lines)"> -->
-                <label class="company-name" :for="company.name"
+                <label class="company-name" :for="mainStation.company.name"
                   ><input
-                    :id="company.name"
+                    :id="mainStation.company.name"
                     type="checkbox"
-                    :value="company"
+                    :value="mainStation.company"
                     style="display: none"
-                    @click="selectCompany(company)"
-                  />{{ company.name }}</label
+                    @click="selectCompany(mainStation.company)"
+                  />{{ mainStation.company.name }}</label
                 >
               </div>
             </transition>
             <div
-              v-for="(line, j) in company.lines"
+              v-for="(line, j) in mainStation.lines"
               :key="j"
               style="position: relative"
             >
@@ -180,26 +180,24 @@ export default Vue.extend({
     };
   },
   computed: {
-    ...mapGetters("station", ["uniqueStations", "filteredCompanyLines"]),
+    ...mapGetters("station", ["uniqueStations", "filteredCompanyLines", 'particularStations']),
     ...mapGetters("switch", ["leftListSwitch"]),
     filteredCompanyLinesByparams() {
-      let filteredCompanyLines = JSON.parse(
-        JSON.stringify(this.filteredCompanyLines)
-      );
+      let filteredCompanyLines = JSON.parse(JSON.stringify(this.particularStations));
       if ("company_id" in this.$route.query) {
         filteredCompanyLines = filteredCompanyLines.filter(
-          (company: Company) => {
-            return String(company.id) == this.$route.query.company_id;
+          (station: Company) => {
+            return String(station.company.id) == this.$route.query.company_id;
           }
         );
         if ("line_id" in this.$route.query) {
           const lineIds = (this.$route.query.line_id as string).split(",");
           filteredCompanyLines = filteredCompanyLines.map(
-            (company: Company) => {
-              company.lines = company.lines.filter((line) => {
+            (station: Company) => {
+              station.lines = station.lines.filter((line) => {
                 return lineIds.includes(String(line.id));
               });
-              return company;
+              return station;
             }
           );
         }
@@ -228,12 +226,12 @@ export default Vue.extend({
     selectCompany(company: Company) {
       if('company_id' in this.$route.query) {
         this.$router.push({
-          name: "station-name",
+          name: "station-prefecture_id-name",
           params: { name: this.$route.params.name },
         });
       } else {
         this.$router.push({
-          name: "station-name",
+          name: "station-prefecture_id-name",
           params: { name: this.$route.params.name },
           query: { company_id: String(company.id) },
         });
@@ -242,13 +240,13 @@ export default Vue.extend({
     selectLine(company: Company, line: Line) {
       if('line_id' in this.$route.query) {
         this.$router.push({
-          name: "station-name",
+          name: "station-prefecture_id-name",
           params: { name: this.$route.params.name },
           query: { company_id: String(company.id) },
         });
       } else {
         this.$router.push({
-          name: "station-name",
+          name: "station-prefecture_id-name",
           params: { name: this.$route.params.name },
           query: { company_id: String(company.id), line_id: String(line.id) },
         });
@@ -256,7 +254,7 @@ export default Vue.extend({
     },
     selectStation(station: Station) {
       this.$router.push({
-        name: "station-name",
+        name: "station-prefecture_id-name",
         params: { name: station.name },
       });
     },
