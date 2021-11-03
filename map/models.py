@@ -1,7 +1,7 @@
 import json
 import ast
 import sqlalchemy as sa
-from sqlalchemy.orm import backref, sessionmaker, relationship
+from sqlalchemy.orm import backref, sessionmaker, relationship, scoped_session
 from sqlalchemy import (Table, Column, Integer, String, ForeignKey, DateTime, text, Float)
 from sqlalchemy.dialects.mysql.base import BIGINT, LONGTEXT
 from sqlalchemy.ext.declarative import declarative_base
@@ -9,11 +9,10 @@ from sqlalchemy.sql.functions import current_timestamp
 from datetime import timedelta
 import pymysql
 
-engine = sa.create_engine('mysql+pymysql://root:admin@35.200.4.154', pool_recycle=3600) # connect to server
-# engine.execute("CREATE DATABASE tap_map") #create db
+from django.conf import settings
+engine = settings.ENGINE
+
 engine.execute("USE tap_map") # select new db
-Session = sessionmaker(bind=engine)
-session = Session()
 Base = declarative_base()
 
 class LineStation(Base):

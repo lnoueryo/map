@@ -18,7 +18,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'map',
     'corsheaders',
-    'aldjemy'
 ]
 
 MIDDLEWARE = [
@@ -118,4 +117,3 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'dist/static'),
 )
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-
