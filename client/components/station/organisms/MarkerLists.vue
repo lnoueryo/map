@@ -106,11 +106,12 @@ interface Station {
   id: number;
   line_id: number;
   order: number;
-  prefecture: string;
+  prefecture_id: string;
   lat: number;
   lng: number;
   company_id: number;
   city_code: string;
+  company: Company;
 }
 interface Coordinate {
   lat: number;
@@ -186,7 +187,7 @@ export default Vue.extend({
       let filteredCompanyLines = JSON.parse(JSON.stringify(this.particularStations));
       if ("company_id" in this.$route.query) {
         filteredCompanyLines = filteredCompanyLines.filter(
-          (station: Company) => {
+          (station: Station) => {
             return String(station.company.id) == this.$route.query.company_id;
           }
         );

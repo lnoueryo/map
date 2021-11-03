@@ -55,7 +55,7 @@ const getters = {
     },
     particularStations: (state: State) => state.particularStations,
     filteredCompanyLines: (state: State, getters: any) => {
-        let companies = [];
+        let companies: Company[] = [];
         if (getters.params?.name) {
             const selectedStations = getters.particularStations.filter((station: Station) => station.name == getters.params?.name)
             const lineIds = selectedStations.map((station: Station) => {
@@ -63,17 +63,6 @@ const getters = {
                     return line.id;
                 })
             })
-            // const joinCompanies = JSON.parse(JSON.stringify(getters.joinCompanies))
-            // companies = joinCompanies.filter((company: Company) => {
-            //     return selectedStations.some((station: Station) => station.company_id == company.id)
-            // }).map((company: Company) => {
-            //     company['lines'] = company.lines.filter((line) => {
-            //         return lineIds.some((lineId: any) => {
-            //             return lineId.includes(line.id);
-            //         })
-            //     })
-            //     return company;
-            // })
         }
         return companies
     },

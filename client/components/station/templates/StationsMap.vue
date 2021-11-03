@@ -96,10 +96,6 @@ export default Vue.extend({
       }
     }
   },
-  created() {
-    this.$store.dispatch('station/getStations', this.$route.params);
-    this.$store.dispatch('station/getLines', this.$route.params);
-  },
   async mounted() {
     await this.setMap();
     this.addMapEvent()
@@ -129,14 +125,12 @@ export default Vue.extend({
       });
       let stationTimer = setInterval(() => {
         if(this.uniqueStations.length !== 0) {
-          console.log(this.uniqueStations)
           clearInterval(stationTimer);
           this.setMarkers()
         }
       }, 250);
       let lineTimer = setInterval(() => {
         if(this.lines.length !== 0) {
-          console.log(this.lines)
           clearInterval(lineTimer);
           this.lines.forEach((line: any) => {
             const polyline = this.$mapConfig.makePolyline(line)

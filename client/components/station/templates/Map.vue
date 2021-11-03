@@ -64,13 +64,13 @@ export default Vue.extend({
   computed: {
     ...mapGetters("station", ["particularStations"]),
     filterStation() {
-      if (this.filteredStation !== 0) {
+      if ((this as any).filteredStation !== 0) {
         (this as any).station = JSON.parse(
-          JSON.stringify(this.filteredStation[0])
+          JSON.stringify((this as any).filteredStation[0])
         );
         delete (this as any).station["lines"];
       }
-      return this.filteredStation;
+      return (this as any).filteredStation;
     },
     nearestSpots() {
       const neighbors = (this as any).particularStations.forEach(
@@ -140,19 +140,19 @@ export default Vue.extend({
     },
     async makeMarkers() {
       if ("company_id" in this.$route.query) {
-        this.particularStations.forEach((mainStation) => {
+        this.particularStations.forEach((mainStation: Station) => {
           if (String(mainStation.company.id) == this.$route.query.company_id) {
             const marker = this.$mapConfig.makeMarkerWithLabel(
               mainStation,
               require("~/assets/img/station.png"),
               mainStation.name
             );
-            this.onClickMarker(marker, mainStation)
-            this.markers.push(marker);
+            (this as any).onClickMarker(marker, mainStation)
+            (this as any).markers.push(marker);
             if ("line_id" in this.$route.query) {
-              mainStation.lines.forEach((line) => {
-                if (String(this.$route.query.line_id) == line.id) {
-                  line.stations.forEach((station) => {
+              mainStation.lines.forEach((line: Line) => {
+                if (String(this.$route.query.line_id) == String(line.id)) {
+                  line.stations.forEach((station: Station) => {
                     if (station.name !== this.particularStations[0].name) {
                       const marker = this.$mapConfig.makeMarkerWithLabel(
                         station,
@@ -171,8 +171,8 @@ export default Vue.extend({
                 }
               });
             } else {
-              mainStation.lines.forEach((line) => {
-                line.stations.forEach((station) => {
+              mainStation.lines.forEach((line: Line) => {
+                line.stations.forEach((station: Station) => {
                   if (station.name !== this.particularStations[0].name) {
                     const marker = this.$mapConfig.makeMarkerWithLabel(
                       station,
@@ -193,7 +193,7 @@ export default Vue.extend({
           }
         });
       } else {
-        this.particularStations.forEach((mainStation) => {
+        this.particularStations.forEach((mainStation: Station) => {
           const marker = this.$mapConfig.makeMarkerWithLabel(
             mainStation,
             require("~/assets/img/station.png"),
@@ -206,11 +206,11 @@ export default Vue.extend({
               query: {company_id: mainStation.company.id}
             });
           });
-          this.markers.push(marker);
+          (this as any).markers.push(marker);
           if ("line_id" in this.$route.query) {
-            mainStation.lines.forEach((line) => {
-              if (String(this.$route.query.line_id) == line.id) {
-                line.stations.forEach((station) => {
+            mainStation.lines.forEach((line: Line) => {
+              if (String(this.$route.query.line_id) == String(line.id)) {
+                line.stations.forEach((station: Station) => {
                   if (station.name !== this.particularStations[0].name) {
                     const marker = this.$mapConfig.makeMarkerWithLabel(
                       station,
@@ -229,8 +229,8 @@ export default Vue.extend({
               }
             });
           } else {
-            mainStation.lines.forEach((line) => {
-              line.stations.forEach((station) => {
+            mainStation.lines.forEach((line: Line) => {
+              line.stations.forEach((station: Station) => {
                 if (station.name !== this.particularStations[0].name) {
                   const marker = this.$mapConfig.makeMarkerWithLabel(
                     station,
@@ -238,7 +238,6 @@ export default Vue.extend({
                     station.name
                   );
                   marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-                    console.log(station)
                     this.$router.push({
                       name: "station-prefecture_id-name",
                       params: { prefecture_id: station.prefecture_id, name: station.name },
@@ -251,53 +250,19 @@ export default Vue.extend({
           }
         });
       }
-
-      // if ("line_id" in this.$route.query) {
-      //   this.particularStations.forEach((mainStation) => {
-      //     mainStation.lines.forEach((line) => {
-      //       if (String(this.$route.query.line_id) == line.id) {
-      //         line.stations.forEach((station) => {
-      //           if (station.name !== this.particularStations[0].name) {
-      //             const marker = this.$mapConfig.makeMarkerWithLabel(
-      //               station,
-      //               "",
-      //               station.name
-      //             );
-      //             (this as any).otherStaionsMarkers.push(marker);
-      //           }
-      //         });
-      //       }
-      //     });
-      //   });
-      // } else {
-      //   this.particularStations.forEach((mainStation) => {
-      //     mainStation.lines.forEach((line) => {
-      //       line.stations.forEach((station) => {
-      //         if (station.name !== this.particularStations[0].name) {
-      //           const marker = this.$mapConfig.makeMarkerWithLabel(
-      //             station,
-      //             "",
-      //             station.name
-      //           );
-      //           (this as any).otherStaionsMarkers.push(marker);
-      //         }
-      //       });
-      //     });
-      //   });
-      // }
     },
     makeOtherStaionsMarkers(query: Query, params: Params) {
       let lines;
       if ("line_id" in query) {
         const lineIds = query.line_id.split(",");
         lines = [].concat(
-          ...this.filteredStation[0].lines.map((line: Line) => {
+          ...(this as any).filteredStation[0].lines.map((line: Line) => {
             if (lineIds.includes(String(line.id))) return line;
           })
         );
       } else {
         lines = [].concat(
-          ...this.filteredStation.map((station: Station) => station.lines)
+          ...(this as any).filteredStation.map((station: Station) => station.lines)
         );
       }
       const stations = lines.map((line: Line) => {
@@ -335,7 +300,7 @@ export default Vue.extend({
         );
       }
     },
-    addPolylineEvent(polyline, station, line) {
+    addPolylineEvent(polyline: google.maps.Polyline, station: Station, line: Line) {
       polyline.addListener("click", () => {
         if ("line_id" in this.$route.query) {
           this.$router.push({
@@ -370,14 +335,13 @@ export default Vue.extend({
               const polylines = mainStation.lines.map((line: Line) => {
                 if ("line_id" in this.$route.query) {
                   if(String(line.id) == this.$route.query.line_id) {
-                    console.log(String(line.id),this.$route.query.line_id)
                     const polyline = this.$mapConfig.makePolyline(line);
-                    this.addPolylineEvent(polyline, mainStation, line)
+                    (this as any).addPolylineEvent(polyline, mainStation, line)
                     return polyline;
                   }
                 } else {
                   const polyline = this.$mapConfig.makePolyline(line);
-                  this.addPolylineEvent(polyline, mainStation, line);
+                  (this as any).addPolylineEvent(polyline, mainStation, line);
                   return polyline;
                 }
               });
@@ -392,12 +356,12 @@ export default Vue.extend({
               if ("line_id" in this.$route.query) {
                 if(String(line.id) == this.$route.query.line_id) {
                 const polyline = this.$mapConfig.makePolyline(line);
-                this.addPolylineEvent(polyline, mainStation, line)
+                (this as any).addPolylineEvent(polyline, mainStation, line)
                 return polyline;
                 }
               } else {
                 const polyline = this.$mapConfig.makePolyline(line);
-                this.addPolylineEvent(polyline, mainStation, line);
+                (this as any).addPolylineEvent(polyline, mainStation, line);
                 return polyline;
               }
             });

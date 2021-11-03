@@ -35,7 +35,7 @@
                     </div>
                   </div>
                   <div class="d-flex flex-wrap pb-2 py-2" style="font-size: 14px">
-                    <div class="mr-2 mb-3 chip" :style="{backgroundColor: line.color}" v-for="(line, j) in station.lines" :key="j" @click="toStation(line, station.name)">
+                    <div class="mr-2 mb-3 chip" :style="{backgroundColor: line.color}" v-for="(line, j) in station.lines" :key="j" @click="toStation(line, station)">
                       {{line.name}}
                     </div>
                   </div>
@@ -131,7 +131,7 @@
 <script lang="ts">
 import Vue from "vue";
 const MapView = () => import("~/components/spot/templates/SpotMap.vue");
-interface Station { name: string, id: number, line_id: number, order: number, prefecture: string, lat: number, lng: number, company_id: number, city_code: string, geohash: string, company: Company }
+interface Station { name: string, id: number, prefecture_id: string, line_id: number, order: number, prefecture: string, lat: number, lng: number, company_id: number, city_code: string, geohash: string, company: Company }
 interface Company { id: number, name: string, address: string, founded: string, lines: Line[] };
 interface Line { id: number, company_id: number, name: string, polygon: Polygon, color: string, stations: Station[] };
 interface Polygon { lat: number, lng: number }[];
@@ -220,8 +220,8 @@ export default Vue.extend({
       const changedDate = `${year}-${month}-${day} ${hours}:${minutes}`;
       return changedDate;
     },
-    toStation(line: Line, name: string) {
-      this.$router.push({name: 'station-name', params: {name: name}, query: {company_id: String(line.company_id), line_id: String(line.id)}})
+    toStation(line: Line, station: Station) {
+      this.$router.push({name: 'station-prefecture_id-name', params: {prefecture_id: station.prefecture_id,name: station.name}, query: {company_id: String(line.company_id), line_id: String(line.id)}})
     },
     addInfo(spot: Spot) {
       const name = spot.Name;

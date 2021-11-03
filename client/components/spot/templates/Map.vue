@@ -84,7 +84,7 @@ export default Vue.extend({
     filterPrefectures: {
       handler(v) {
         if(v !== 0 && this.$mapConfig.map) {
-          this.$mapConfig.resetMarkers(this.markers);
+          this.$mapConfig.resetMarkers((this as any).markers);
           this.selectMarkers()
         }
       },
@@ -151,13 +151,13 @@ export default Vue.extend({
       prefecture: Prefecture
     ) {
       marker.addListener("click", async (e: google.maps.MapMouseEvent) => {
-        this.$mapConfig.resetMarkers(this.markers)
+        this.$mapConfig.resetMarkers((this as any).markers)
         this.$router.push({name: 'spot', query: {prefecture_id: prefecture.id}});
       });
     },
     cityMarkerFunction(marker: google.maps.Marker, city: City) {
       marker.addListener("click", async (e: google.maps.MapMouseEvent) => {
-        this.$mapConfig.resetMarkers(this.markers)
+        this.$mapConfig.resetMarkers((this as any).markers)
         this.$router.push(
           {name: 'spot', query: {prefecture_id: this.$route.query.prefecture_id, city_code: city.id}}
         );
@@ -169,8 +169,8 @@ export default Vue.extend({
       });
     },
     async setPrefectureMarkers() {
-      this.$mapConfig.resetMarkers(this.markers);
-      this.markers = await this.$mapConfig.makeMarkers(
+      this.$mapConfig.resetMarkers((this as any).markers);
+      (this as any).markers = await this.$mapConfig.makeMarkers(
         this.filterPrefectures,
         "prefectures",
         this.prefectureMarkerFunction
@@ -181,7 +181,7 @@ export default Vue.extend({
       this.$mapConfig.mapOptions(mapOtions);
     },
     setCityMarkers(id: string) {
-      this.markers = this.$mapConfig.makeMarkers(
+      (this as any).markers = this.$mapConfig.makeMarkers(
         this.filterPrefectures.cities,
         "cities",
         this.cityMarkerFunction
@@ -191,7 +191,7 @@ export default Vue.extend({
       this.$mapConfig.focusMarker(this.filterPrefectures, zoom);
     },
     selectCityMarker(query: { city_code: string }) {
-      this.markers = this.$mapConfig.makeMarkers(
+      (this as any).markers = this.$mapConfig.makeMarkers(
         this.filterPrefectures.spots,
         "spots",
         this.spotMarkerFunction

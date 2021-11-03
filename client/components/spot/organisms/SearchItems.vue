@@ -111,7 +111,6 @@ export default Vue.extend({
         return this.$store.getters["switch/leftListSwitch"];
       },
       set(newValue) {
-        console.log(newValue);
         this.$store.dispatch("switch/changeLeftListSwitch", newValue);
       },
     },

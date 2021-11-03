@@ -7,10 +7,17 @@
 </template>
 
 <script lang="ts">
-import MarkerClusterer from '@googlemaps/markerclustererplus';
+import MarkerClusterer from "@googlemaps/markerclustererplus";
 import Vue from "vue";
 import { mapGetters } from "vuex";
 const MapTop = () => import("../organisms/MapTop.vue");
+interface Prefecture {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  cities: City[];
+}
 interface GMapWindow extends Window {
   google: any;
 }
@@ -83,20 +90,20 @@ export default Vue.extend({
   },
   computed: {
     ...mapGetters("station", [
-      'prefectures',
-      'currentBounds',
-      'boundsFilteredStations'
+      "prefectures",
+      "currentBounds",
+      "boundsFilteredStations",
     ]),
   },
   watch: {
     currentBounds: {
       handler() {
-        this.$mapConfig.boundsFilterForMarker([(this as any).markers], true)
-      }
-    }
+        this.$mapConfig.boundsFilterForMarker([(this as any).markers], true);
+      },
+    },
   },
   created() {
-    this.$store.dispatch('station/getPrefectures')
+    this.$store.dispatch("station/getPrefectures");
   },
   async mounted() {
     await this.setMap();
@@ -109,24 +116,31 @@ export default Vue.extend({
       this.$mapConfig.map.setZoom(10);
     },
     async setMarkers() {
-      this.markers = this.prefectures.map((prefecture: Station) => {
-        const marker = this.$mapConfig.makeMarkerWithLabel(prefecture, '', prefecture.name)
+      this.markers = this.prefectures.map((prefecture: Prefecture) => {
+        const marker = this.$mapConfig.makeMarkerWithLabel(
+          prefecture,
+          "",
+          prefecture.name
+        );
         marker.addListener("click", (e: google.maps.MapMouseEvent) => {
-          this.$router.push({name: 'station-prefecture-prefecture_id', params: {prefecture_id: prefecture.id}})
-        })
-        marker.setVisible(false)
+          this.$router.push({
+            name: "station-prefecture-prefecture_id",
+            params: { prefecture_id: prefecture.id },
+          });
+        });
+        marker.setVisible(false);
         return marker;
-      })
+      });
     },
     addMapEvent() {
-    let timer: NodeJS.Timer | null;
+      let timer: NodeJS.Timer | null;
 
-    this.$mapConfig.map.addListener("bounds_changed", () => {
-      const bounds = this.$mapConfig.currentBounds();
-      const getMapCenter = this.$mapConfig.map.getCenter();
-      const mapCenter = { lat: getMapCenter.lat(), lng: getMapCenter.lng() };
-      const zoom = this.$mapConfig.map.getZoom();
-      if (timer !== null) clearTimeout(timer);
+      this.$mapConfig.map.addListener("bounds_changed", () => {
+        const bounds = this.$mapConfig.currentBounds();
+        const getMapCenter = this.$mapConfig.map.getCenter();
+        const mapCenter = { lat: getMapCenter.lat(), lng: getMapCenter.lng() };
+        const zoom = this.$mapConfig.map.getZoom();
+        if (timer !== null) clearTimeout(timer);
         timer = setTimeout(() => {
           this.$store.dispatch("station/getCity", {
             mapCenter: mapCenter,
@@ -136,9 +150,9 @@ export default Vue.extend({
         }, 250);
       });
       let prefectureTimer = setInterval(() => {
-        if(this.prefectures.length !== 0) {
+        if (this.prefectures.length !== 0) {
           clearInterval(prefectureTimer);
-          this.setMarkers()
+          this.setMarkers();
         }
       }, 250);
     },
@@ -215,9 +229,9 @@ export default Vue.extend({
     }
   }
 }
-  @media screen and(max-width: 500px) {
-    .map-container {
-      max-height: calc(var(--vh, 1vh) * 100 - 56px);
-    }
+@media screen and(max-width: 500px) {
+  .map-container {
+    max-height: calc(var(--vh, 1vh) * 100 - 56px);
   }
+}
 </style>

@@ -38,7 +38,9 @@ export default Vue.extend({
     },
   },
   created() {
-    this.$store.dispatch('station/params', this.$route)
+    this.$store.dispatch('station/params', this.$route);
+    this.$store.dispatch('station/getStations', this.$route.params);
+    this.$store.dispatch('station/getLines', this.$route.params);
   }
 });
 </script>

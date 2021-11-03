@@ -33,7 +33,7 @@ export default Vue.extend({
   },
   mounted() {
     let timer = setInterval(async() => {
-      if(this.mainStation.name == this.$route.params.name) {
+      if((this as any).mainStation.name == this.$route.params.name) {
         clearInterval(timer)
         await (this as any).setMap();
       }

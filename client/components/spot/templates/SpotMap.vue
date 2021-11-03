@@ -12,7 +12,7 @@ interface Station {
   id: number;
   line_id: number;
   order: number;
-  prefecture: string;
+  prefecture_id: string;
   lat: number;
   lng: number;
   company_id: number;
