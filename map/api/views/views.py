@@ -169,6 +169,26 @@ class CityAPI(APIView):
         # city_dict = city.to_city_dict()
         # cache.set(f'lines_{id}', line_dict_list, 30)
         return JsonResponse(city_dict_list[0], safe=False)
+
+class SearchStationAPI(APIView):
+    Session = scoped_session(sessionmaker(bind=engine))
+    session = Session()
+    def get(self, request):
+        name = request.GET.dict()['name']
+        name = name.replace('　', ' ')
+        names = name.split(' ')
+        query = self.session.query(Station)
+        filters = []
+        for name in names:
+            filters.append(and_(Station.name.like('%' + name + '%')))
+        try:
+            stations = query.filter(and_(*filters)).all()
+        except Exception as e:
+            print(e)
+        else:
+            stationdict_list = [station.join_dict() for station in stations] if stations else []
+        return JsonResponse(stationdict_list, safe=False)
+
 class HouseModel(APIView):
 
     def get(self, request):

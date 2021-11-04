@@ -61,21 +61,7 @@ DATABASE = {
     'USER': env('DATABASE_USER'),
     'HOST': env('DATABASE_HOST'),
     'PASSWORD': env('DATABASE_PASSWORD'),
-    'QUERY': env('DATABASE_QUERY'),
 }
-# DATABASE_HOST=35.200.4.154
-# db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
-# cloud_sql_connection_name = 'trim-tide-313616:asia-northeast1:tap-map'
-# ENGINE = sa.create_engine(f'{DATABASE["ENGINE"]}://{DATABASE["USER"]}:{DATABASE["PASSWORD"]}@{DATABASE["HOST"]}/{DATABASE["NAME"]}', pool_recycle=3600) # connect to server
-
-# ENGINE = sa.create_engine(sa.engine.url.URL(
-#     drivername=DATABASE["ENGINE"],
-#     username=DATABASE["USER"],
-#     password=DATABASE["PASSWORD"],
-#     database=DATABASE["NAME"],
-#     host=DATABASE["HOST"],
-#     # port="3306",
-# ), pool_recycle=3600)
 
 db_socket_dir = os.environ.get("DB_SOCKET_DIR", "/cloudsql")
 cloud_sql_connection_name = 'trim-tide-313616:asia-northeast1:gmap'
@@ -97,10 +83,3 @@ ENGINE = sa.create_engine(sa.engine.url.URL(
             cloud_sql_connection_name)  # i.e "<PROJECT-NAME>:<INSTANCE-REGION>:<INSTANCE-NAME>"
     }
 ), **db_config)
-# ENGINE = sa.create_engine(f'{DATABASE["ENGINE"]}://{DATABASE["USER"]}:{DATABASE["PASSWORD"]}@{DATABASE["HOST"]}/{DATABASE["NAME"]}?charset=utf8', **db_config)
-# ENGINE = sa.create_engine(f'mysql://tap-map:admin@//cloudsql/trim-tide-313616:asia-northeast1:tap-map/tap_map', pool_recycle=3600) # connect to server
-# gcloud run services update map --add-cloudsql-instances=trim-tide-313616:asia-northeast1:tap-map
-# ENGINE = sa.create_engine(f'{DATABASE["ENGINE"]}://tap-map:{DATABASE["PASSWORD"]}@{DATABASE["HOST"]}', pool_recycle=3600)
-# ENGINE = sa.create_engine(f'mysql+pymysql://tap-map:admin@/cloudsql/trim-tide-313616:asia-northeast1:tap-map', pool_recycle=3600)
-# ENGINE = sa.create_engine(f'mysql+pymysql://admin:admin@/cloudsql/trim-tide-313616:asia-northeast1:gmap', pool_recycle=3600)
-# cloud_sql_proxy.exe -instances=trim-tide-313616:asia-northeast1:tap-map=tcp:3307 mysql -u tap-map --host 127.0.0.1

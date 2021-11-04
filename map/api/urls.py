@@ -14,7 +14,8 @@ from map.api.views.views import (
     SpotAPI,
     StationAPI,
     LineAPI,
-    CityAPI
+    CityAPI,
+    SearchStationAPI
 )
 # from map.api.views import (
 #     WikiAPI,
@@ -36,4 +37,5 @@ urlpatterns = [
     path('line/', LineAPI.as_view(), name="line"),
     path('prefecture/', PrefectureAPI.as_view(), name="prefecture-station"),
     path('city/', CityAPI.as_view(), name="city"),
+    path('search/station/', SearchStationAPI.as_view(), name="search-station"),
 ]
