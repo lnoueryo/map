@@ -10,13 +10,20 @@
         "
       >
         <simple-lists
-          :items="$store.getters['station/boundsFilter'](uniqueStations)"
-          @item="selectStation($event)"
-          v-if="'name' in $route.params === false"
+          :items="$store.getters['station/boundsFilter'](prefectures)"
+          @item="selectPrefecture($event)"
+          v-if="Object.keys(this.$route.params).length == 0"
         >
           <div>駅を選択</div>
         </simple-lists>
-        <div v-else>
+        <simple-lists
+          :items="$store.getters['station/boundsFilter'](uniqueStations)"
+          @item="selectStation($event)"
+          v-else
+        >
+          <div>駅を選択</div>
+        </simple-lists>
+        <!-- <div v-else>
           <router-link :to="{name: 'station'}" class="company-name" >駅</router-link>
           <div
             v-for="(mainStation, i) in filteredCompanyLinesByparams"
@@ -25,7 +32,6 @@
           >
             <transition name="list">
               <div>
-                <!-- <div v-if="isCheck(company.id, company.lines)"> -->
                 <label class="company-name" :for="mainStation.company.name"
                   ><input
                     :id="mainStation.company.name"
@@ -73,7 +79,7 @@
               </transition-group>
             </div>
           </div>
-        </div>
+        </div> -->
       </div>
     </transition>
   </div>
@@ -181,8 +187,8 @@ export default Vue.extend({
     };
   },
   computed: {
-    ...mapGetters("station", ["uniqueStations", "filteredCompanyLines", 'particularStations']),
-    ...mapGetters("switch", ["leftListSwitch"]),
+    ...mapGetters('station', ['uniqueStations', 'filteredCompanyLines', 'particularStations', 'prefectures']),
+    ...mapGetters('switch', ['leftListSwitch']),
     filteredCompanyLinesByparams() {
       let filteredCompanyLines = JSON.parse(JSON.stringify(this.particularStations));
       if ("company_id" in this.$route.query) {
@@ -257,6 +263,12 @@ export default Vue.extend({
       this.$router.push({
         name: "station-prefecture_id-name",
         params: { name: station.name },
+      });
+    },
+    selectPrefecture(prefecture: Prefecture) {
+      this.$router.push({
+        name: "station-prefecture-prefecture_id",
+        params: { prefecture_id: prefecture.id },
       });
     },
   },

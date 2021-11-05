@@ -27,7 +27,7 @@
           @item="spot = { ...spot, ...$event }"
           v-if="$route.query.prefecture_id && $route.query.city_code"
         >
-        {{filterPrefectures.name}}
+        <div @click="moveToCity(filterPrefectures)">{{filterPrefectures.name}}</div>
         </simple-lists>
       </div>
     </transition>
@@ -45,6 +45,7 @@ interface Prefecture {
   cities: City[];
 }
 interface City {
+  prefecture_id: string
   name: string;
   wiki: string;
   id: string;
@@ -133,6 +134,9 @@ export default Vue.extend({
     getWiki(obj: City | Prefecture) {
       (this.$parent.$refs.modals as any).getWiki(obj);
     },
+    moveToCity(city: City) {
+      this.$router.push({'name': 'prefecture-prefecture_id-city_code', params: {prefecture_id: city.prefecture_id, city_code: city.id}})
+    }
     // hideWiki() {
     //     (this as any).wikiReady = false;
     // },

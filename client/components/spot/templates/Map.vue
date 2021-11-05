@@ -197,7 +197,8 @@ export default Vue.extend({
         this.spotMarkerFunction
       );
       const zoom = 14;
-      this.$mapConfig.focusMarker(this.filterPrefectures, zoom);
+      if('lat' in this.$route.query && 'lng' in this.$route.query) this.$mapConfig.focusMarker({lat: this.$route.query.lat, lng: this.$route.query.lng}, zoom);
+      else this.$mapConfig.focusMarker(this.filterPrefectures, zoom);
     },
     clearTime() {
       if (this.timer) clearTimeout(this.timer);

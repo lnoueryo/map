@@ -37,9 +37,15 @@ export default Vue.extend({
       return this.$store.getters.windowSize.x < 500;
     },
   },
-  created() {
-    this.$store.dispatch('station/params', this.$route)
-  }
+  watch: {
+    '$route': {
+      handler(to, from) {
+        if(from?.path !== '/station') this.$store.commit('spot/resetState');
+        this.$store.dispatch('station/params', this.$route.params);
+      },
+      immediate: true
+    }
+  },
 });
 </script>
 

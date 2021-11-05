@@ -37,8 +37,16 @@ export default Vue.extend({
       return this.$store.getters.windowSize.x < 500;
     },
   },
+  watch: {
+    '$route': {
+      handler(to, from) {
+        if(from?.path !== '/station') this.$store.commit('spot/resetState');
+        this.$store.dispatch('station/params', this.$route.params)
+      },
+      immediate: true
+    }
+  },
   created() {
-    this.$store.dispatch('station/params', this.$route);
     this.$store.dispatch('station/getStations', this.$route.params);
     this.$store.dispatch('station/getLines', this.$route.params);
   }

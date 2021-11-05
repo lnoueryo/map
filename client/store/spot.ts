@@ -13,6 +13,7 @@ interface State {
     query: Query
     params: Params | null,
     spot: Spot
+    searchResult: Town[],
 }
 interface Coordinate { lat: number, lng: number };
 interface Polygon { lat: number, lng: number }[];
@@ -20,19 +21,24 @@ interface Bounds { north: number, south: number, west: number, east: number };
 interface AddressElement { Code: string, Name: string, Kana: string, Level: string }
 interface Prefecture { id: string, name: string, lat: number, lng: number, cities: City[] }
 interface City { id: string, name: string, city_code: string, province: string, lat: string, lng: string, city: string, spots: Spot[], polygons: Polygon[][], prefecture_id: string }
-interface Spot { name: string, place_id: string, address: string, lat: string, lng: string, city_code: string }
+interface Town { name: string, address: string, lat: string, lng: string, city_code: string }
 interface Query { prefecture_id: string, city_code: string }
-interface Spot { id: number, name: string, place_id: string, address: string, lat: string, lng: string }
+interface Spot { id: number, name: string, place_id: string, address: string, lat: string, lng: string, city_code: string }
 interface Params { prefecture_id: string, city_code: string, id: number }
-const state = {
-    prefectures: [],
-    currentBounds: { south: 0, north: 0, east: 0, west: 0 },
-    searchWord: null,
-    addressElement: null,
-    query: {},
-    params: null,
-    spot: {}
-};
+
+const getDefaultState = () => {
+    return {
+        prefectures: [],
+        currentBounds: { south: 0, north: 0, east: 0, west: 0 },
+        searchResult: [],
+        addressElement: null,
+        query: {},
+        params: null,
+        spot: {}
+    }
+}
+
+const state = () => getDefaultState();
 
 const getters = {
     prefectures: (state: State) => state.prefectures,
@@ -50,12 +56,13 @@ const getters = {
         if('prefecture_id' in state.query && result.length !== 0) {
             result = result.find((prefecture: Prefecture) => prefecture.id == state.query.prefecture_id);
             if('city_code' in state.query) {
+                console.log(result)
                 result = result.cities.find((city: City) => city.id == state.query.city_code);
             }
         }
         return result;
     },
-    searchWord: (state: State): string => state.searchWord,
+    searchResult: (state: State): Town[] => state.searchResult,
     boundsFilter: (state: State) => (points: Coordinate[]): Coordinate[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
         const filteredStations = points.filter((point) => {
             const verticalCondition = state.currentBounds.west < point.lng && state.currentBounds.east > point.lng;
@@ -103,11 +110,14 @@ const getters = {
 }
 
 const mutations = {
+    resetState: (state: State) => {
+        Object.assign(state, getDefaultState())
+    },
     currentBounds: (state: State, payload: Bounds) => {
         state.currentBounds = { ...state.currentBounds, ...payload }
     },
-    searchWord: (state: State, payload: string) => {
-        state.searchWord = payload;
+    searchResult: (state: State, payload: Town[]) => {
+        state.searchResult = payload;
     },
     addressElement: (state: State, payload: AddressElement[]) => {
         state.addressElement = payload;
@@ -124,7 +134,7 @@ const mutations = {
     },
     spot: (state: State, payload: Spot) => {
         state.spot = payload;
-    }
+    },
 };
 
 const actions = {
@@ -163,6 +173,14 @@ const actions = {
         context.dispatch('info/getTwitterInfo', twitterQuery, {root: true})
         context.dispatch("info/getAroundSpot", twitterQuery, {root: true});
     },
+    searchTown: async(context: any, payload: string) => {
+        if(payload) {
+            const response = await $axios.$get('/api/search/town/', {params: {word: payload}})
+            context.commit('searchResult', response)
+        } else {
+            context.commit('searchResult', [])
+        }
+    }
 };
 
 export default {

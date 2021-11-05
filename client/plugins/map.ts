@@ -118,7 +118,7 @@ export class MapConfig {
             icon = this.markerIcons[key].big;
         }
         const markers = json.map((obj: {lat: number, lng: number, name: string}) => {
-            let marker = this.makeMarker(obj, icon, obj.name);
+            let marker = this.makeMarkerWithLabel(obj, icon, obj.name);
             func(marker, obj)
             return marker
         })

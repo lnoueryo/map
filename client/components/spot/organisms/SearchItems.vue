@@ -4,21 +4,21 @@
       <search-bar
         ref="searchBar"
         placeholder="観光地を検索"
-        v-model="searchWord"
-        @select="select(filteredSearchSpots[0])"
+        @select="select(filteredsearchResult[0])"
+        @searchWord="searchTown($event)"
       >
         <div
           class="menu"
-          v-if="searchSpots.length !== 0"
+          v-if="searchResult.length !== 0"
           style="background-color: white"
         >
           <div
-            @mouseup.stop.prevent="select(searchSpot)"
-            v-for="(searchSpot, i) in filteredSearchSpots"
+            @mouseup.stop.prevent="select(searchResult)"
+            v-for="(searchResult, i) in filteredsearchResult"
             :key="i"
             class="list"
           >
-            <span>{{ searchSpot.name }}</span>
+            <span>{{ searchResult.address }}</span>
           </div>
         </div>
       </search-bar>
@@ -64,6 +64,7 @@ const ToggleSwitch = () => import("../../global/ToggleSwitch.vue");
 
 interface DataType {
   countMarkers: number;
+  timer: Node | null;
 }
 interface Station {
   company_name: string;
@@ -86,6 +87,15 @@ interface Spot {
   city_code: string;
   geohash: string;
 }
+interface Town {
+  name: string;
+  address: string;
+  prefecture_id: string;
+  lat: string;
+  lng: string;
+  city_code: string;
+}
+
 export default Vue.extend({
   components: {
     SearchBar,
@@ -94,18 +104,11 @@ export default Vue.extend({
   data(): DataType {
     return {
       countMarkers: 0,
+      timer: null,
     };
   },
   computed: {
-    ...mapGetters("spot", ['showNumberOfMarkers', 'searchSpots']),
-    searchWord: {
-      get() {
-        return this.$store.getters["spot/searchWord"];
-      },
-      set(newValue) {
-        this.$store.dispatch("spot/searchWord", newValue);
-      },
-    },
+    ...mapGetters("spot", ["showNumberOfMarkers", "searchResult"]),
     changeLeftListSwitch: {
       get() {
         return this.$store.getters["switch/leftListSwitch"];
@@ -120,20 +123,27 @@ export default Vue.extend({
     smp() {
       return this.$store.getters.windowSize.x < 500;
     },
-    filteredSearchSpots() {
-      return this.searchSpots.filter((_: any, index: number) => {
+    filteredsearchResult() {
+      return this.searchResult.filter((_: any, index: number) => {
         return index < 5;
       });
     },
   },
   watch: {
-      showNumberOfMarkers(newValue, OldValue) { //vuexから表示されている数の変化を検知
-          (this as any).count(newValue, OldValue);
-      },
+    showNumberOfMarkers(newValue, OldValue) {
+      //vuexから表示されている数の変化を検知
+      (this as any).count(newValue, OldValue);
+    },
   },
   methods: {
-    select(searchSpot: Spot) {
-      this.$router.push({name: 'detail-prefecture_id-city_code-id', params: {prefecture_id: searchSpot.prefecture_id, city_code: searchSpot.city_code, id: String(searchSpot.id)}})
+    select(town: Town) {
+      // this.$store.dispatch('spot/getPrefectures')
+      console.log(town)
+      this.$router.push({
+        name: "spot",
+        query: { prefecture_id: town.prefecture_id, city_code: town.city_code, lat: town.lat, lng: town.lng},
+      });
+      this.$refs.searchBar.blur = false;
     },
     count(newValue: number, OldValue: number): void {
       const DURATION = 600;
@@ -151,6 +161,13 @@ export default Vue.extend({
           this.$data.countMarkers = to;
         }
       }, 1);
+    },
+    searchTown(word: string) {
+      if ((this as any).timer) clearTimeout((this as any).timer);
+      (this as any).timer = setTimeout(
+        () => this.$store.dispatch("spot/searchTown", word),
+        750
+      );
     },
   },
 });

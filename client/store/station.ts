@@ -13,7 +13,7 @@ interface State {
     addressElement: null | AddressElement[],
     params: Params | null
     query: Query
-    searchWord: string,
+    searchResult: Station[],
     particularStations: Station[]
 }
 interface Coordinate { lat: number, lng: number };
@@ -30,17 +30,32 @@ interface Station { name: string, id: number, line_id: number, order: number, pr
 interface LineStations { id: number, station_id: number, line_id: number }
 interface Params { prefecture_id: string, city_code: string, id: number, name: string, company_id: string }
 interface Query { company_id: string, line_id: string }
-const state = {
-    prefectures: [],
-    lines: [],
-    stations: [],
-    currentBounds: { south: 0, north: 0, east: 0, west: 0 },
-    addressElement: null,
-    params: null,
-    query: {},
-    searchWord: null,
-    particularStations: []
-};
+const getDefaultState = () => {
+    return {
+        prefectures: [],
+        lines: [],
+        stations: [],
+        currentBounds: { south: 0, north: 0, east: 0, west: 0 },
+        addressElement: null,
+        params: {},
+        query: {},
+        searchResult: [],
+        particularStations: []
+    }
+}
+
+const state = () => getDefaultState();
+// const state = {
+//     prefectures: [],
+//     lines: [],
+//     stations: [],
+//     currentBounds: { south: 0, north: 0, east: 0, west: 0 },
+//     addressElement: null,
+//     params: {},
+//     query: {},
+//     searchResult: [],
+//     particularStations: []
+// };
 
 const getters = {
     params: (state: State) => state.params,
@@ -125,10 +140,10 @@ const getters = {
     // originalCities: (state: State, getters: any) => {
     //     return state.cities
     // },
-    searchWord: (state: State): string => state.searchWord,
+    searchResult: (state: State): Station[] => state.searchResult,
     currentBounds: (state: State) => state.currentBounds,
     showNumberOfMarkers: (state: State, getters: any): number => { //現在表示されているマーカーの数を返す
-        return getters.params?.name == 'station' ? getters.boundsFilter(getters.uniqueStations).length : getters.boundsFilteredStations.length;
+        return 'prefecture_id' in getters.params ? getters.boundsFilter(getters.uniqueStations).length : getters.boundsFilter(getters.prefectures).length;
     },
     boundsFilter: (state: State) => (points: Coordinate[]): Coordinate[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
         const filteredStations = points.filter((point) => {
@@ -138,10 +153,6 @@ const getters = {
         });
         return filteredStations;
     },
-    searchStations: (state: State, getters: any): Station[] => { //検索バーに入った駅名がstationにあればオブジェクトを返す
-        const stations = getters.stations.filter((station: Station) => station.name.indexOf(state.searchWord) > -1);
-        return state.searchWord ? getters.removeOverlap(stations) : [];
-    },
     removeOverlap: (state: State) => (stations: Station[]) => { //重複した駅名を削除
         let map = new Map(stations.map(station => [station.name, station]));
         return Array.from(map.values());
@@ -149,6 +160,9 @@ const getters = {
 }
 
 const mutations = {
+    resetState: (state: State) => {
+        Object.assign(state, getDefaultState())
+    },
     addressElement: (state: State, payload: AddressElement[]) => {
         state.addressElement = payload;
     },
@@ -164,8 +178,8 @@ const mutations = {
     currentBounds: (state: State, payload: Bounds) => {
         state.currentBounds = Object.assign({}, state.currentBounds, payload)
     },
-    searchWord: (state: State, payload: string) => {
-        state.searchWord = payload;
+    searchResult: (state: State, payload: Station[]) => {
+        state.searchResult = payload;
     },
     prefectures: (state: State, payload: Prefecture[]) => {
         state.prefectures = payload;
@@ -224,6 +238,14 @@ const actions = {
         const response = await $axios.$get('/api/line/', {params: payload});
         context.commit('lines', response)
     },
+    searchStation: async(context: any, payload: string) => {
+        if(payload) {
+            const response = await $axios.$get('/api/search/station/', {params: {word: payload}})
+            context.commit('searchResult', response)
+        } else {
+            context.commit('searchResult', [])
+        }
+    }
 };
 
 export default {

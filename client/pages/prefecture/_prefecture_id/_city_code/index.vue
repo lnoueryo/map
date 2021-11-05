@@ -282,7 +282,6 @@ export default {
       return Math.round(num / 100) / 100;
     },
     page(num) {
-      console.log(this.$route)
       const city_code = Number(this.$route.params.city_code) + num;
       // this.$router.push({name: 'station-name', params: {name: '飯田橋駅'}})
       // this.$router.push({name: 'prefecture-prefecture_id-city_code', params: {prefecture_id: '13', city_code: String(city_code)}})

@@ -6,9 +6,9 @@
           ref="input"
           type="text"
           :placeholder="placeholder"
-          v-model="searchWord"
           @blur="check"
           @keyup.enter="onEnter"
+          @input="input($event)"
         />
         <v-icon class="close" @click="searchWord = null">mdi-close</v-icon>
       </div>
@@ -28,16 +28,6 @@ export default {
       blur: false,
     };
   },
-  computed: {
-    searchWord: {
-      get() {
-        return this.value;
-      },
-      set(newValue) {
-        this.$emit("input", newValue);
-      },
-    },
-  },
   methods: {
     focus() {
       this.$refs.input.focus();
@@ -54,6 +44,9 @@ export default {
     onEnter() {
       this.$emit("select");
     },
+    input(word) {
+      this.$emit('searchWord', word.target.value);
+    }
   },
 };
 </script>

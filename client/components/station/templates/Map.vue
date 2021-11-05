@@ -95,6 +95,7 @@ export default Vue.extend({
     },
   },
   created() {
+    this.$store.commit('station/resetState')
     this.$store.dispatch("station/getParticularStations", this.$route.params);
     this.$store.dispatch("station/query", this.$route.query);
   },
