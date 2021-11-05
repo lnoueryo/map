@@ -59,6 +59,9 @@ def import_data():
     df_towns = pd.read_csv(os.path.join(settings.BASE_DIR / f'data/csv/towns.csv')).fillna(0)
     town_dict_list = df_towns.to_dict(orient='records')
 
+    Session = scoped_session(sessionmaker(bind=engine))
+    session = Session()
+
     session.bulk_insert_mappings(Prefecture, prefecture_dict_list)
     for city_dict in city_dict_list:
         city_dict['id'] = city_dict['city_code']

@@ -155,39 +155,67 @@ class LineAPI(APIView):
         return JsonResponse(line_dict_list, safe=False)
 
 class CityAPI(APIView):
-    Session = scoped_session(sessionmaker(bind=engine))
-    session = Session()
     def get(self, request):
+        Session = scoped_session(sessionmaker(bind=engine))
+        session = Session()
         id = request.GET.dict()['city_code']
-        # lines_cache = cache.get(f'lines_{id}')
-        # if lines_cache:
-        #     sys.getsizeof(lines_cache)
-        #     cache.touch(f'lines_{id}', 30)
-        #     return JsonResponse(lines_cache, safe=False)
-        cities = self.session.query(City).filter(City.id == id).all()
-        city_dict_list =[city.to_city_dict() for city in cities]
-        # city_dict = city.to_city_dict()
-        # cache.set(f'lines_{id}', line_dict_list, 30)
-        return JsonResponse(city_dict_list[0], safe=False)
+        try:
+            cities = session.query(City).filter(City.id == id).all()
+        except Exception as e:
+            print(e)
+        city_dict_list = [city.to_city_dict() for city in cities]
+        session.close()
+        return JsonResponse(city_dict_list, safe=False)
 
 class SearchStationAPI(APIView):
     Session = scoped_session(sessionmaker(bind=engine))
     session = Session()
     def get(self, request):
-        name = request.GET.dict()['name']
-        name = name.replace('　', ' ')
-        names = name.split(' ')
+        word = request.GET.dict()['word']
+        word = word.replace('　', ' ')
+        words = word.split(' ')
         query = self.session.query(Station)
         filters = []
-        for name in names:
-            filters.append(and_(Station.name.like('%' + name + '%')))
+        for word in words:
+            filters.append(and_(Station.search_text.like('%' + word + '%')))
         try:
             stations = query.filter(and_(*filters)).all()
         except Exception as e:
             print(e)
         else:
-            stationdict_list = [station.join_dict() for station in stations] if stations else []
-        return JsonResponse(stationdict_list, safe=False)
+            station_dict_list = [station.join_dict() for station in stations] if stations else []
+            new_station_dict_list = []
+            for station_dict in station_dict_list:
+                if word in station_dict['name']:
+                    new_station_dict_list = [station_dict] + new_station_dict_list
+                else:
+                    new_station_dict_list.append(station_dict)
+        return JsonResponse(new_station_dict_list, safe=False)
+
+class SearchSpotAPI(APIView):
+    Session = scoped_session(sessionmaker(bind=engine))
+    session = Session()
+    def get(self, request):
+        word = request.GET.dict()['word']
+        word = word.replace('　', ' ')
+        words = word.split(' ')
+        query = self.session.query(Town)
+        filters = []
+        for word in words:
+            filters.append(and_(Town.address.like('%' + word + '%')))
+        try:
+            towns = query.filter(and_(*filters)).all()
+        except Exception as e:
+            print(e)
+        else:
+            town_dict_list = [town.to_dict() for town in towns] if towns else []
+            new_town_dict_list = []
+            for town_dict in town_dict_list:
+                if word in town_dict['name']:
+                    new_town_dict_list = [town_dict] + new_town_dict_list
+                else:
+                    new_town_dict_list.append(town_dict)
+        return JsonResponse(new_town_dict_list, safe=False)
 
 class HouseModel(APIView):
 
