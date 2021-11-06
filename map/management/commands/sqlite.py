@@ -4,8 +4,9 @@ import pandas as pd
 from django.core.management.base import BaseCommand
 from django.conf import settings
 from sqlalchemy.orm import backref, sessionmaker, relationship, scoped_session
-from map.models import *
-
+from map.sqlite.models import *
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+engine = create_engine(f'sqlite:///{BASE_DIR}/db.sqlite3')
 def execute(is_import):
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
