@@ -106,7 +106,7 @@ export class MapConfig {
             labelContent: text,                   //ラベル文字
             labelAnchor: new google.maps.Point(labelWidth, -55),   //ラベル文字の基点
             labelClass: 'labels',
-            title: text,                      //CSSのクラス名                 //スタイル定義
+            // title: text,                      //CSSのクラス名                 //スタイル定義
         }) as any;
         return marker
     }

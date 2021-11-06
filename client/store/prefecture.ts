@@ -60,12 +60,9 @@ const actions = {
     getCities: async(context: any, payload: {city_code: string}) => {
         const response = await $axios.$get('/api/prefecture/city/', {params: payload});
         context.commit('cities', response)
-        console.log(response)
     },
     getCity: async(context: any, payload: {city_code: string}) => {
-        console.log(payload)
         const response = await $axios.$get('/api/city/', {params: payload});
-        console.log(response)
         context.commit('city', response)
     },
 };

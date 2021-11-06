@@ -56,7 +56,6 @@ const getters = {
         if('prefecture_id' in state.query && result.length !== 0) {
             result = result.find((prefecture: Prefecture) => prefecture.id == state.query.prefecture_id);
             if('city_code' in state.query) {
-                console.log(result)
                 result = result.cities.find((city: City) => city.id == state.query.city_code);
             }
         }
@@ -64,6 +63,7 @@ const getters = {
     },
     searchResult: (state: State): Town[] => state.searchResult,
     boundsFilter: (state: State) => (points: Coordinate[]): Coordinate[] => { //現在表示されているマップ内にあるマーカー(駅)のみ返す
+        if(!Array.isArray(points)) return [];
         const filteredStations = points.filter((point) => {
             const verticalCondition = state.currentBounds.west < point.lng && state.currentBounds.east > point.lng;
             const horizontalCondition = state.currentBounds.south < point.lat && state.currentBounds.north > point.lat;

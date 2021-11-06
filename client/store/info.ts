@@ -57,7 +57,6 @@ const mutations = {
 
 const actions = {
     getTwitterInfo: async (context: any, payload: string) => {
-        console.log(payload)
         let err, response = await $axios.$get('/api/twitter/', { params: payload });
         if (err) {
             console.log(err)

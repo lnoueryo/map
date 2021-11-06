@@ -227,7 +227,6 @@ const actions = {
     },
     getStations: async (context: any, payload: {prefecture_id: string}) => {
         const response = await $axios.$get('/api/station/', {params: payload});
-        console.log(response)
         context.commit('stations', response)
     },
     getParticularStations: async (context: any, payload: {prefecture_id: string}) => {
