@@ -2,90 +2,99 @@ import sys
 from django.http import HttpResponse, JsonResponse
 import requests
 import json
-import re
-import time
-from datetime import datetime, date, timedelta, timezone
-from dateutil.relativedelta import relativedelta
+from datetime import timedelta
 import urllib.request
+import sqlalchemy as sa
+from sqlalchemy.orm import backref, sessionmaker, scoped_session
+from sqlalchemy import and_
 
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 from rest_framework.views import APIView
 import tweepy
-import pytz
 
 from gmap.house_model import HouseModel
 from map.models import *
-# from map.sqlite_models import *
-from django.conf import settings
-from django.core import serializers
-from django.core.cache import cache
 from gmap.geohash import Geohash
+from django.conf import settings
+from django.core.cache import cache
+from map.sqlite.views import Sqlite
+sq = Sqlite()
 
 class CompanyAPI(APIView):
 
     def get(self, request):
-        Session = scoped_session(sessionmaker(bind=engine))
-        session = Session()
         companies_cache = cache.get('companies')
         if companies_cache:
             sys.getsizeof(companies_cache)
             cache.touch('companies', 30)
             return JsonResponse(companies_cache, safe=False)
+        Session = scoped_session(sessionmaker(bind=engine))
+        session = Session()
         try:
             companies = session.query(Company).all()
-        except Exception as e:
+        except Exception  as e:
+            company_dict_list = sq.get_companies()
             print(e)
         else:
             company_dict_list = [company.to_dict() for company in companies]
-            cache.set('companies', company_dict_list, 30)
         finally:
+            cache.set('companies', company_dict_list, 30)
             session.close()
             return JsonResponse(company_dict_list, safe=False)
 
 class PrefectureCityAPI(APIView):
 
     def get(self, request):
-        Session = scoped_session(sessionmaker(bind=engine))
-        session = Session()
         prefectures_cache = cache.get('prefectures')
         if prefectures_cache:
             sys.getsizeof(prefectures_cache)
             cache.touch('prefectures', 30)
             return JsonResponse(prefectures_cache, safe=False)
+        Session = scoped_session(sessionmaker(bind=engine))
+        session = Session()
         try:
             prefectures = session.query(Prefecture).all()
-        except Exception as e:
+        except Exception  as e:
+            prefecture_dict_list = sq.get_prefectures_cities()
             print(e)
         else:
             prefecture_dict_list = [prefecture.with_city_dict() for prefecture in prefectures]
-            cache.set('prefectures', prefecture_dict_list, 30)
         finally:
+            cache.set('prefectures', prefecture_dict_list, 30)
             session.close()
             return JsonResponse(prefecture_dict_list, safe=False)
 
 class SpotAPI(APIView):
     gh = Geohash()
-    Session = scoped_session(sessionmaker(bind=engine))
-    session = Session()
     def get(self, request):
         if request.GET.dict():
-            spot = self.session.query(Spot).filter(Spot.id == request.GET.dict()['id']).one_or_none()
-            spot_dict = spot.join_dict()
-            neighbors = self.get_neighbors(spot_dict['geohash'])
-            num = 1
-            while num < 6:
-                stations = self.session.query(Station).filter(Station.geohash.in_(neighbors)).all()
-                if stations:
-                    break
-                else:
-                    for neighbor in neighbors:
-                        neighbors = neighbors + self.get_neighbors(neighbor)
-                    neighbors = list(set(neighbors))
-                num += 1
-            station_dict_list = [station.to_dict() for station in stations]
-            spot_dict['stations'] = station_dict_list
-        return JsonResponse(spot_dict, safe=False)
+            id = request.GET.dict()['id']
+            Session = scoped_session(sessionmaker(bind=engine))
+            session = Session()
+            try:
+                spot = session.query(Spot).filter(Spot.id == id).one_or_none()
+            except Exception  as e:
+                spot_dict = sq.get_spot(id)
+                print(e)
+            else:
+                spot_dict = spot.join_dict()
+                neighbors = self.get_neighbors(spot_dict['geohash'])
+                num = 1
+                while num < 6:
+                    stations = session.query(Station).filter(Station.geohash.in_(neighbors)).all()
+                    if stations:
+                        break
+                    else:
+                        for neighbor in neighbors:
+                            neighbors = neighbors + self.get_neighbors(neighbor)
+                        neighbors = list(set(neighbors))
+                    num += 1
+                station_dict_list = [station.to_dict() for station in stations]
+                spot_dict['stations'] = station_dict_list
+            finally:
+                session.close()
+                return JsonResponse(spot_dict, safe=False)
 
 
     def get_neighbors(self, geohash):
@@ -95,12 +104,19 @@ class SpotAPI(APIView):
         return list(set(neighbors))
 
 class PrefectureAPI(APIView):
-    Session = scoped_session(sessionmaker(bind=engine))
-    session = Session()
     def get(self, request):
-        prefectures = self.session.query(Prefecture).all()
-        prefecture_dict_list = [prefecture.to_dict() for prefecture in prefectures]
-        return JsonResponse(prefecture_dict_list, safe=False)
+        Session = scoped_session(sessionmaker(bind=engine))
+        session = Session()
+        try:
+            prefectures = session.query(Prefecture).all()
+        except Exception as e:
+            prefecture_dict_list = sq.get_prefectures()
+            print(e)
+        else:
+            prefecture_dict_list = [prefecture.to_dict() for prefecture in prefectures]
+        finally:
+            session.close()
+            return JsonResponse(prefecture_dict_list, safe=False)
 
 class StationAPI(APIView):
 
@@ -114,11 +130,13 @@ class StationAPI(APIView):
                 stations = session.query(Station).filter(Station.prefecture_id == id).filter(Station.name == name).all()
             except Exception as e:
                 print(e)
+                station_dict_list = sq.get_stations_by_name(id, name)
             else:
                 station_dict_list = [station.to_dict() for station in stations]
             finally:
                 session.close()
                 return JsonResponse(station_dict_list, safe=False)
+
         id = request.GET.dict()['prefecture_id']
         stations_cache = cache.get(f'stations_{id}')
         if stations_cache:
@@ -129,10 +147,11 @@ class StationAPI(APIView):
             stations = session.query(Station).filter(Station.prefecture_id == id).all()
         except Exception as e:
             print(e)
+            station_dict_list = sq.get_stations(id)
         else:
             station_dict_list = [station.join_dict() for station in stations]
-            cache.set(f'stations_{id}', station_dict_list, 30)
         finally:
+            cache.set(f'stations_{id}', station_dict_list, 30)
             session.close()
             return JsonResponse(station_dict_list, safe=False)
 
@@ -148,11 +167,14 @@ class LineAPI(APIView):
         try:
             lines = session.query(Line).filter(Line.prefecture_id == id).all()
         except Exception as e:
+            line_dict_list = sq.get_lines(id)
             return JsonResponse({'error': e}, safe=False)
-        session.close()
-        line_dict_list = [line.join_dict() for line in lines]
-        cache.set(f'lines_{id}', line_dict_list, 30)
-        return JsonResponse(line_dict_list, safe=False)
+        else:
+            line_dict_list = [line.join_dict() for line in lines]
+        finally:
+            cache.set(f'lines_{id}', line_dict_list, 30)
+            session.close()
+            return JsonResponse(line_dict_list, safe=False)
 
 class CityAPI(APIView):
     def get(self, request):
@@ -163,25 +185,29 @@ class CityAPI(APIView):
             cities = session.query(City).filter(City.id == id).all()
         except Exception as e:
             print(e)
-        city_dict_list = [city.to_city_dict() for city in cities]
-        session.close()
-        return JsonResponse(city_dict_list, safe=False)
+            city_dict_list = sq.get_cities(id)
+        else:
+            city_dict_list = [city.to_city_dict() for city in cities]
+        finally:
+            session.close()
+            return JsonResponse(city_dict_list[0], safe=False)
 
 class SearchStationAPI(APIView):
-    Session = scoped_session(sessionmaker(bind=engine))
-    session = Session()
     def get(self, request):
+        Session = scoped_session(sessionmaker(bind=engine))
+        session = Session()
         word = request.GET.dict()['word']
         word = word.replace('　', ' ')
         words = word.split(' ')
-        query = self.session.query(Station)
-        filters = []
-        for word in words:
-            filters.append(and_(Station.search_text.like('%' + word + '%')))
         try:
+            query = session.query(Station)
+            filters = []
+            for word in words:
+                filters.append(and_(Station.search_text.like('%' + word + '%')))
             stations = query.filter(and_(*filters)).all()
         except Exception as e:
             print(e)
+            new_station_dict_list = sq.search_stations()
         else:
             station_dict_list = [station.join_dict() for station in stations] if stations else []
             new_station_dict_list = []
@@ -190,23 +216,26 @@ class SearchStationAPI(APIView):
                     new_station_dict_list = [station_dict] + new_station_dict_list
                 else:
                     new_station_dict_list.append(station_dict)
-        return JsonResponse(new_station_dict_list, safe=False)
+        finally:
+            session.close()
+            return JsonResponse(new_station_dict_list, safe=False)
 
 class SearchSpotAPI(APIView):
-    Session = scoped_session(sessionmaker(bind=engine))
-    session = Session()
     def get(self, request):
+        Session = scoped_session(sessionmaker(bind=engine))
+        session = Session()
         word = request.GET.dict()['word']
         word = word.replace('　', ' ')
         words = word.split(' ')
-        query = self.session.query(Town)
-        filters = []
-        for word in words:
-            filters.append(and_(Town.address.like('%' + word + '%')))
         try:
+            query = session.query(Town)
+            filters = []
+            for word in words:
+                filters.append(and_(Town.address.like('%' + word + '%')))
             towns = query.filter(and_(*filters)).all()
         except Exception as e:
             print(e)
+            new_town_dict_list = sq.search_towns(words)
         else:
             town_dict_list = [town.to_dict() for town in towns] if towns else []
             new_town_dict_list = []
@@ -215,7 +244,9 @@ class SearchSpotAPI(APIView):
                     new_town_dict_list = [town_dict] + new_town_dict_list
                 else:
                     new_town_dict_list.append(town_dict)
-        return JsonResponse(new_town_dict_list, safe=False)
+        finally:
+            session.close()
+            return JsonResponse(new_town_dict_list, safe=False)
 
 class HouseModel(APIView):
 

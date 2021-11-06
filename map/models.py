@@ -1,18 +1,14 @@
-import json
-import ast
-import sqlalchemy as sa
-from sqlalchemy.orm import backref, sessionmaker, relationship, scoped_session
+from sqlalchemy.orm import relationship
 from sqlalchemy import (Table, Column, Integer, String, ForeignKey, DateTime, text, Float, and_)
 from sqlalchemy.dialects.mysql.base import BIGINT, LONGTEXT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.functions import current_timestamp
 from datetime import timedelta
-import pymysql
+
 
 from django.conf import settings
 engine = settings.ENGINE
 
-engine.execute("USE tap_map") # select new db
 Base = declarative_base()
 
 class LineStation(Base):
@@ -138,6 +134,7 @@ class Station(Base):
     geohash = Column(String(10))
     lat = Column(Float)
     lng = Column(Float)
+    search_text = Column(String(255))
     created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
     updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
     lines = relationship(
@@ -160,6 +157,7 @@ class Station(Base):
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
+            'search_text': self.search_text,
             'created_at': change_time(self.created_at),
             'updated_at': change_time(self.updated_at),
             'lines': [line.to_dict() for line in self.lines],
@@ -181,6 +179,7 @@ class Station(Base):
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
+            'search_text': self.search_text,
             'created_at': change_time(self.created_at),
             'updated_at': change_time(self.updated_at),
         }
@@ -315,6 +314,7 @@ class Prefecture(Base):
                 'geohash': station.geohash,
                 'lat': station.lat,
                 'lng': station.lng,
+                'search_text': station.search_text,
                 'created_at': change_time(station.created_at),
                 'updated_at': change_time(station.updated_at),
                 'lines': [line.join_dict() for line in station.lines],
@@ -377,7 +377,9 @@ class City(Base):
         return city_dict
 
     def to_city_dict(self):
-
+        spots = [spot.join_dict() for spot in self.spots] if self.spots else []
+        towns = [town.to_dict() for town in self.towns] if self.towns else []
+        stations = [station.to_dict() for station in self.stations] if self.stations else []
         city_dict = {
             'id': self.id,
             'name': self.name,
@@ -391,9 +393,9 @@ class City(Base):
             'population': self.population.to_dict(),
             'created_at': change_time(self.created_at),
             'updated_at': change_time(self.updated_at),
-            'spots': [spot.join_dict() for spot in self.spots],
-            'towns': [town.to_dict() for town in self.towns],
-            'stations': [station.to_dict() for station in self.stations]
+            'spots': spots,
+            'towns': towns,
+            'stations': stations
         }
         return city_dict
 
@@ -630,6 +632,7 @@ class Spot(Base):
             'city_code': self.city_code,
             'name': self.name,
             'place_id': self.place_id,
+            'address': self.address,
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
@@ -646,6 +649,7 @@ class Spot(Base):
             'city_code': self.city_code,
             'name': self.name,
             'place_id': self.place_id,
+            'address': self.address,
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
@@ -667,6 +671,7 @@ class Town(Base):
     prefecture_id = Column(String(3), ForeignKey('prefectures.id'))
     city_code = Column(String(6), ForeignKey('cities.id'))
     name = Column(String(20))
+    address = Column(String(100))
     count = Column(Integer)
     count_ratio = Column(Float)
     geohash = Column(String(10))
@@ -681,6 +686,8 @@ class Town(Base):
         town_dict = {
             'id': self.id,
             'name': self.name,
+            'address': self.address,
+            'prefecture_id': self.prefecture_id,
             'city_code': self.city_code,
             'count': self.count,
             'count_ratio': self.count_ratio,
@@ -698,8 +705,9 @@ class Town(Base):
         town_dict = {
             'id': self.id,
             'name': self.name,
-            'lat': self.place_result,
-            'lng': self.geohash,
+            'address': self.address,
+            'lat': self.lat,
+            'lng': self.lng,
             'created_at': change_time(self.created_at),
             'updated_at': change_time(self.updated_at),
         }

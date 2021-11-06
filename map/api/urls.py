@@ -18,11 +18,6 @@ from map.api.views.views import (
     SearchStationAPI,
     SearchSpotAPI
 )
-# from map.api.views import (
-#     WikiAPI,
-#     ReverseGeocodeAPI,
-#     EventAPI
-# )
 
 urlpatterns = [
     path('wiki/',WikiAPI.as_view(), name="wiki"),
