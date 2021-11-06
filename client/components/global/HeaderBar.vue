@@ -53,6 +53,11 @@ export default Vue.extend({
                     title: 'Station',
                     to: '/station',
                 },
+                {
+                    icon: 'mdi-apps',
+                    title: 'Prefecture',
+                    to: '/prefecture',
+                },
                 // {
                 //     icon: 'mdi-chart-bubble',
                 //     title: 'Login',

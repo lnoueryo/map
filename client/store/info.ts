@@ -57,29 +57,51 @@ const mutations = {
 
 const actions = {
     getTwitterInfo: async (context: any, payload: string) => {
-        let err, response = await $axios.$get('/api/twitter/', { params: payload });
-        if (err) {
-            console.log(err)
-            context.commit('stationInfo', 'ページが見つかりませんでした')
+        try {
+            const response = await $axios.$get('/api/twitter/', { params: payload });
+            context.commit('twitterInfo', response)
+        } catch (err: any) {
+            if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
+            else context.dispatch('errorDialog', true, { root: true })
         }
-        context.commit('twitterInfo', response)
     },
     getEvents: async (context: any) => {
-        const response = await $axios.$get('/api/event/');
-        context.commit('events', response);
+        try {
+            const response = await $axios.$get('/api/event/');
+            context.commit('events', response);
+        } catch (err: any) {
+            if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection');
+            else context.dispatch('errorDialog', true, { root: true })
+        }
     },
     getAroundSpot: async (context: any, payload: Spot) => {
-        const response = await $axios.$get('/api/search-by-place-info/', {params: payload});
-        context.commit('aroundSpot', response);
+        try {
+            const response = await $axios.$get('/api/search-by-place-info/', {params: payload});
+            context.commit('aroundSpot', response);
+
+        } catch (err: any) {
+            if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection');
+            else context.dispatch('errorDialog', true, { root: true })
+        }
     },
     getAroundStationInfo: async (context: any, payload: Spot) => {
-        const response = await $axios.$get('/api/search-by-place-info/', {params: payload});
-        context.commit('aroundStationInfo', response);
+        try {
+            const response = await $axios.$get('/api/search-by-place-info/', {params: payload});
+            context.commit('aroundStationInfo', response);
+        } catch (err: any) {
+            if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection');
+            else context.dispatch('errorDialog', true, { root: true })
+        }
     },
     spotDetail: async (context: any, payload: Spot) => {
         if (payload) {
-            const result = await $nuxt.$mapConfig.placesDetail(payload.place_id);
-            context.commit('spotDetail', result);
+            try {
+                const result = await $nuxt.$mapConfig.placesDetail(payload.place_id);
+                context.commit('spotDetail', result);
+            } catch (err: any) {
+                if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection');
+                else context.dispatch('errorDialog', true, { root: true });
+            }
         } else context.commit('spotDetail', payload);
     },
 };

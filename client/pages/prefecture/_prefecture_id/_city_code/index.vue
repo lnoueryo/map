@@ -1,27 +1,27 @@
 <template>
   <div>
-    <v-content>
-      <v-container>
-        <v-main v-if="Object.keys(city).length !== 0">
-          <div>
-              <h1>{{ city.name }}</h1>
-            <div class="d-flex justify-space-between align-center py-2">
+    <v-container>
+      <v-main v-if="Object.keys(city).length !== 0">
+        <div>
+            <h1>{{ city.name }}</h1>
+          <div class="d-flex justify-space-between align-center py-2">
+          </div>
+          <h2 class="py-2">基本情報</h2>
+          <v-card>
+            <div class="d-flex tabs">
+              <h2 class="tab" :class="{'active': tabsKey == 0}" @click="tabsKey = 0">人口</h2>
+              <h2 class="tab" :class="{'active': tabsKey == 1}" @click="tabsKey = 1">職業</h2>
+              <h2 class="tab" :class="{'active': tabsKey == 2}" @click="tabsKey = 2">施設</h2>
             </div>
-            <h2 class="py-2">基本情報</h2>
-            <v-card>
-              <div class="d-flex tabs">
-                <h2 class="tab" :class="{'active': tabsKey == 0}" @click="tabsKey = 0">人口</h2>
-                <h2 class="tab" :class="{'active': tabsKey == 1}" @click="tabsKey = 1">職業</h2>
-                <h2 class="tab" :class="{'active': tabsKey == 2}" @click="tabsKey = 2">施設</h2>
-              </div>
-              <div class="content">
-                <transition name="fade" mode="out-in">
-                  <tabs :tabItems="populationItems" :tabValues="city.population" unit="人" v-if="tabsKey == 0 && city.population" key="0"></tabs>
-                  <tabs :tabItems="occupationItems" :tabValues="city.occupation" unit="人" v-if="tabsKey == 1" key="1"></tabs>
-                  <tabs :tabItems="facilityItems" :tabValues="city.facility" unit="件" v-if="tabsKey == 2" key="2"></tabs>
-                </transition>
-              </div>
-            </v-card>
+            <div class="content">
+              <transition name="fade" mode="out-in">
+                <tabs :tabItems="populationItems" :tabValues="city.population" unit="人" v-if="tabsKey == 0 && city.population" key="0"></tabs>
+                <tabs :tabItems="occupationItems" :tabValues="city.occupation" unit="人" v-if="tabsKey == 1" key="1"></tabs>
+                <tabs :tabItems="facilityItems" :tabValues="city.facility" unit="件" v-if="tabsKey == 2" key="2"></tabs>
+              </transition>
+            </div>
+          </v-card>
+          <div v-if="city.columns.length !== 0">
             <h2 class="py-2">賃貸</h2>
             <div>
               <div class="price-title">
@@ -31,58 +31,58 @@
                 </div>
               </div>
             </div>
-            <div class="price-title">
-              <h2 class="pointer" @click="layoutSwitch = !layoutSwitch">
-                <span>間取り別賃貸価格</span>
-                <v-btn icon absolute right>
-                  <v-icon large :style="layoutSwitch ? {transform: 'rotate(180deg)'} : {transform: 'rotate(0deg)'}">mdi-menu-down</v-icon>
-                </v-btn>
-              </h2>
-              <div class="ac-content">
-                <div :style="layoutSwitch ? {maxHeight: '100%', height: `${$refs.layout.$el.getBoundingClientRect().height}px`, transition: 'all 1s'} : {height: 0, transition: 'all 1s'}">
-                  <layout ref="layout" :analysisData="city"></layout>
-                </div>
+          </div>
+          <div class="price-title" v-if="city.layouts.length !== 0">
+            <h2 class="pointer" @click="layoutSwitch = !layoutSwitch">
+              <span>間取り別賃貸価格</span>
+              <v-btn icon absolute right>
+                <v-icon large :style="layoutSwitch ? {transform: 'rotate(180deg)'} : {transform: 'rotate(0deg)'}">mdi-menu-down</v-icon>
+              </v-btn>
+            </h2>
+            <div class="ac-content">
+              <div :style="layoutSwitch ? {maxHeight: '100%', height: `${$refs.layout.$el.getBoundingClientRect().height}px`, transition: 'all 1s'} : {height: 0, transition: 'all 1s'}">
+                <layout ref="layout" :analysisData="city"></layout>
               </div>
             </div>
-            <div class="price-title">
-              <h2 class="pointer" @click="addressSwitch = !addressSwitch">
-                <span>町別賃貸価格</span>
-                <v-btn icon absolute right>
-                  <v-icon large :style="addressSwitch ? {transform: 'rotate(180deg)'} : {transform: 'rotate(0deg)'}">mdi-menu-down</v-icon>
-                </v-btn>
-              </h2>
-              <div class="ac-content">
-                <div :style="addressSwitch ? {maxHeight: '100%', height: `${$refs.town.$el.getBoundingClientRect().height}px`, transition: 'all 1s'} : {height: 0, transition: 'all 1s'}">
-                  <town ref="town" :analysisData="city"></town>
-                </div>
+          </div>
+          <div class="price-title" v-if="city.towns.length !== 0">
+            <h2 class="pointer" @click="addressSwitch = !addressSwitch">
+              <span>町別賃貸価格</span>
+              <v-btn icon absolute right>
+                <v-icon large :style="addressSwitch ? {transform: 'rotate(180deg)'} : {transform: 'rotate(0deg)'}">mdi-menu-down</v-icon>
+              </v-btn>
+            </h2>
+            <div class="ac-content">
+              <div :style="addressSwitch ? {maxHeight: '100%', height: `${$refs.town.$el.getBoundingClientRect().height}px`, transition: 'all 1s'} : {height: 0, transition: 'all 1s'}">
+                <town ref="town" :analysisData="city"></town>
               </div>
             </div>
-            <h2 class="py-2">観光地</h2>
-            <div class="price-title">
-              <div class="pa-4" v-for="(spot, i) in city.spots" :key="i">
-                <router-link class="d-flex anchor" :to="{name: 'spot-detail-prefecture_id-city_code-id', params: {prefecture_id: spot.prefecture_id, city_code: spot.city_code, id: spot.id}}">
-                <div>{{spot.name}}:　</div>
-                <div>{{spot.address}}</div>
-                </router-link>
-              </div>
+          </div>
+          <h2 class="py-2">観光地</h2>
+          <div class="price-title">
+            <div class="pa-4" v-for="(spot, i) in city.spots" :key="i">
+              <router-link class="d-flex anchor" :to="{name: 'spot-detail-prefecture_id-city_code-id', params: {prefecture_id: spot.prefecture_id, city_code: spot.city_code, id: spot.id}}">
+              <div>{{spot.name}}:　</div>
+              <div>{{spot.address}}</div>
+              </router-link>
             </div>
-            <h2 class="py-2">駅</h2>
-            <div class="price-title">
-              <div class="pa-4" v-for="(company, i) in companies" :key="i">
-                <h4 class="text-left">{{company.name}}</h4>
-                <div class="d-flex flex-wrap">
-                  <div class="py-2 pr-2" v-for="(station, j) in company.stations" :key="j">
-                    <div>
-                      <router-link class="anchor" :to="{name: 'station-prefecture_id-name-detail-company_id', params: {prefecture_id: station.prefecture_id, name: station.name, company_id: company.id}}">{{station.name}}</router-link>
-                    </div>
+          </div>
+          <h2 class="py-2">駅</h2>
+          <div class="price-title">
+            <div class="pa-4" v-for="(company, i) in companies" :key="i">
+              <h4 class="text-left">{{company.name}}</h4>
+              <div class="d-flex flex-wrap">
+                <div class="py-2 pr-2" v-for="(station, j) in company.stations" :key="j">
+                  <div>
+                    <router-link class="anchor" :to="{name: 'station-prefecture_id-name-detail-company_id', params: {prefecture_id: station.prefecture_id, name: station.name, company_id: company.id}}">{{station.name}}</router-link>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </v-main>
-      </v-container>
-    </v-content>
+        </div>
+      </v-main>
+    </v-container>
     <!-- <v-dialog
       v-model="dialog"
       width="800"

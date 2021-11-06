@@ -27,9 +27,8 @@ class WikiAPI(APIView):
                 data = self.disambiguation(data, request)
                 data = self.parse(data)
                 return HttpResponse(json.dumps(data, ensure_ascii=False))
-        except requests.error as e:
-            error = {'status': 404}
-            return HttpResponse(json.dumps(error, ensure_ascii=False))
+        except Exception as e:
+            return JsonResponse(error_response(502), status=502, safe=False)
 
     def disambiguation(self, data, request):
         soup = BeautifulSoup(data, 'html.parser')
@@ -100,6 +99,10 @@ class WikiAPI(APIView):
                     key=d
                 data = page[key]['revisions'][0]['*']
         except Exception as e:
-            print(e)
+            return JsonResponse(error_response(502), status=502, safe=False)
         finally:
             return data
+
+def error_response(status_code):
+    if status_code == 502:
+        return {'message': '現在アクセスが集中しているため、時間をおいて再度お試しください。'}

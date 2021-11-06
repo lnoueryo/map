@@ -139,19 +139,28 @@ const mutations = {
 
 const actions = {
     getPrefectures: async (context: any) => {
-        const response = await $axios.$get('/api/prefecture/city/');
-        context.commit('prefectures', response)
+        try {
+            const response = await $axios.$get('/api/prefecture/city/');
+            context.commit('prefectures', response)
+        } catch(err: any) {
+            if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
+            else context.dispatch('errorDialog', true, { root: true })
+        }
     },
     getCity: async (context: any, payload: { mapCenter: Coordinate, zoom: number }) => {
-        const response = await $axios.$get('/api/search-by-reverse-geocode/', { params: payload.mapCenter });
-        let AddressElement;
-        if (response.Property) {
-            try {
-                AddressElement = context.getters.removeAddressElement(response.Property.AddressElement, payload.zoom);
-            } catch (error) {
-                AddressElement = [response.Property.Country];
+        try {
+            const response = await $axios.$get('/api/search-by-reverse-geocode/', { params: payload.mapCenter });
+            let AddressElement;
+            if (response.Property) {
+                try {
+                    AddressElement = context.getters.removeAddressElement(response.Property.AddressElement, payload.zoom);
+                } catch (error) {
+                    AddressElement = [response.Property.Country];
+                }
+                context.commit('addressElement', AddressElement);
             }
-            context.commit('addressElement', AddressElement);
+        } catch (err: any) {
+            if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection');
         }
     },
     query: (context: any, payload: Query) => {
@@ -167,16 +176,26 @@ const actions = {
         context.commit('params', payload)
     },
     getSpot: async (context: any, payload: {prefecture_id: string, city_code: string, id: string}) => {
-        const response = await $axios.$get('/api/spot/', { params: {id: payload.id} });
-        context.commit('spot', response)
-        const twitterQuery = {name: response.name, lat: response.lat, lng: response.lng}
-        context.dispatch('info/getTwitterInfo', twitterQuery, {root: true})
-        context.dispatch("info/getAroundSpot", twitterQuery, {root: true});
+        try {
+            const response = await $axios.$get('/api/spot/', { params: {id: payload.id} });
+            context.commit('spot', response)
+            const twitterQuery = {name: response.name, lat: response.lat, lng: response.lng}
+            context.dispatch('info/getTwitterInfo', twitterQuery, {root: true})
+            context.dispatch("info/getAroundSpot", twitterQuery, {root: true});
+        } catch(err: any) {
+            if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
+            else context.dispatch('errorDialog', true, { root: true })
+        }
     },
     searchTown: async(context: any, payload: string) => {
         if(payload) {
-            const response = await $axios.$get('/api/search/town/', {params: {word: payload}})
-            context.commit('searchResult', response)
+            try {
+                const response = await $axios.$get('/api/search/town/', {params: {word: payload}})
+                context.commit('searchResult', response)
+            } catch(err: any) {
+                if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
+                else context.dispatch('errorDialog', true, { root: true })
+            }
         } else {
             context.commit('searchResult', [])
         }

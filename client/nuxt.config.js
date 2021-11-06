@@ -40,7 +40,11 @@ export default {
   css: [],
 
   // Plugins to run before rendering page: https://go.nuxtjs.dev/config-plugins
-  plugins: ['@/plugins/axios-accessor','~/plugins/map'],
+  plugins: [
+    '@/plugins/axios-accessor',
+    '~/plugins/map',
+    '~/plugins/component'
+  ],
 
   // Auto import components: https://go.nuxtjs.dev/config-components
   components: true,
@@ -77,7 +81,6 @@ export default {
   //ローカル
   axios: {
     baseURL: process.env.NODE_ENV === 'production' ? process.env.baseURL : 'http://localhost:3000/api/',
-    retry: { retries: 5 },
   },
   proxy: {
     '/api': {

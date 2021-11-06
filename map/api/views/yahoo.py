@@ -5,7 +5,6 @@ import re
 import time
 from datetime import datetime, date, timedelta
 from dateutil.relativedelta import relativedelta
-import urllib.request
 
 from bs4 import BeautifulSoup
 from bs4.element import Comment
@@ -25,12 +24,13 @@ class ReverseGeocodeAPI(APIView):
         payload = {'appid': API_KEY, 'output': 'json', 'lat': params['lat'], 'lon': params['lng']}
         url = 'https://map.yahooapis.jp/geoapi/V1/reverseGeoCoder'
         try:
-            with requests.get(url, params=payload) as response:
-                data = response.json()
-                data = data['Feature'][0]
-                return JsonResponse(data, safe=False)
-        except urllib.error.URLError as e:
-            raise e.reason
+            response = requests.get(url, params=payload)
+        except Exception as e:
+            return JsonResponse(error_response(502), status=502, safe=False)
+        else:
+            data = response.json()
+            data = data['Feature'][0]
+            return JsonResponse(data, safe=False)
 
 class LocalSearchAPI(APIView):
     """
@@ -55,12 +55,13 @@ class LocalSearchAPI(APIView):
         }
         url = 'https://map.yahooapis.jp/search/local/V1/localSearch'
         try:
-            with requests.get(url, params=payload) as response:
-                data = response.json()
-                data = data['Feature'][0]
-                return JsonResponse(data, safe=False)
-        except urllib.error.URLError as e:
-            raise e.reason
+            response = requests.get(url, params=payload)
+        except Exception as e:
+            return JsonResponse(error_response(502), status=502, safe=False)
+        else:
+            data = response.json()
+            data = data['Feature'][0]
+            return JsonResponse(data, safe=False)
 
 class PlaceInfoAPI(APIView):
     """
@@ -79,12 +80,14 @@ class PlaceInfoAPI(APIView):
         }
         url = 'https://map.yahooapis.jp/placeinfo/V1/get'
         try:
-            with requests.get(url, params=payload) as response:
-                data = response.json()
-                data = data['ResultSet']['Result']
-                return JsonResponse(data, safe=False)
-        except urllib.error.URLError as e:
-            raise e.reason
+            response = requests.get(url, params=payload)
+        except Exception as e:
+            return JsonResponse(error_response(502), status=502, safe=False)
+        else:
+            data = response.json()
+            data = data['ResultSet']['Result']
+            return JsonResponse(data, safe=False)
+
     def create_coordinates(response_dict):
         coordinates_list = response_dict['Geometry']['Coordinates'].split(',')
         response_dict['lat'] = coordinates_list[1]
@@ -106,9 +109,14 @@ class ContentGeocoderAPI(APIView):
         payload = {'appid': API_KEY, 'output': 'json', 'query': params['searchWord'], 'category': 'landmark', 'results': 10}
         url = 'https://map.yahooapis.jp/geocode/cont/V1/contentsGeoCoder'
         try:
-            with requests.get(url, params=payload) as response:
-                data = response.json()
-                data = data['Feature'][0]
-                return JsonResponse(data, safe=False)
-        except urllib.error.URLError as e:
-            raise e.reason
+            response = requests.get(url, params=payload)
+        except Exception as e:
+            return JsonResponse(error_response(502), status=502, safe=False)
+        else:
+            data = response.json()
+            data = data['Feature'][0]
+            return JsonResponse(data, safe=False)
+
+def error_response(status_code):
+    if status_code == 502:
+        return {'message': '現在アクセスが集中しているため、時間をおいて再度お試しください。'}

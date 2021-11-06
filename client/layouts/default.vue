@@ -1,7 +1,9 @@
 <template>
   <v-app dark v-resize="onResize">
     <header-bar v-if="!smp"></header-bar>
-    <nuxt :style="{paddingTop: smp ? 0 : '64px'}" />
+    <transition name="fade">
+      <nuxt :style="{paddingTop: smp ? 0 : '64px'}" />
+    </transition>
     <!-- <v-main>
             <v-container>
                 <nuxt />
@@ -15,6 +17,9 @@
                 <v-icon>mdi-keyboard-backspace</v-icon>
             </v-btn>
         </div>
+        <transition name="fade">
+          <error v-if="errorDialog"></error>
+        </transition>
   </v-app>
 </template>
 
@@ -34,8 +39,11 @@ export default Vue.extend({
   },
   computed: {
     smp() {
-        return this.$store.getters['windowSize'].x < 500
+        return this.$store.getters['windowSize'].x < 500;
     },
+    errorDialog() {
+      return this.$store.getters['errorDialog'];
+    }
   },
   beforeCreate() {
     if (process.env.NODE_ENV === "production") {
@@ -69,6 +77,14 @@ export default Vue.extend({
   text-align: center;
   padding: 2px 10px;
   border-radius: 8px;
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 1s;
+}
+.fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
+  opacity: 0;
+  transition: opacity 1s;
 }
 // .gm-style-iw {
 //   margin-left: 10px;

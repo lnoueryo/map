@@ -3,7 +3,7 @@
     <v-container>
       <div class="d-flex flex-wrap">
         <v-card
-          class="mx-auto my-12"
+          class="mx-auto my-12 card"
           max-width="374"
           v-for="(cardItem, i) in cardItems"
           :key="i"
@@ -12,7 +12,7 @@
 
           <v-img
             height="250"
-            src="https://cdn.vuetifyjs.com/images/cards/cooking.png"
+            :src="cardItem.image"
           ></v-img>
 
           <v-card-title>{{cardItem.title}}</v-card-title>
@@ -35,7 +35,7 @@ import Vue from "vue";
 interface DataType {
   open: boolean;
   lefList: boolean;
-  cardItems: {title: string, description: string, page: {name: string}}[]
+  cardItems: {title: string, description: string, page: {name: string}, image: string}[]
 }
 export default Vue.extend({
   data(): DataType {
@@ -43,9 +43,9 @@ export default Vue.extend({
       open: false,
       lefList: false,
       cardItems: [
-        {title: '観光地検索', description: '気になるロケーションの観光地を探そう', page: {name: 'spot'}},
-        {title: '駅検索', description: '駅とその周辺情報を調べよう', page: {name: 'station'}},
-        {title: '都道府県情報', description: '都道府県情報を調べよう', page: {name: 'prefecture'}},
+        {title: '観光地検索', description: '気になるロケーションの観光地を探そう', page: {name: 'spot'}, image: require('~/assets/img/spot-top.jpg')},
+        {title: '駅検索', description: '駅とその周辺情報を調べよう', page: {name: 'station'}, image: require('~/assets/img/station-top.jpg')},
+        {title: '都道府県情報', description: '都道府県情報を調べよう', page: {name: 'prefecture'}, image: require('~/assets/img/prefecture-top.jpg')},
       ]
     };
   },
@@ -67,42 +67,11 @@ export default Vue.extend({
 </script>
 
 <style lang="scss" scoped>
-#wrapper {
-  width: 100%;
-  height: calc(100vh - 100px);
-  position: relative;
-  #container {
-    width: 100%;
-    position: relative;
-    padding-right: 100px;
-    transition: all 0.3s;
-    .main-view {
-      display: flex;
-      overflow: hidden;
-      .map-container {
-        position: relative;
-        width: 100%;
-      }
-    }
-    @media screen and (max-width: 500px) {
-      .main-view {
-        //left-listを上げて、map-viewを下げる
-        display: block;
-      }
-    }
-  }
-  #container.open {
-    padding-right: 256px;
-    transition: all 0.3s;
-  }
-  @media screen and (max-width: 500px) {
-    #container {
-      padding-right: 0;
-    }
-    #container.open {
-      padding-right: 0;
-      transition: all 0.3s;
-    }
-  }
+.card {
+  transition: all .5s;
+}
+.card:hover {
+  transition: all .5s;
+  opacity: .5;
 }
 </style>

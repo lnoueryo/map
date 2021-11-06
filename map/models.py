@@ -683,6 +683,8 @@ class Town(Base):
     updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
 
     def to_dict(self):
+        layouts = eval(self.layouts) if self.layouts else ''
+        columns = eval(self.columns) if self.columns else ''
         town_dict = {
             'id': self.id,
             'name': self.name,
@@ -694,8 +696,8 @@ class Town(Base):
             'lat': self.lat,
             'lng': self.lng,
             'geohash': self.geohash,
-            'layouts': eval(self.layouts),
-            'columns': eval(self.columns),
+            'layouts': layouts,
+            'columns': columns,
             'created_at': change_time(self.created_at),
             'updated_at': change_time(self.updated_at),
         }

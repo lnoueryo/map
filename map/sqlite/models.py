@@ -365,14 +365,16 @@ class City(Base):
         spots = [spot.join_dict() for spot in self.spots] if self.spots else []
         towns = [town.to_dict() for town in self.towns] if self.towns else []
         stations = [station.to_dict() for station in self.stations] if self.stations else []
+        layouts = eval(self.layouts) if self.layouts else ''
+        columns = eval(self.columns) if self.columns else ''
         city_dict = {
             'id': self.id,
             'name': self.name,
             'lat': self.lat,
             'lng': self.lng,
             'polygons': eval(self.polygons),
-            'layouts': eval(self.layouts),
-            'columns': eval(self.columns),
+            'layouts': layouts,
+            'columns': columns,
             'facility': self.facility.to_dict(),
             'occupation': self.occupation.to_dict(),
             'population': self.population.to_dict(),
@@ -707,6 +709,8 @@ class Town(Base):
     # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     def to_dict(self):
+        layouts = eval(self.layouts) if self.layouts else ''
+        columns = eval(self.columns) if self.columns else ''
         town_dict = {
             'id': self.id,
             'prefecture_id': self.prefecture_id,
@@ -718,8 +722,8 @@ class Town(Base):
             'lat': self.lat,
             'lng': self.lng,
             'geohash': self.geohash,
-            'layouts': eval(self.layouts),
-            'columns': eval(self.columns),
+            'layouts': layouts,
+            'columns': columns,
         }
         return town_dict
 
