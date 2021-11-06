@@ -69,7 +69,7 @@
             <h2 class="py-2">駅</h2>
             <div class="price-title">
               <div class="pa-4" v-for="(company, i) in companies" :key="i">
-                <div>{{company.name}}</div>
+                <h4 class="text-left">{{company.name}}</h4>
                 <div class="d-flex flex-wrap">
                   <div class="py-2 pr-2" v-for="(station, j) in company.stations" :key="j">
                     <div>
@@ -118,6 +118,7 @@ export default {
       'city',
     ]),
     companies() {
+      console.log(Object.keys(this.city).length !== 0)
       if(Object.keys(this.city).length !== 0) {
         const city = JSON.parse(JSON.stringify(this.city))
         const overlappedCompanies = city.stations.map((station) => {

@@ -28,7 +28,7 @@ export default Vue.extend({
   },
   mounted() {
     let timer = setInterval(() => {
-      if(this.spot) {
+      if(Object.keys(this.spot).length !== 0) {
         clearInterval(timer);
         (this as any).setMap();
       }

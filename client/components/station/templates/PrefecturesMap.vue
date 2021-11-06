@@ -102,12 +102,15 @@ export default Vue.extend({
       },
     },
   },
-  created() {
+  async created() {
     this.$store.dispatch("station/getPrefectures");
-  },
-  async mounted() {
-    await this.setMap();
-    this.addMapEvent();
+    let timer = setInterval(async() => {
+      if(google && this.prefectures.length !== 0) {
+        clearInterval(timer)
+        await this.setMap();
+        this.addMapEvent();
+      }
+    })
   },
   methods: {
     async setMap() {

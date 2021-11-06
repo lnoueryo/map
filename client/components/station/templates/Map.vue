@@ -148,7 +148,7 @@ export default Vue.extend({
               require("~/assets/img/station.png"),
               mainStation.name
             );
-            (this as any).onClickMarker(marker, mainStation)
+            (this as any).onClickMarker(marker, mainStation);
             (this as any).markers.push(marker);
             if ("line_id" in this.$route.query) {
               mainStation.lines.forEach((line: Line) => {
@@ -172,6 +172,7 @@ export default Vue.extend({
                 }
               });
             } else {
+              (this as any).markers.push(marker);
               mainStation.lines.forEach((line: Line) => {
                 line.stations.forEach((station: Station) => {
                   if (station.name !== this.particularStations[0].name) {

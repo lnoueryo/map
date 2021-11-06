@@ -116,7 +116,7 @@ export default Vue.extend({
       this.$router.push({name: 'spot', query: query});
     },
     city(v) {
-      const query = { ...this.$route.query, ...{ city_code: v.city_code } };
+      const query = { ...this.$route.query, ...{ city_code: v.id } };
       this.$router.push({name: 'spot', query: query});
     },
     spot(v) {

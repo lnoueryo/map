@@ -190,7 +190,6 @@ export default Vue.extend({
           return gh.neighbors((this as any).spotInfo.geohash.slice(0, -1)).includes(station.geohash.slice(0, -1));
         });
       }
-      console.log(nearestStations)
       return nearestStations;
     },
     photos() {
@@ -254,7 +253,6 @@ export default Vue.extend({
       }) ?? spotAddInfo
       if(spot.Name.indexOf('店') > -1) Object.assign(spot, {category: '', color: '#be69f3', icon: 'store'})
       if('icon' in spot === false) Object.assign(spot, {category: '', color: '#be69f3', icon: 'square-medium'})
-      console.log(spot)
       return spotAddInfo ? Object.assign(spot, spotAddInfo) : spot;
     }
   }

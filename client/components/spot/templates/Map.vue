@@ -75,15 +75,11 @@ export default Vue.extend({
   },
   watch: {
     $route(to, from) {
-      if ("click" in to.query) {
-        const bounds = sessionStorage.getItem("tokyo-map") as string;
-        this.$mapConfig.focusMarker(JSON.parse(bounds), 11);
-      }
       this.$store.dispatch('spot/query', to.query)
     },
     filterPrefectures: {
       handler(v) {
-        if(v !== 0 && this.$mapConfig.map) {
+        if(v.length !== 0 && this.$mapConfig.map) {
           this.$mapConfig.resetMarkers((this as any).markers);
           this.selectMarkers()
         }
@@ -197,7 +193,7 @@ export default Vue.extend({
         this.spotMarkerFunction
       );
       const zoom = 14;
-      if('lat' in this.$route.query && 'lng' in this.$route.query) this.$mapConfig.focusMarker({lat: this.$route.query.lat, lng: this.$route.query.lng}, zoom);
+      if('lat' in this.$route.query && 'lng' in this.$route.query) this.$mapConfig.focusMarker({lat: Number(this.$route.query.lat), lng: Number(this.$route.query.lng)}, zoom);
       else this.$mapConfig.focusMarker(this.filterPrefectures, zoom);
     },
     clearTime() {
