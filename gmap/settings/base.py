@@ -45,6 +45,7 @@ CORS_ALLOW_HEADERS = (
 )
 CORS_ORIGIN_WHITELIST = (
     'https://tokyo-map.jpn.org',
+    'https://tap-map.jounetsism.biz',
 )
 
 ROOT_URLCONF = 'gmap.urls'

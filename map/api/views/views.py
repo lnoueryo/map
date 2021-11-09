@@ -28,11 +28,6 @@ sq = Sqlite()
 class CompanyAPI(APIView):
 
     def get(self, request):
-        companies_cache = cache.get('companies')
-        if companies_cache:
-            sys.getsizeof(companies_cache)
-            cache.touch('companies', 30)
-            return JsonResponse(companies_cache, safe=False)
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         try:
@@ -44,17 +39,13 @@ class CompanyAPI(APIView):
         else:
             company_dict_list = [company.to_dict() for company in companies]
         finally:
-            cache.set('companies', company_dict_list, 30)
             session.close()
-            return JsonResponse(company_dict_list, safe=False)
+            response = JsonResponse(company_dict_list, safe=False)
+            response.__setitem__('Cache-Control', 'public, max-age=300')
+            return response
 class PrefectureCityAPI(APIView):
 
     def get(self, request):
-        prefectures_cache = cache.get('prefectures')
-        if prefectures_cache:
-            sys.getsizeof(prefectures_cache)
-            cache.touch('prefectures', 30)
-            return JsonResponse(prefectures_cache, safe=False)
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         try:
@@ -66,9 +57,10 @@ class PrefectureCityAPI(APIView):
         else:
             prefecture_dict_list = [prefecture.with_city_dict() for prefecture in prefectures]
         finally:
-            cache.set('prefectures', prefecture_dict_list, 30)
             session.close()
-            return JsonResponse(prefecture_dict_list, status=200, safe=False)
+            response = JsonResponse(prefecture_dict_list, safe=False)
+            response.__setitem__('Cache-Control', 'public, max-age=300')
+            return response
 
 class SpotAPI(APIView):
     gh = Geohash()
@@ -127,7 +119,9 @@ class PrefectureAPI(APIView):
             prefecture_dict_list = [prefecture.to_dict() for prefecture in prefectures]
         finally:
             session.close()
-            return JsonResponse(prefecture_dict_list, safe=False)
+            response = JsonResponse(prefecture_dict_list, safe=False)
+            response.__setitem__('Cache-Control', 'public, max-age=300')
+            return response
 
 class StationAPI(APIView):
 
@@ -150,11 +144,6 @@ class StationAPI(APIView):
                 return JsonResponse(station_dict_list, safe=False)
 
         id = request.GET.dict()['prefecture_id']
-        stations_cache = cache.get(f'stations_{id}')
-        if stations_cache:
-            sys.getsizeof(stations_cache)
-            cache.touch(f'stations_{id}', 30)
-            return JsonResponse(stations_cache, safe=False)
         try:
             stations = session.query(Station).filter(Station.prefecture_id == id).all()
         except Exception as e:
@@ -164,19 +153,16 @@ class StationAPI(APIView):
         else:
             station_dict_list = [station.join_dict() for station in stations]
         finally:
-            cache.set(f'stations_{id}', station_dict_list, 30)
             session.close()
-            return JsonResponse(station_dict_list, safe=False)
+            response = JsonResponse(station_dict_list, safe=False)
+            response.__setitem__('Cache-Control', 'public, max-age=300')
+            return response
 
 class LineAPI(APIView):
     def get(self, request):
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         id = request.GET.dict()['prefecture_id']
-        lines_cache = cache.get(f'lines_{id}')
-        if lines_cache:
-            cache.touch(f'lines_{id}', 30)
-            return JsonResponse(lines_cache, safe=False)
         try:
             lines = session.query(Line).filter(Line.prefecture_id == id).all()
         except Exception as e:
@@ -187,9 +173,10 @@ class LineAPI(APIView):
         else:
             line_dict_list = [line.join_dict() for line in lines]
         finally:
-            cache.set(f'lines_{id}', line_dict_list, 30)
             session.close()
-            return JsonResponse(line_dict_list, safe=False)
+            response = JsonResponse(line_dict_list, safe=False)
+            response.__setitem__('Cache-Control', 'public, max-age=300')
+            return response
 
 class CityAPI(APIView):
     def get(self, request):

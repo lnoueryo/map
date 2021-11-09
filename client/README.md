@@ -15,6 +15,12 @@ $ yarn start
 
 # generate static project
 $ yarn generate
+
+$ npm install -g firebase-tools
+firebase login
+firebase init
+https://deha.co.jp/magazine/nuxt-js/
+firebase deploy
 ```
 
 For detailed explanation on how things work, check out the [documentation](https://nuxtjs.org).

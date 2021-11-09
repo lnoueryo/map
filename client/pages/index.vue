@@ -4,10 +4,10 @@
       <div class="d-flex flex-wrap">
         <v-card
           class="mx-auto my-12 card"
-          max-width="374"
           v-for="(cardItem, i) in cardItems"
           :key="i"
           :to="cardItem.page"
+          style="max-width: 350px;width:100%;"
         >
 
           <v-img
