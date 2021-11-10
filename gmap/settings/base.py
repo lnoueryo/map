@@ -18,6 +18,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'map',
     'corsheaders',
+    'user'
 ]
 
 MIDDLEWARE = [
@@ -26,7 +27,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
-    'django.middleware.csrf.CsrfViewMiddleware',
+    # 'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -118,3 +119,6 @@ STATICFILES_DIRS = (
     os.path.join(BASE_DIR, 'dist/static'),
 )
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+
+SESSION_ENGINE = "django.contrib.sessions.backends.file"
+SESSION_FILE_PATH = os.path.join(BASE_DIR, 'session/')

@@ -12,7 +12,8 @@ urlpatterns = [
     #urlがadmin、accounts、mapから始まるもの以外は全てindex.htmlを返す
     url(r'^(?!admin|api).*', views.index, name='index'),
     # url(r'^(?!admin|api).*', views.index, name='index'),
-    path('api/', include('map.api.urls')),
+    path('api/map/', include('map.api.urls')),
+    path('api/user/', include('user.api.urls')),
     path('admin/', admin.site.urls),
 ]
 
