@@ -58,7 +58,7 @@ const mutations = {
 const actions = {
     getTwitterInfo: async (context: any, payload: string) => {
         try {
-            const response = await $axios.$get('/api/twitter/', { params: payload });
+            const response = await $axios.$get('/api/map/twitter/', { params: payload });
             context.commit('twitterInfo', response)
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
@@ -67,7 +67,7 @@ const actions = {
     },
     getEvents: async (context: any) => {
         try {
-            const response = await $axios.$get('/api/event/');
+            const response = await $axios.$get('/api/map/event/');
             context.commit('events', response);
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection');
@@ -76,7 +76,7 @@ const actions = {
     },
     getAroundSpot: async (context: any, payload: Spot) => {
         try {
-            const response = await $axios.$get('/api/search-by-place-info/', {params: payload});
+            const response = await $axios.$get('/api/map/search-by-place-info/', {params: payload});
             context.commit('aroundSpot', response);
 
         } catch (err: any) {
@@ -86,7 +86,7 @@ const actions = {
     },
     getAroundStationInfo: async (context: any, payload: Spot) => {
         try {
-            const response = await $axios.$get('/api/search-by-place-info/', {params: payload});
+            const response = await $axios.$get('/api/map/search-by-place-info/', {params: payload});
             context.commit('aroundStationInfo', response);
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection');

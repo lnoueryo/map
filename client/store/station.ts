@@ -197,7 +197,7 @@ const mutations = {
 
 const actions = {
     getCity: async (context: any, payload: { mapCenter: Coordinate, zoom: number }) => {
-        const response = await $axios.$get('/api/search-by-reverse-geocode/', { params: payload.mapCenter });
+        const response = await $axios.$get('/api/map/search-by-reverse-geocode/', { params: payload.mapCenter });
         let AddressElement;
         if (response.Property) {
             try {
@@ -222,7 +222,7 @@ const actions = {
     },
     getPrefectures: async (context: any) => {
         try {
-            const response = await $axios.$get('/api/prefecture/');
+            const response = await $axios.$get('/api/map/prefecture/');
             context.commit('prefectures', response)
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
@@ -231,7 +231,7 @@ const actions = {
     },
     getStations: async (context: any, payload: {prefecture_id: string}) => {
         try {
-            const response = await $axios.$get('/api/station/', {params: payload});
+            const response = await $axios.$get('/api/map/station/', {params: payload});
             context.commit('stations', response)
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
@@ -240,7 +240,7 @@ const actions = {
     },
     getParticularStations: async (context: any, payload: {prefecture_id: string}) => {
         try {
-            const response = await $axios.$get('/api/station/', {params: payload});
+            const response = await $axios.$get('/api/map/station/', {params: payload});
             context.commit('particularStations', response)
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
@@ -249,7 +249,7 @@ const actions = {
     },
     getLines: async (context: any, payload: {prefecture_id: string}) => {
         try {
-            const response = await $axios.$get('/api/line/', {params: payload});
+            const response = await $axios.$get('/api/map/line/', {params: payload});
             context.commit('lines', response)
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
@@ -259,7 +259,7 @@ const actions = {
     searchStation: async(context: any, payload: string) => {
         if(payload) {
             try {
-                const response = await $axios.$get('/api/search/station/', {params: {word: payload}})
+                const response = await $axios.$get('/api/map/search/station/', {params: {word: payload}})
                 context.commit('searchResult', response)
             } catch (err: any) {
                 if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')

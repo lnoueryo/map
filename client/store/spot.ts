@@ -140,7 +140,7 @@ const mutations = {
 const actions = {
     getPrefectures: async (context: any) => {
         try {
-            const response = await $axios.$get('/api/prefecture/city/');
+            const response = await $axios.$get('/api/map/prefecture/city/');
             context.commit('prefectures', response)
         } catch(err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
@@ -149,7 +149,7 @@ const actions = {
     },
     getCity: async (context: any, payload: { mapCenter: Coordinate, zoom: number }) => {
         try {
-            const response = await $axios.$get('/api/search-by-reverse-geocode/', { params: payload.mapCenter });
+            const response = await $axios.$get('/api/map/search-by-reverse-geocode/', { params: payload.mapCenter });
             let AddressElement;
             if (response.Property) {
                 try {
@@ -177,7 +177,7 @@ const actions = {
     },
     getSpot: async (context: any, payload: {prefecture_id: string, city_code: string, id: string}) => {
         try {
-            const response = await $axios.$get('/api/spot/', { params: {id: payload.id} });
+            const response = await $axios.$get('/api/map/spot/', { params: {id: payload.id} });
             context.commit('spot', response)
             const twitterQuery = {name: response.name, lat: response.lat, lng: response.lng}
             context.dispatch('info/getTwitterInfo', twitterQuery, {root: true})
@@ -190,7 +190,7 @@ const actions = {
     searchTown: async(context: any, payload: string) => {
         if(payload) {
             try {
-                const response = await $axios.$get('/api/search/town/', {params: {word: payload}})
+                const response = await $axios.$get('/api/map/search/town/', {params: {word: payload}})
                 context.commit('searchResult', response)
             } catch(err: any) {
                 if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')

@@ -55,7 +55,7 @@ const mutations = {
 const actions = {
     getPrefectures: async(context: any) => {
         try {
-            const response = await $axios.$get('/api/prefecture/city/');
+            const response = await $axios.$get('/api/map/prefecture/city/');
             context.commit('prefectures', response);
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
@@ -64,7 +64,7 @@ const actions = {
     },
     getCities: async(context: any, payload: {city_code: string}) => {
         try {
-            const response = await $axios.$get('/api/prefecture/city/', {params: payload});
+            const response = await $axios.$get('/api/map/prefecture/city/', {params: payload});
             context.commit('cities', response)
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
@@ -73,7 +73,7 @@ const actions = {
     },
     getCity: async(context: any, payload: {city_code: string}) => {
         try {
-            const response = await $axios.$get('/api/city/', {params: payload});
+            const response = await $axios.$get('/api/map/city/', {params: payload});
             context.commit('city', response)
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
