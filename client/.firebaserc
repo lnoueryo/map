@@ -1,5 +1,6 @@
 {
   "projects": {
-    "default": "trim-tide-313616"
+    "dev": "tm-map-test",
+    "prod": "trim-tide-313616"
   }
 }

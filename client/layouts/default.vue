@@ -47,9 +47,9 @@ export default Vue.extend({
   },
   beforeCreate() {
     if (process.env.NODE_ENV === "production") {
-      if (window.location.hostname === "map-ai7ganlifq-an.a.run.app") {
-        this.$axios.defaults.baseURL = "/";
-      }
+        const parts = location.hostname.split(".");
+        const subdomain = parts.shift();
+        if(subdomain == 'tap-map-test') this.$axios.defaults.baseURL = 'https://tap-map-test.api.jounetsism.biz'
     }
     this.$store.dispatch("isAuth", this.$route.name);
   },

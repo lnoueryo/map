@@ -21,6 +21,8 @@ firebase login
 firebase init
 https://deha.co.jp/magazine/nuxt-js/
 firebase deploy
+firebase deploy --project dev
+firebase deploy --project prod
 ```
 
 For detailed explanation on how things work, check out the [documentation](https://nuxtjs.org).
