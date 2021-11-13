@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "dev": "tm-map-test",
+    "prod": "trim-tide-313616"
+  }
+}
