@@ -16,7 +16,8 @@ from map.api.views.views import (
     LineAPI,
     CityAPI,
     SearchStationAPI,
-    SearchSpotAPI
+    SearchSpotAPI,
+    TableAPI
 )
 
 urlpatterns = [
@@ -35,4 +36,5 @@ urlpatterns = [
     path('city/', CityAPI.as_view(), name="city"),
     path('search/station/', SearchStationAPI.as_view(), name="search-station"),
     path('search/town/', SearchSpotAPI.as_view(), name="search-town"),
+    path('table/', TableAPI.as_view(), name="table"),
 ]

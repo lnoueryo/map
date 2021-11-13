@@ -1,11 +1,12 @@
 from django.urls import path
 from user.api.views import (
-    AccountAPI,
-    UserAPI
+    AuthenticationAPI,
+    UserAPI,
 )
 
 urlpatterns = [
     path('', UserAPI.as_view(), name="user"),
-    path('account/', AccountAPI.as_view(), name="account"),
-    path('account/logout/', AccountAPI.logout, name="logout"),
+    path('login/', AuthenticationAPI.login, name="login"),
+    path('auth/', AuthenticationAPI.authentication, name="authentication"),
+    path('logout/', AuthenticationAPI.logout, name="logout"),
 ]

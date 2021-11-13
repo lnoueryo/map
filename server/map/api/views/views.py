@@ -10,7 +10,7 @@ import logging
 
 import sqlalchemy as sa
 from sqlalchemy.orm import backref, sessionmaker, scoped_session
-from sqlalchemy import and_
+from sqlalchemy import and_, inspect
 from bs4 import BeautifulSoup
 from bs4.element import Comment
 from rest_framework.views import APIView
@@ -26,6 +26,23 @@ from map.sqlite.views import Sqlite
 sq = Sqlite()
 import socket
 
+class TableAPI(APIView):
+
+    def get(self, request):
+        try:
+            inspector = inspect(engine)
+            tables = []
+            for table_name in inspector.get_table_names(schema='tap_map'):
+                table = {'name': table_name, 'columns': [[], []]}
+                for index, column in enumerate(inspector.get_columns(table_name, schema='tap_map')):
+                    if index <= 12:
+                        table['columns'][0].append(column['name'])
+                    else:
+                        table['columns'][1].append(column['name'])
+                tables.append(table)
+            return JsonResponse(tables, safe=False)
+        except Exception as e:
+            return JsonResponse(error_response(502), status=502, safe=False)
 class CompanyAPI(APIView):
 
     def get(self, request):
@@ -182,10 +199,6 @@ class LineAPI(APIView):
 
 class CityAPI(APIView):
     def get(self, request):
-        host = socket.gethostname()
-        ip = socket.gethostbyname(host)
-        logging.warning(host)
-        logging.warning(ip)
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         id = request.GET.dict()['city_code']
@@ -357,3 +370,7 @@ class EventAPI(APIView):
 def error_response(status_code):
     if status_code == 502:
         return {'message': '現在アクセスが集中しているため、時間をおいて再度お試しください。'}
+        # host = socket.gethostname()
+        # ip = socket.gethostbyname(host)
+        # logging.warning(host)
+        # logging.warning(ip)
