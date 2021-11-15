@@ -232,10 +232,8 @@ export default Vue.extend({
       spotAddInfo = this.categoryArray.find((spot) => {
         return spot.category.some((key) => category.includes(key));
       }) ?? spotAddInfo
-      console.log(spotAddInfo)
       if(spot.Name.indexOf('店') > -1) Object.assign(spot, {category: '', color: '#be69f3', icon: 'store'})
       if('icon' in spot === false) Object.assign(spot, {category: '', color: '#be69f3', icon: 'square-medium'})
-      console.log(spot)
       return spotAddInfo ? Object.assign(spot, spotAddInfo) : spot;
     }
   }

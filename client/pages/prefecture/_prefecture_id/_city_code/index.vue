@@ -118,7 +118,6 @@ export default {
       'city',
     ]),
     companies() {
-      console.log(Object.keys(this.city).length !== 0)
       if(Object.keys(this.city).length !== 0) {
         const city = JSON.parse(JSON.stringify(this.city))
         const overlappedCompanies = city.stations.map((station) => {
