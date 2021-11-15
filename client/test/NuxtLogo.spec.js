@@ -1,9 +1,10 @@
 import { mount } from '@vue/test-utils'
-import Hello from '@/comments/index/'
-
-describe('HelloWorld', () => {
+import Index from '@/pages/index'
+import assert from 'assert'
+describe('Index', () => {
   test('display Hello World', () => {
-    const wrapper = mount(Hello)
-    expect(wrapper.text()).toBe("東京都")
+    const wrapper = mount(Index)
+    // expect(wrapper.text()).toBe("東京都")
+    assert(wrapper.vm.smp === true)
   })
 })

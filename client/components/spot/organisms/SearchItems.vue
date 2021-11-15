@@ -137,12 +137,12 @@ export default Vue.extend({
   },
   methods: {
     select(town: Town) {
-      // this.$store.dispatch('spot/getPrefectures')
-      console.log(town)
-      this.$router.push({
-        name: "spot",
-        query: { prefecture_id: town.prefecture_id, city_code: town.city_code, lat: town.lat, lng: town.lng},
-      });
+      if(town) {
+        this.$router.push({
+          name: "spot",
+          query: { prefecture_id: town.prefecture_id, city_code: town.city_code, lat: town.lat, lng: town.lng},
+        });
+      }
     },
     count(newValue: number, OldValue: number): void {
       const DURATION = 600;

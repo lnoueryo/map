@@ -122,10 +122,12 @@ export default Vue.extend({
   },
   methods: {
     select(searchStation: Station) {
-      this.$router.push({
-        name: "station-prefecture_id-name",
-        params: { name: searchStation.name, prefecture_id: searchStation.prefecture_id },
-      });
+      if(searchStation) {
+        this.$router.push({
+          name: "station-prefecture_id-name",
+          params: { name: searchStation.name, prefecture_id: searchStation.prefecture_id },
+        });
+      }
     },
     count(newValue: number, OldValue: number): void {
       const DURATION = 600;
