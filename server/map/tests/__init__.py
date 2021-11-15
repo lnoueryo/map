@@ -1,0 +1,1 @@
+from map.tests.test_models import *

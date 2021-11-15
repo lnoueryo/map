@@ -54,20 +54,47 @@ class Company(Base):
     # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     lines = relationship("Line", backref="companies")
 
-    def to_dict(self):
+    def to_join_line_station_dict(self):
         company_dict = {
             'id': self.id,
             'name': self.name,
             'address': self.address,
-            'lines': [line.to_dict() for line in self.lines]
+            'founded': self.founded,
+            'lines': self.to_station_dict(self.lines)
         }
         return company_dict
 
-    def join_dict(self):
+    def to_line_station_dict(self, lines):
+        line_dict_list = []
+        for line in lines:
+            line_dict = {
+                'id': line.id,
+                'name': line.name,
+                'polygon': line.polygon,
+                'color': line.color,
+                'stations': self.to_station_dict(line.stations)
+            }
+            line_dict_list.append(line_dict)
+        return line_dict_list
+
+    def to_station_dict(self, stations):
+        station_dict_list = []
+        for station in stations:
+            station_dict = {
+                'id': station.id,
+                'name': station.name,
+                'lat': station.lat,
+                'lng': station.lng,
+            }
+            station_dict_list.append(station_dict)
+        return station_dict_list
+
+    def to_company_dict(self):
         company_dict = {
             'id': self.id,
             'name': self.name,
             'address': self.address,
+            'founded': self.founded,
         }
         return company_dict
 
@@ -101,11 +128,11 @@ class Line(Base):
             'name': self.name,
             'polygon': polygon,
             'color': self.color,
-            'stations': [station.join_dict() for station in self.stations]
+            'stations': [station.to_station_dict() for station in self.stations]
         }
         return line_dict
 
-    def join_dict(self):
+    def to_line_dict(self):
         polygon = eval(self.polygon)
         line_dict = {
             'id': self.id,
@@ -115,6 +142,7 @@ class Line(Base):
             'color': self.color,
         }
         return line_dict
+
 
 class Station(Base):
     """
@@ -146,7 +174,7 @@ class Station(Base):
     )
     company = relationship('Company')
 
-    def to_dict(self):
+    def to_join_company_line_station_dict(self):
         station_dict = {
             'id': self.id,
             'company_id': self.company_id,
@@ -155,18 +183,31 @@ class Station(Base):
             'prefecture_id': self.prefecture_id,
             'city_code': self.city_code,
             'place_id': self.place_id,
-            'place_ids': self.place_ids,
-            'place_result': self.place_result,
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
             'search_text': self.search_text,
-            'lines': [line.to_dict() for line in self.lines],
-            'company': self.company.join_dict()
+            'lines': self.to_line_station_dict(self.lines),
+            'company': self.company.to_company_dict()
         }
         return station_dict
 
-    def join_dict(self):
+    def to_line_station_dict(self, lines):
+        line_dict_station = []
+        for line in lines:
+            polygon = eval(line.polygon)
+            line_dict = {
+                'id': line.id,
+                'company_id': line.company_id,
+                'name': line.name,
+                'polygon': polygon,
+                'color': line.color,
+                'stations': [station.to_station_dict() for station in line.stations]
+            }
+            line_dict_station.append(line_dict)
+        return line_dict_station
+
+    def to_join_company_line_dict(self):
         station_dict = {
             'id': self.id,
             'company_id': self.company_id,
@@ -175,8 +216,36 @@ class Station(Base):
             'prefecture_id': self.prefecture_id,
             'city_code': self.city_code,
             'place_id': self.place_id,
-            'place_ids': self.place_ids,
-            'place_result': self.place_result,
+            'geohash': self.geohash,
+            'lat': self.lat,
+            'lng': self.lng,
+            'search_text': self.search_text,
+            'lines': self.to_line_dict(self.lines),
+            'company': self.company.to_company_dict()
+        }
+        return station_dict
+
+    def to_line_dict(self, lines):
+        line_dict_station = []
+        for line in lines:
+            line_dict = {
+                'id': line.id,
+                'company_id': line.company_id,
+                'name': line.name,
+                'color': line.color,
+            }
+            line_dict_station.append(line_dict)
+        return line_dict_station
+
+    def to_station_dict(self):
+        station_dict = {
+            'id': self.id,
+            'company_id': self.company_id,
+            'name': self.name,
+            'address': self.address,
+            'prefecture_id': self.prefecture_id,
+            'city_code': self.city_code,
+            'place_id': self.place_id,
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
@@ -210,57 +279,31 @@ class Prefecture(Base):
     )
     spots = relationship('Spot', backref='prefectures')
 
-    def to_dict(self):
+    def to_join_city_spot_dict(self):
         prefecture_dict = {
             'id': self.id,
             'name': self.name,
             'lat': self.lat,
             'lng': self.lng,
+            'cities': self.to_city_spot_dict(self.cities)
         }
         return prefecture_dict
 
-    def with_city_dict(self):
-        prefecture_dict = {
-            'id': self.id,
-            'name': self.name,
-            'lat': self.lat,
-            'lng': self.lng,
-            'cities': self.city_dict_list(self.cities, spots=True)
-        }
-        return prefecture_dict
-
-    def city_dict_list(self, cities, spots):
+    def to_city_spot_dict(self, cities):
         city_dict_list = []
-        if spots:
-            for city in cities:
-                city_dict = {
-                    'id': city.id,
-                    'prefecture_id': city.prefecture_id,
-                    'name': city.name,
-                    'lat': city.lat,
-                    'lng': city.lng,
-                    'polygons': eval(city.polygons),
-                    'layouts': city.layouts,
-                    'spots': self.spot_dict_list(city.spots)
-                }
-                city_dict_list.append(city_dict)
-        else:
-            for city in cities:
-                city_dict = {
-                    'id': city.id,
-                    'prefecture_id': city.prefecture_id,
-                    'name': city.name,
-                    'lat': city.lat,
-                    'lng': city.lng,
-                    'polygons': eval(city.polygons),
-                    'layouts': city.layouts,
-                    'created_at': city.created_at,
-                    'updated_at': city.updated_at,
-                }
-                city_dict_list.append(city_dict)
+        for city in cities:
+            city_dict = {
+                'id': city.id,
+                'prefecture_id': city.prefecture_id,
+                'name': city.name,
+                'lat': city.lat,
+                'lng': city.lng,
+                'spots': self.to_spot_dict(city.spots)
+            }
+            city_dict_list.append(city_dict)
         return city_dict_list
 
-    def spot_dict_list(self, spots):
+    def to_spot_dict(self, spots):
         spot_dict_list = []
         for spot in spots:
             spot_dict = {
@@ -270,45 +313,43 @@ class Prefecture(Base):
                 'name': spot.name,
                 'lat': spot.lat,
                 'lng': spot.lng,
-                'place_id': spot.place_id,
-                'address': spot.address,
-                'geohash': spot.geohash,
             }
             spot_dict_list.append(spot_dict)
         return spot_dict_list
 
-    def with_station_dict(self):
+    # def station_dict(self, stations):
+    #     station_dict_list = []
+    #     for station in stations:
+    #         station_dict = {
+    #             'id': station.id,
+    #             'company_id': station.company_id,
+    #             'name': station.name,
+    #             'address': station.address,
+    #             'prefecture_id': station.prefecture_id,
+    #             'city_code': station.city_code,
+    #             'place_id': station.place_id,
+    #             'place_ids': station.place_ids,
+    #             'place_result': station.place_result,
+    #             'geohash': station.geohash,
+    #             'lat': station.lat,
+    #             'lng': station.lng,
+    #             'search_text': station.search_text,
+    #             'created_at': change_time(station.created_at),
+    #             'updated_at': change_time(station.updated_at),
+    #             'lines': [line.join_dict() for line in station.lines],
+    #             'company': station.company.join_dict()
+    #         }
+    #         station_dict_list.append(station_dict)
+    #     return station_dict_list
+
+    def to_prefecture_dict(self):
         prefecture_dict = {
             'id': self.id,
             'name': self.name,
             'lat': self.lat,
             'lng': self.lng,
-            'stations': self.station_dict(self.stations)
         }
         return prefecture_dict
-
-    def station_dict(self, stations):
-        station_dict_list = []
-        for station in stations:
-            station_dict = {
-                'id': station.id,
-                'company_id': station.company_id,
-                'name': station.name,
-                'address': station.address,
-                'prefecture_id': station.prefecture_id,
-                'city_code': station.city_code,
-                'place_id': station.place_id,
-                'place_ids': station.place_ids,
-                'place_result': station.place_result,
-                'geohash': station.geohash,
-                'lat': station.lat,
-                'lng': station.lng,
-                'search_text': station.search_text,
-                'lines': [line.join_dict() for line in station.lines],
-                'company': station.company.join_dict()
-            }
-            station_dict_list.append(station_dict)
-        return station_dict_list
 class City(Base):
     """
     Cityテーブルクラス
@@ -352,44 +393,33 @@ class City(Base):
     spots = relationship('Spot', backref='cities')
     towns = relationship('Town', backref='towns')
 
-    def to_dict(self):
-        city_dict = {
-            'id': self.id,
-            'name': self.name,
-            'lat': self.lat,
-            'lng': self.lng,
-        }
-        return city_dict
-
-    def to_city_dict(self):
-        spots = [spot.join_dict() for spot in self.spots] if self.spots else []
-        towns = [town.to_dict() for town in self.towns] if self.towns else []
-        stations = [station.to_dict() for station in self.stations] if self.stations else []
-        layouts = eval(self.layouts) if self.layouts else ''
-        columns = eval(self.columns) if self.columns else ''
+    def to_join_spot_town_station_company_line_dict(self):
+        spots = [spot.to_spot_dict() for spot in self.spots] if self.spots else []
+        towns = [town.to_town_dict() for town in self.towns] if self.towns else []
+        stations = [station.to_join_company_line_station_dict() for station in self.stations] if self.stations else []
         city_dict = {
             'id': self.id,
             'name': self.name,
             'lat': self.lat,
             'lng': self.lng,
             'polygons': eval(self.polygons),
-            'layouts': layouts,
-            'columns': columns,
-            'facility': self.facility.to_dict(),
-            'occupation': self.occupation.to_dict(),
-            'population': self.population.to_dict(),
+            'layouts': eval(self.layouts),
+            'columns': eval(self.columns),
+            'facility': self.facility.to_facility_dict(),
+            'occupation': self.occupation.to_occupation_dict(),
+            'population': self.population.to_population_dict(),
             'spots': spots,
             'towns': towns,
             'stations': stations
         }
         return city_dict
 
-    def join_dict(self):
+    def to_city_dict(self):
         city_dict = {
             'id': self.id,
             'name': self.name,
-            'lat': self.place_result,
-            'lng': self.geohash,
+            'lat': self.lat,
+            'lng': self.lng,
         }
         return city_dict
 
@@ -428,7 +458,7 @@ class Facility(Base):
     city = relationship('City')
 
 
-    def to_dict(self):
+    def to_facility_dict(self):
         facility_dict = {
             'id': self.id,
             'city_code': self.city_code,
@@ -490,7 +520,7 @@ class Occupation(Base):
     # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     city = relationship('City')
 
-    def to_dict(self):
+    def to_occupation_dict(self):
         occupation_dict = {
             'id': self.id,
             'city_code': self.city_code,
@@ -553,7 +583,7 @@ class Population(Base):
     # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     city = relationship('City')
 
-    def to_dict(self):
+    def to_population_dict(self):
         population_dict = {
             'id': self.id,
             'city_code': self.city_code,
@@ -581,55 +611,6 @@ class Population(Base):
         }
         return population_dict
 
-class Spot(Base):
-    """
-    Populationテーブルクラス
-    """
-
-    # テーブル名
-    __tablename__ = 'spots'
-
-    # 個々のカラムを定義
-    id = Column(BIGINT, primary_key=True)
-    prefecture_id = Column(String(3), ForeignKey('prefectures.id'))
-    city_code = Column(String(6), ForeignKey('cities.id'))
-    name = Column(String(100))
-    place_id = Column(String(100))
-    address = Column(String(100))
-    geohash = Column(String(10))
-    lat = Column(Float)
-    lng = Column(Float)
-    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
-    city = relationship('City')
-
-    def to_dict(self):
-        population_dict = {
-            'id': self.id,
-            'city_code': self.city_code,
-            'name': self.name,
-            'population': self.population,
-            'japanese': self.japanese,
-            'foreign': self.foreign,
-            'basic_resident_register_population': self.basic_resident_register_population,
-            'under15': self.under15,
-            'between15_64': self.between15_64,
-            'over65': self.over65,
-            'daytime': self.daytime,
-            'births': self.births,
-            'death': self.death,
-            'total_households': self.total_households,
-            'households': self.households,
-            'nuclear_family_households': self.nuclear_family_households,
-            'single_households': self.single_households,
-            'transferees': self.transferees,
-            'mover': self.mover,
-            'marriages': self.marriages,
-            'divorces': self.divorces,
-            'area': self.area,
-            'resident_area': self.resident_area,
-        }
-        return population_dict
 
 class Spot(Base):
     """
@@ -654,8 +635,8 @@ class Spot(Base):
     # updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
     city = relationship('City')
 
-    def to_dict(self):
-        prefecture_dict = {
+    def to_join_city_dict(self):
+        spot_dict = {
             'id': self.id,
             'prefecture_id': self.prefecture_id,
             'city_code': self.city_code,
@@ -665,11 +646,11 @@ class Spot(Base):
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
-            'lines': [city.to_dict() for city in self.cities]
+            'cities': [city.to_city_dict() for city in self.cities]
         }
-        return prefecture_dict
+        return spot_dict
 
-    def join_dict(self):
+    def to_spot_dict(self):
         spot_dict = {
             'id': self.id,
             'prefecture_id': self.prefecture_id,
@@ -708,15 +689,28 @@ class Town(Base):
     # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
     # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
-    def to_dict(self):
+    def to_short_town_dict(self):
+        town_dict = {
+            'id': self.id,
+            'name': self.name,
+            'address': self.address,
+            'prefecture_id': self.prefecture_id,
+            'city_code': self.city_code,
+            'lat': self.lat,
+            'lng': self.lng,
+            'geohash': self.geohash,
+        }
+        return town_dict
+
+    def to_town_dict(self):
         layouts = eval(self.layouts) if self.layouts else ''
         columns = eval(self.columns) if self.columns else ''
         town_dict = {
             'id': self.id,
-            'prefecture_id': self.prefecture_id,
-            'city_code': self.city_code,
             'name': self.name,
             'address': self.address,
+            'prefecture_id': self.prefecture_id,
+            'city_code': self.city_code,
             'count': self.count,
             'count_ratio': self.count_ratio,
             'lat': self.lat,
@@ -724,16 +718,6 @@ class Town(Base):
             'geohash': self.geohash,
             'layouts': layouts,
             'columns': columns,
-        }
-        return town_dict
-
-    def join_dict(self):
-        town_dict = {
-            'id': self.id,
-            'name': self.name,
-            'address': self.address,
-            'lat': self.lat,
-            'lng': self.lng,
         }
         return town_dict
 

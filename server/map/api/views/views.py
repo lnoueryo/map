@@ -55,7 +55,7 @@ class CompanyAPI(APIView):
                 return JsonResponse(error_response(502), status=502, safe=False)
             company_dict_list = sq.get_companies()
         else:
-            company_dict_list = [company.to_dict() for company in companies]
+            company_dict_list = [company.to_join_line_station_dict() for company in companies]
         finally:
             session.close()
             response = JsonResponse(company_dict_list, safe=False)
@@ -74,7 +74,7 @@ class PrefectureCityAPI(APIView):
                 return JsonResponse(error_response(502), status=502, safe=False)
             prefecture_dict_list = sq.get_prefectures_cities()
         else:
-            prefecture_dict_list = [prefecture.with_city_dict() for prefecture in prefectures]
+            prefecture_dict_list = [prefecture.to_join_city_spot_dict() for prefecture in prefectures]
         finally:
             session.close()
             response = JsonResponse(prefecture_dict_list, safe=False)
@@ -95,7 +95,7 @@ class SpotAPI(APIView):
                     return JsonResponse(error_response(502), status=502, safe=False)
                 spot_dict = sq.get_spot(id)
             else:
-                spot_dict = spot.join_dict()
+                spot_dict = spot.to_spot_dict()
                 neighbors = self.get_neighbors(spot_dict['geohash'])
                 num = 1
                 while num < 6:
@@ -111,7 +111,7 @@ class SpotAPI(APIView):
                                 neighbors = neighbors + self.get_neighbors(neighbor)
                             neighbors = list(set(neighbors))
                         num += 1
-                station_dict_list = [station.to_dict() for station in stations]
+                station_dict_list = [station.to_join_company_line_dict() for station in stations]
                 spot_dict['stations'] = station_dict_list
             finally:
                 session.close()
@@ -135,7 +135,7 @@ class PrefectureAPI(APIView):
                 return JsonResponse(error_response(502), status=502, safe=False)
             prefecture_dict_list = sq.get_prefectures()
         else:
-            prefecture_dict_list = [prefecture.to_dict() for prefecture in prefectures]
+            prefecture_dict_list = [prefecture.to_prefecture_dict() for prefecture in prefectures]
         finally:
             session.close()
             response = JsonResponse(prefecture_dict_list, safe=False)
@@ -157,7 +157,7 @@ class StationAPI(APIView):
                     return JsonResponse(error_response(502), status=502, safe=False)
                 station_dict_list = sq.get_stations_by_name(id, name)
             else:
-                station_dict_list = [station.to_dict() for station in stations]
+                station_dict_list = [station.to_join_company_line_station_dict() for station in stations]
             finally:
                 session.close()
                 return JsonResponse(station_dict_list, safe=False)
@@ -170,7 +170,7 @@ class StationAPI(APIView):
                 return JsonResponse(error_response(502), status=502, safe=False)
             station_dict_list = sq.get_stations(id)
         else:
-            station_dict_list = [station.join_dict() for station in stations]
+            station_dict_list = [station.to_station_dict() for station in stations]
         finally:
             session.close()
             response = JsonResponse(station_dict_list, safe=False)
@@ -190,7 +190,7 @@ class LineAPI(APIView):
             line_dict_list = sq.get_lines(id)
             return JsonResponse({'error': e}, safe=False)
         else:
-            line_dict_list = [line.join_dict() for line in lines]
+            line_dict_list = [line.to_line_dict() for line in lines]
         finally:
             session.close()
             response = JsonResponse(line_dict_list, safe=False)
@@ -209,7 +209,7 @@ class CityAPI(APIView):
                 return JsonResponse(error_response(502), status=502, safe=False)
             city_dict_list = sq.get_cities(id)
         else:
-            city_dict_list = [city.to_city_dict() for city in cities]
+            city_dict_list = [city.to_join_spot_town_station_company_line_dict() for city in cities]
         finally:
             session.close()
             return JsonResponse(city_dict_list[0], safe=False)
@@ -232,7 +232,7 @@ class SearchStationAPI(APIView):
                 return JsonResponse(error_response(502), status=502, safe=False)
             new_station_dict_list = sq.search_stations()
         else:
-            station_dict_list = [station.join_dict() for station in stations] if stations else []
+            station_dict_list = [station.to_station_dict() for station in stations] if stations else []
             new_station_dict_list = []
             for station_dict in station_dict_list:
                 if word in station_dict['name']:
@@ -261,7 +261,7 @@ class SearchSpotAPI(APIView):
                 return JsonResponse(error_response(502), status=502, safe=False)
             new_town_dict_list = sq.search_towns(words)
         else:
-            town_dict_list = [town.join_dict() for town in towns] if towns else []
+            town_dict_list = [town.to_short_town_dict() for town in towns] if towns else []
             new_town_dict_list = []
             for town_dict in town_dict_list:
                 if word in town_dict['name']:
