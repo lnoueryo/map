@@ -141,7 +141,7 @@ const actions = {
     getPrefectures: async (context: any) => {
         try {
             const response = await $axios.$get('/api/map/prefecture/city/');
-            context.commit('prefectures', response)
+            context.commit('prefectures', response);
         } catch(err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
             else context.dispatch('errorDialog', true, { root: true })
@@ -178,7 +178,7 @@ const actions = {
     getSpot: async (context: any, payload: {prefecture_id: string, city_code: string, id: string}) => {
         try {
             const response = await $axios.$get('/api/map/spot/', { params: {id: payload.id} });
-            context.commit('spot', response)
+            context.commit('spot', response);
             const twitterQuery = {name: response.name, lat: response.lat, lng: response.lng}
             context.dispatch('info/getTwitterInfo', twitterQuery, {root: true})
             context.dispatch("info/getAroundSpot", twitterQuery, {root: true});
@@ -190,8 +190,9 @@ const actions = {
     searchTown: async(context: any, payload: string) => {
         if(payload) {
             try {
-                const response = await $axios.$get('/api/map/search/town/', {params: {word: payload}})
-                context.commit('searchResult', response)
+                const response = await $axios.$get('/api/map/search/town/', {params: {word: payload}});
+                context.commit('searchResult', response);
+                console.log(response)
             } catch(err: any) {
                 if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection')
                 else context.dispatch('errorDialog', true, { root: true })

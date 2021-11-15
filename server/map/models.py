@@ -158,8 +158,6 @@ class Station(Base):
             'lat': self.lat,
             'lng': self.lng,
             'search_text': self.search_text,
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
             'lines': [line.to_dict() for line in self.lines],
             'company': self.company.join_dict()
         }
@@ -180,8 +178,6 @@ class Station(Base):
             'lat': self.lat,
             'lng': self.lng,
             'search_text': self.search_text,
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
         }
         return station_dict
 
@@ -217,8 +213,6 @@ class Prefecture(Base):
             'name': self.name,
             'lat': self.lat,
             'lng': self.lng,
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
         }
         return prefecture_dict
 
@@ -228,8 +222,6 @@ class Prefecture(Base):
             'name': self.name,
             'lat': self.lat,
             'lng': self.lng,
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
             'cities': self.city_dict_list(self.cities, spots=True)
         }
         return prefecture_dict
@@ -244,10 +236,6 @@ class Prefecture(Base):
                     'name': city.name,
                     'lat': city.lat,
                     'lng': city.lng,
-                    'polygons': eval(city.polygons),
-                    'layouts': city.layouts,
-                    'created_at': city.created_at,
-                    'updated_at': city.updated_at,
                     'spots': self.spot_dict_list(city.spots)
                 }
                 city_dict_list.append(city_dict)
@@ -259,10 +247,6 @@ class Prefecture(Base):
                     'name': city.name,
                     'lat': city.lat,
                     'lng': city.lng,
-                    'polygons': eval(city.polygons),
-                    'layouts': city.layouts,
-                    'created_at': city.created_at,
-                    'updated_at': city.updated_at,
                 }
                 city_dict_list.append(city_dict)
         return city_dict_list
@@ -277,11 +261,6 @@ class Prefecture(Base):
                 'name': spot.name,
                 'lat': spot.lat,
                 'lng': spot.lng,
-                'place_id': spot.place_id,
-                'address': spot.address,
-                'geohash': spot.geohash,
-                'created_at': spot.created_at,
-                'updated_at': spot.updated_at,
             }
             spot_dict_list.append(spot_dict)
         return spot_dict_list
@@ -331,7 +310,7 @@ class City(Base):
     __tablename__ = 'cities'
 
     # 個々のカラムを定義
-    
+
     id = Column(String(6), nullable=False, index=True, primary_key=True)
     prefecture_id = Column(String(3), ForeignKey('prefectures.id'))
     name = Column(String(20))
@@ -371,8 +350,6 @@ class City(Base):
             'name': self.name,
             'lat': self.lat,
             'lng': self.lng,
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
         }
         return city_dict
 
@@ -391,8 +368,6 @@ class City(Base):
             'facility': self.facility.to_dict(),
             'occupation': self.occupation.to_dict(),
             'population': self.population.to_dict(),
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
             'spots': spots,
             'towns': towns,
             'stations': stations
@@ -405,8 +380,6 @@ class City(Base):
             'name': self.name,
             'lat': self.place_result,
             'lng': self.geohash,
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
         }
         return city_dict
 
@@ -626,7 +599,7 @@ class Spot(Base):
     city = relationship('City')
 
     def to_dict(self):
-        prefecture_dict = {
+        spot_dict = {
             'id': self.id,
             'prefecture_id': self.prefecture_id,
             'city_code': self.city_code,
@@ -636,11 +609,9 @@ class Spot(Base):
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
             'lines': [city.to_dict() for city in self.cities]
         }
-        return prefecture_dict
+        return spot_dict
 
     def join_dict(self):
         spot_dict = {
@@ -653,8 +624,6 @@ class Spot(Base):
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
         }
         return spot_dict
 
@@ -698,8 +667,6 @@ class Town(Base):
             'geohash': self.geohash,
             'layouts': layouts,
             'columns': columns,
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
         }
         return town_dict
 
@@ -707,11 +674,11 @@ class Town(Base):
         town_dict = {
             'id': self.id,
             'name': self.name,
+            'prefecture_id': self.prefecture_id,
+            'city_code': self.city_code,
             'address': self.address,
             'lat': self.lat,
             'lng': self.lng,
-            'created_at': change_time(self.created_at),
-            'updated_at': change_time(self.updated_at),
         }
         return town_dict
 

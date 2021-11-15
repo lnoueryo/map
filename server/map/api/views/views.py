@@ -261,7 +261,7 @@ class SearchSpotAPI(APIView):
                 return JsonResponse(error_response(502), status=502, safe=False)
             new_town_dict_list = sq.search_towns(words)
         else:
-            town_dict_list = [town.to_dict() for town in towns] if towns else []
+            town_dict_list = [town.join_dict() for town in towns] if towns else []
             new_town_dict_list = []
             for town_dict in town_dict_list:
                 if word in town_dict['name']:
