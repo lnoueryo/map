@@ -37,21 +37,19 @@ interface City {
   lat: string;
   lng: string;
   city: string;
-  spots: Spot;
+  spots: Spot[];
 }
 interface Coordinate {
   lat: number;
   lng: number;
 }
 interface Spot {
-  name: string;
-  place_id: string;
-  address: string;
-  lat: string;
-  lng: string;
+  id: number;
   prefecture_id: string;
   city_code: string;
-  id: number;
+  name: string;
+  lat: string;
+  lng: string;
 }
 
 export default Vue.extend({

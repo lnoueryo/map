@@ -19,12 +19,12 @@
         <simple-lists
           :items="$store.getters['station/boundsFilter'](uniqueStations)"
           @item="selectStation($event)"
-          v-else
+          v-else-if="'name' in this.$route.params == false"
         >
           <div>駅を選択</div>
         </simple-lists>
-        <!-- <div v-else>
-          <router-link :to="{name: 'station'}" class="company-name" >駅</router-link>
+        <div v-else>
+          <div class="company-name">駅</div>
           <div
             v-for="(mainStation, i) in filteredCompanyLinesByparams"
             :key="i"
@@ -59,7 +59,7 @@
                     class="line-name"
                     :style="{ backgroundColor: line.color }"
                     :for="line.name"
-                    @click="selectLine(company, line)"
+                    @click="selectLine(mainStation.company, line)"
                   >
                     {{ line.name }}
                   </label>
@@ -79,7 +79,7 @@
               </transition-group>
             </div>
           </div>
-        </div> -->
+        </div>
       </div>
     </transition>
   </div>
@@ -234,12 +234,12 @@ export default Vue.extend({
       if('company_id' in this.$route.query) {
         this.$router.push({
           name: "station-prefecture_id-name",
-          params: { name: this.$route.params.name },
+          params: {prefecture_id: this.$route.params.prefecture_id, name: this.$route.params.name },
         });
       } else {
         this.$router.push({
           name: "station-prefecture_id-name",
-          params: { name: this.$route.params.name },
+          params: {prefecture_id: this.$route.params.prefecture_id, name: this.$route.params.name },
           query: { company_id: String(company.id) },
         });
       }
@@ -248,13 +248,13 @@ export default Vue.extend({
       if('line_id' in this.$route.query) {
         this.$router.push({
           name: "station-prefecture_id-name",
-          params: { name: this.$route.params.name },
+          params: {prefecture_id: this.$route.params.prefecture_id, name: this.$route.params.name },
           query: { company_id: String(company.id) },
         });
       } else {
         this.$router.push({
           name: "station-prefecture_id-name",
-          params: { name: this.$route.params.name },
+          params: {prefecture_id: this.$route.params.prefecture_id, name: this.$route.params.name },
           query: { company_id: String(company.id), line_id: String(line.id) },
         });
       }
