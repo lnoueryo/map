@@ -18,7 +18,7 @@
         </simple-lists>
         <simple-lists
           :items="$store.getters['station/boundsFilter'](uniqueStations)"
-          @item="selectStation($event)"
+          @item="selectStations($event)"
           v-else-if="'name' in this.$route.params == false"
         >
           <div>駅を選択</div>
@@ -73,6 +73,7 @@
                     line.stations
                   )"
                   :key="k"
+                  @click="selectStation(station)"
                 >
                   <div>{{ station.name }}</div>
                 </div>
@@ -259,10 +260,17 @@ export default Vue.extend({
         });
       }
     },
-    selectStation(station: Station) {
+    selectStations(station: Station) {
       this.$router.push({
         name: "station-prefecture_id-name",
         params: { name: station.name },
+      });
+    },
+    selectStation(station: Station) {
+      this.$router.push({
+        name: "station-prefecture_id-name",
+        params: { prefecture_id: station.prefecture_id, name: station.name },
+        query: {company_id: String(station.company_id)}
       });
     },
     selectPrefecture(prefecture: Prefecture) {

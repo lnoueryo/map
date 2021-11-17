@@ -119,7 +119,12 @@ export default {
 
   // Build Configuration: https://go.nuxtjs.dev/config-build
   build: {
-    publicPath: '/static/_nuxt/'
+    publicPath: '/static/_nuxt/',
+    terser: {
+      terserOptions: {
+        compress: { drop_console: true }
+      },
+    },
   },
   generate: {
     dir: './dist'

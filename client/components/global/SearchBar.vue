@@ -10,7 +10,7 @@
           @keyup.enter="onEnter"
           @input="input($event)"
         />
-        <v-icon class="close" @click="searchWord = null">mdi-close</v-icon>
+        <v-icon class="close" @click="input(null)">mdi-close</v-icon>
       </div>
       <v-icon id="magnify">mdi-magnify</v-icon>
     </div>
@@ -45,7 +45,9 @@ export default {
       this.$emit("select");
     },
     input(word) {
-      this.$emit('searchWord', word.target.value);
+      const searchWord = word?.target?.value ?? ''
+      if(!searchWord) this.$refs.input.value = ''
+      this.$emit('searchWord', searchWord);
     }
   },
 };
