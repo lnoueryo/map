@@ -81,7 +81,8 @@ const actions = {
 
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection');
-            else context.dispatch('errorDialog', true, { root: true })
+            else if(!err?.response || err?.response.status == 404) return;
+            else context.dispatch('errorDialog', true, { root: true });
         }
     },
     getAroundStationInfo: async (context: any, payload: Spot) => {

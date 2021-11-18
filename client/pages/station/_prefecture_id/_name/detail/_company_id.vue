@@ -44,7 +44,7 @@
           </div>
           <div class="my-4" style="max-width: 550px;width: 100%;">
             <h4 class="mb-1">周辺施設</h4>
-            <div class="d-flex flex-wrap" style="font-size: 14px">
+            <div class="d-flex flex-wrap" style="font-size: 14px" v-if="aroundSpotInfo.length !== 0">
               <div class="py-1 px-4 mr-4 mb-4" :style="{backgroundColor: spot.color, borderRadius: '5px'}" v-for="(spot, i) in aroundSpotInfo" :key="i">
                 <div class="text-center">
                   <v-icon>mdi-{{spot.icon}}</v-icon>
@@ -208,11 +208,11 @@ export default Vue.extend({
       return this.$store.getters.windowSize.x < 500;
     },
     aroundSpotInfo() {
-      return this.$store.getters['info/aroundSpot'].filter((spot: any) => {
+      return this.$store.getters['info/aroundSpot'].length !== 0 ? this.$store.getters['info/aroundSpot'].filter((spot: any) => {
         return this.excludedArray.some((key) => spot.Category.includes(key)) === false;
       }).filter((spot: any, index: number) => index < 14).map((spot: Spot) => {
         return this.addInfo(spot);
-      });
+      }) : [];
     },
   },
   created() {

@@ -148,6 +148,7 @@ const actions = {
         }
     },
     getCity: async (context: any, payload: { mapCenter: Coordinate, zoom: number }) => {
+        if(!payload?.mapCenter?.lat || !payload?.mapCenter?.lng) return;
         try {
             const response = await $axios.$get('/api/map/search-by-reverse-geocode/', { params: payload.mapCenter });
             let AddressElement;
@@ -161,6 +162,7 @@ const actions = {
             }
         } catch (err: any) {
             if(!err?.response || err?.response.status == 504) $nuxt.$router.push('/bad-connection');
+            if(!err?.response || err?.response.status == 404) return;
         }
     },
     query: (context: any, payload: Query) => {

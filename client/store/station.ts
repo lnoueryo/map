@@ -133,13 +133,6 @@ const getters = {
         }
         return stations;
     },
-    // lineItems: (state: State, getters: any) => {
-    //     const lines = [].concat(...getters.companies.map((company: Company): Line[] => company.lines));
-    //     return getters.companyFilter(lines);
-    // },
-    // originalCities: (state: State, getters: any) => {
-    //     return state.cities
-    // },
     searchResult: (state: State): Station[] => state.searchResult,
     currentBounds: (state: State) => state.currentBounds,
     showNumberOfMarkers: (state: State, getters: any): number => { //現在表示されているマーカーの数を返す
@@ -197,6 +190,7 @@ const mutations = {
 
 const actions = {
     getCity: async (context: any, payload: { mapCenter: Coordinate, zoom: number }) => {
+        if(!payload?.mapCenter?.lat || !payload?.mapCenter?.lng) return;
         const response = await $axios.$get('/api/map/search-by-reverse-geocode/', { params: payload.mapCenter });
         let AddressElement;
         if (response.Property) {
