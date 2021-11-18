@@ -120,18 +120,6 @@ class Line(Base):
         secondary=LineStation.__tablename__,
     )
 
-    def to_dict(self):
-        polygon = eval(self.polygon)
-        line_dict = {
-            'id': self.id,
-            'company_id': self.company_id,
-            'name': self.name,
-            'polygon': polygon,
-            'color': self.color,
-            'stations': [station.to_station_dict() for station in self.stations]
-        }
-        return line_dict
-
     def to_line_dict(self):
         polygon = eval(self.polygon)
         line_dict = {
@@ -267,8 +255,6 @@ class Prefecture(Base):
     name = Column(String(20))
     lat = Column(Float)
     lng = Column(Float)
-    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     cities = relationship(
         'City',
         backref='prefectures',
@@ -317,31 +303,6 @@ class Prefecture(Base):
             spot_dict_list.append(spot_dict)
         return spot_dict_list
 
-    # def station_dict(self, stations):
-    #     station_dict_list = []
-    #     for station in stations:
-    #         station_dict = {
-    #             'id': station.id,
-    #             'company_id': station.company_id,
-    #             'name': station.name,
-    #             'address': station.address,
-    #             'prefecture_id': station.prefecture_id,
-    #             'city_code': station.city_code,
-    #             'place_id': station.place_id,
-    #             'place_ids': station.place_ids,
-    #             'place_result': station.place_result,
-    #             'geohash': station.geohash,
-    #             'lat': station.lat,
-    #             'lng': station.lng,
-    #             'search_text': station.search_text,
-    #             'created_at': change_time(station.created_at),
-    #             'updated_at': change_time(station.updated_at),
-    #             'lines': [line.join_dict() for line in station.lines],
-    #             'company': station.company.join_dict()
-    #         }
-    #         station_dict_list.append(station_dict)
-    #     return station_dict_list
-
     def to_prefecture_dict(self):
         prefecture_dict = {
             'id': self.id,
@@ -368,8 +329,6 @@ class City(Base):
     polygons = Column(TextType)
     layouts = Column(TextType)
     columns = Column(TextType)
-    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
     stations = relationship(
         'Station',
         backref='cities',
@@ -402,7 +361,6 @@ class City(Base):
             'name': self.name,
             'lat': self.lat,
             'lng': self.lng,
-            'polygons': eval(self.polygons),
             'layouts': eval(self.layouts),
             'columns': eval(self.columns),
             'facility': self.facility.to_facility_dict(),
@@ -631,8 +589,6 @@ class Spot(Base):
     geohash = Column(String(10))
     lat = Column(Float)
     lng = Column(Float)
-    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    # updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
     city = relationship('City')
 
     def to_join_city_dict(self):
@@ -646,7 +602,7 @@ class Spot(Base):
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
-            'cities': [city.to_city_dict() for city in self.cities]
+            'city': self.city.to_city_dict()
         }
         return spot_dict
 
@@ -686,8 +642,6 @@ class Town(Base):
     layouts = Column(TextType)
     columns = Column(TextType)
     city = relationship('City')
-    # created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
-    # updated_at = Column(DateTime, nullable=False, default=datetime.datetime.now, onupdate=datetime.datetime.now)
 
     def to_short_town_dict(self):
         town_dict = {
@@ -711,11 +665,11 @@ class Town(Base):
             'address': self.address,
             'prefecture_id': self.prefecture_id,
             'city_code': self.city_code,
-            'count': self.count,
-            'count_ratio': self.count_ratio,
             'lat': self.lat,
             'lng': self.lng,
             'geohash': self.geohash,
+            'count': self.count,
+            'count_ratio': self.count_ratio,
             'layouts': layouts,
             'columns': columns,
         }

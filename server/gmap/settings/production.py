@@ -8,10 +8,11 @@ import pymysql
 import google.auth
 import environ
 from google.cloud import secretmanager, logging
+from google.cloud.logging import Client
 with warnings.catch_warnings():
     warnings.simplefilter("ignore", category=sa_exc.SAWarning)
 
-client = google.cloud.logging.Client()
+client = Client()
 client.setup_logging()
 
 env = environ.Env(DEBUG=(bool, False))

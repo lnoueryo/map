@@ -1,3 +1,4 @@
+import logging
 from django.http import HttpResponse, JsonResponse
 from django.http.response import Http404
 import requests
@@ -21,19 +22,24 @@ class ReverseGeocodeAPI(APIView):
     https://developer.yahoo.co.jp/webapi/map/openlocalplatform/v1/reversegeocoder.html
     """
     def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR')
+        user_agent = request.META['HTTP_USER_AGENT']
         params = request.GET.dict()
         if 'lat' not in params or 'lng' not in params:
+            logging.error(client_ip + ': ' + user_agent)
             raise Http404()
         try:
             params['lat'] = float(params['lat'])
             params['lng'] = float(params['lng'])
         except Exception:
+            logging.error(client_ip + ': ' + user_agent)
             raise Http404()
         payload = {'appid': API_KEY, 'output': 'json', 'lat': params['lat'], 'lon': params['lng']}
         url = 'https://map.yahooapis.jp/geoapi/V1/reverseGeoCoder'
         try:
             response = requests.get(url, params=payload)
         except Exception as e:
+            logging.error(e)
             return JsonResponse(error_response(502), status=502, safe=False)
         else:
             data = response.json()
@@ -65,6 +71,7 @@ class LocalSearchAPI(APIView):
         try:
             response = requests.get(url, params=payload)
         except Exception as e:
+            logging.error(e)
             return JsonResponse(error_response(502), status=502, safe=False)
         else:
             data = response.json()
@@ -79,13 +86,17 @@ class PlaceInfoAPI(APIView):
     """
 
     def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR')
+        user_agent = request.META['HTTP_USER_AGENT']
         params = request.GET.dict()
         if 'lat' not in params or 'lng' not in params:
+            logging.error(client_ip + ': ' + user_agent)
             raise Http404()
         try:
             params['lat'] = float(params['lat'])
             params['lng'] = float(params['lng'])
         except Exception:
+            logging.error(client_ip + ': ' + user_agent)
             raise Http404()
         payload = {
             'appid': API_KEY,
@@ -97,6 +108,7 @@ class PlaceInfoAPI(APIView):
         try:
             response = requests.get(url, params=payload)
         except Exception as e:
+            logging.error(e)
             return JsonResponse(error_response(502), status=502, safe=False)
         else:
             data = response.json()

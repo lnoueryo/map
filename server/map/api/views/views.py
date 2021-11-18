@@ -5,6 +5,7 @@ import urllib.request
 import datetime
 import pytz
 import logging
+import socket
 
 from django.http import HttpResponse, JsonResponse
 from django.conf import settings
@@ -23,6 +24,7 @@ from gmap.house_model import HouseModel
 from map.models import *
 from gmap.geohash import Geohash
 from map.sqlite.views import Sqlite
+
 sq = Sqlite()
 
 class TableAPI(APIView):
@@ -49,13 +51,17 @@ class CompanyAPI(APIView):
         session = Session()
         try:
             companies = session.query(Company).all()
-        except Exception:
+        except Exception as e:
             if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                logging.error(e)
+                session.close()
                 return JsonResponse(error_response(502), status=502, safe=False)
             company_dict_list = sq.get_companies()
         else:
             company_dict_list = [company.to_join_line_station_dict() for company in companies]
         finally:
+            client_ip = request.META.get('REMOTE_ADDR')
+            logging.info(client_ip)
             session.close()
             response = JsonResponse(company_dict_list, safe=False)
             response.__setitem__('Cache-Control', 'public, max-age=300')
@@ -72,11 +78,15 @@ class PrefectureCityAPI(APIView):
             prefectures = session.query(Prefecture).all()
         except Exception  as e:
             if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                logging.error(e)
+                session.close()
                 return JsonResponse(error_response(502), status=502, safe=False)
             prefecture_dict_list = sq.get_prefectures_cities()
         else:
             prefecture_dict_list = [prefecture.to_join_city_spot_dict() for prefecture in prefectures]
         finally:
+            client_ip = request.META.get('REMOTE_ADDR')
+            logging.info(client_ip)
             session.close()
             response = JsonResponse(prefecture_dict_list, safe=False)
             response.__setitem__('Cache-Control', 'public, max-age=300') #5分
@@ -86,12 +96,16 @@ class PrefectureCityAPI(APIView):
 class SpotAPI(APIView):
     gh = Geohash()
     def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR')
+        user_agent = request.META['HTTP_USER_AGENT']
         if 'id' not in request.GET.dict():
+            logging.error(client_ip + ': ' + user_agent)
             raise Http404()
         id = request.GET.dict()['id']
         try:
             id = int(id)
         except Exception:
+            logging.error(client_ip + ' : ' + user_agent)
             raise Http404()
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
@@ -99,6 +113,8 @@ class SpotAPI(APIView):
             spot = session.query(Spot).filter(Spot.id == id).one_or_none()
         except Exception as e:
             if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                logging.error(e)
+                session.close()
                 return JsonResponse(error_response(502), status=502, safe=False)
             spot_dict = sq.get_spot(id)
         else:
@@ -109,6 +125,8 @@ class SpotAPI(APIView):
                 try:
                     stations = session.query(Station).filter(Station.geohash.in_(neighbors)).all()
                 except Exception as e:
+                    logging.error(e)
+                    session.close()
                     return JsonResponse(error_response(502), status=502, safe=False)
                 else:
                     if stations:
@@ -121,6 +139,7 @@ class SpotAPI(APIView):
             station_dict_list = [station.to_join_company_line_dict() for station in stations]
             spot_dict['stations'] = station_dict_list
         finally:
+            logging.info(client_ip)
             session.close()
             response = JsonResponse(spot_dict, safe=False)
             response.__setitem__('Cache-Control', 'public, max-age=300')
@@ -135,8 +154,10 @@ class SpotAPI(APIView):
 
 class PrefectureAPI(APIView):
     def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR')
         prefectures_cache = cache.get('prefectures')
         if prefectures_cache:
+            logging.info(client_ip)
             return JsonResponse(prefectures_cache, safe=False)
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
@@ -144,11 +165,14 @@ class PrefectureAPI(APIView):
             prefectures = session.query(Prefecture).all()
         except Exception as e:
             if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                logging.error(e)
+                session.close()
                 return JsonResponse(error_response(502), status=502, safe=False)
             prefecture_dict_list = sq.get_prefectures()
         else:
             prefecture_dict_list = [prefecture.to_prefecture_dict() for prefecture in prefectures]
         finally:
+            logging.info(client_ip)
             session.close()
             response = JsonResponse(prefecture_dict_list, safe=False)
             response.__setitem__('Cache-Control', 'public, max-age=300') #5分
@@ -158,6 +182,8 @@ class PrefectureAPI(APIView):
 class StationAPI(APIView):
 
     def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR')
+        user_agent = request.META['HTTP_USER_AGENT']
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         if 'name' in request.GET.dict():
@@ -167,21 +193,27 @@ class StationAPI(APIView):
                 stations = session.query(Station).filter(Station.prefecture_id == id).filter(Station.name == name).all()
             except Exception as e:
                 if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                    logging.error(e)
+                    session.close()
                     return JsonResponse(error_response(502), status=502, safe=False)
                 station_dict_list = sq.get_stations_by_name(id, name)
             else:
                 station_dict_list = [station.to_join_company_line_station_dict() for station in stations]
             finally:
+                logging.info(client_ip)
                 session.close()
                 return JsonResponse(station_dict_list, safe=False)
 
         if 'prefecture_id' not in request.GET.dict():
+            logging.error(client_ip + ': ' + user_agent)
             session.close()
             raise Http404()
         id = request.GET.dict()['prefecture_id']
         try:
             int(id)
         except:
+            logging.error(client_ip + ': ' + user_agent)
+            session.close()
             raise Http404()
         try:
             stations = session.query(Station).filter(Station.prefecture_id == id).all()
@@ -190,11 +222,14 @@ class StationAPI(APIView):
                 return JsonResponse([], safe=False)
         except Exception as e:
             if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                logging.error(e)
+                session.close()
                 return JsonResponse(error_response(502), status=502, safe=False)
             station_dict_list = sq.get_stations(id)
         else:
             station_dict_list = [station.to_station_dict() for station in stations]
         finally:
+            logging.info(client_ip)
             session.close()
             response = JsonResponse(station_dict_list, safe=False)
             response.__setitem__('Cache-Control', 'public, max-age=300')
@@ -202,31 +237,40 @@ class StationAPI(APIView):
 
 class LineAPI(APIView):
     def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR')
+        user_agent = request.META['HTTP_USER_AGENT']
         if 'prefecture_id' not in request.GET.dict():
+            logging.error(client_ip + ': ' + user_agent)
             raise Http404()
         id = request.GET.dict()['prefecture_id']
         line_cache = cache.get(f'line_{id}')
         if line_cache:
+            logging.info(client_ip)
             return JsonResponse(line_cache, safe=False)
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         try:
             int(id)
         except:
+            logging.error(client_ip + ': ' + user_agent)
+            session.close()
             raise Http404()
         try:
             lines = session.query(Line).filter(Line.prefecture_id == id).all()
             if not lines:
                 session.close()
+                logging.info(client_ip)
                 return JsonResponse([], safe=False)
         except Exception as e:
             if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                logging.error(e)
+                session.close()
                 return JsonResponse(error_response(502), status=502, safe=False)
             line_dict_list = sq.get_lines(id)
-            return JsonResponse({'error': e}, safe=False)
         else:
             line_dict_list = [line.to_line_dict() for line in lines]
         finally:
+            logging.info(client_ip)
             session.close()
             response = JsonResponse(line_dict_list, safe=False)
             response.__setitem__('Cache-Control', 'public, max-age=300') #5分
@@ -235,7 +279,10 @@ class LineAPI(APIView):
 
 class CityAPI(APIView):
     def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR')
+        user_agent = request.META['HTTP_USER_AGENT']
         if 'city_code' not in request.GET.dict():
+            logging.error(client_ip + ': ' + user_agent)
             raise Http404()
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
@@ -243,27 +290,36 @@ class CityAPI(APIView):
         try:
             int(id)
         except:
+            logging.error(client_ip + ': ' + user_agent)
+            session.close()
             raise Http404()
         try:
             cities = session.query(City).filter(City.id == id).all()
             if not cities:
+                logging.info(client_ip)
                 session.close()
                 return JsonResponse([], safe=False)
         except Exception as e:
             if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                logging.error(e)
+                session.close()
                 return JsonResponse(error_response(502), status=502, safe=False)
             city_dict_list = sq.get_cities(id)
         else:
             city_dict_list = [city.to_join_spot_town_station_company_line_dict() for city in cities]
         finally:
+            logging.info(client_ip)
             session.close()
             return JsonResponse(city_dict_list[0], safe=False)
 
 class SearchStationAPI(APIView):
     def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR')
+        user_agent = request.META['HTTP_USER_AGENT']
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         if 'word' not in request.GET.dict():
+            logging.error(client_ip + ': ' + user_agent)
             session.close()
             raise Http404()
         word = request.GET.dict()['word']
@@ -277,6 +333,8 @@ class SearchStationAPI(APIView):
             stations = query.filter(*filters).all()
         except Exception as e:
             if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                logging.error(e)
+                session.close()
                 return JsonResponse(error_response(502), status=502, safe=False)
             new_station_dict_list = sq.search_stations()
         else:
@@ -288,14 +346,18 @@ class SearchStationAPI(APIView):
                 else:
                     new_station_dict_list.append(station_dict)
         finally:
+            logging.info(client_ip)
             session.close()
             return JsonResponse(new_station_dict_list, safe=False)
 
 class SearchTownAPI(APIView):
     def get(self, request):
+        client_ip = request.META.get('REMOTE_ADDR')
+        user_agent = request.META['HTTP_USER_AGENT']
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         if 'word' not in request.GET.dict():
+            logging.error(client_ip + ': ' + user_agent)
             session.close()
             raise Http404()
         word = request.GET.dict()['word']
@@ -309,6 +371,8 @@ class SearchTownAPI(APIView):
             towns = query.filter(*filters).all()
         except Exception as e:
             if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                logging.error(e)
+                session.close()
                 return JsonResponse(error_response(502), status=502, safe=False)
             new_town_dict_list = sq.search_towns(words)
         else:
@@ -320,6 +384,7 @@ class SearchTownAPI(APIView):
                 else:
                     new_town_dict_list.append(town_dict)
         finally:
+            logging.info(client_ip)
             session.close()
             return JsonResponse(new_town_dict_list, safe=False)
 
