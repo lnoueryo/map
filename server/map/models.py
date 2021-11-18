@@ -1,19 +1,44 @@
+#!/usr/bin/python
+# -*- coding: utf-8 -*-
+"""Mapに使用するModel
+
+Prefecture
+City
+Population
+Occupation
+Facility
+Town
+Spot
+Company
+Line
+LineStation
+Station
+
+"""
+from datetime import timedelta
+
 from sqlalchemy.orm import relationship
 from sqlalchemy import (Table, Column, Integer, String, ForeignKey, DateTime, text, Float, and_)
 from sqlalchemy.dialects.mysql.base import BIGINT, LONGTEXT
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql.functions import current_timestamp
-from datetime import timedelta
-
-
 from django.conf import settings
-engine = settings.ENGINE
 
+engine = settings.ENGINE
 Base = declarative_base()
 
 class LineStation(Base):
-    """
-    LineStationテーブルクラス
+    """LineStationテーブルクラス
+
+    linesテーブルとstationsテーブルを繋げる
+    中間テーブル
+
+    Attributes:
+        id (int): プライマリーキー
+        line_id (int): linesテーブルとつなぐ外部キー
+        station_id (int): stationsテーブルとつなぐ外部キー
+        line (:obj:Line): linesテーブル(ManyToMany)
+        station (:obj:Station): stationsテーブル(ManyToMany)
     """
 
     # テーブル名
@@ -27,8 +52,19 @@ class LineStation(Base):
     station = relationship('Station', backref='stations_junctions')
 
 class Company(Base):
-    """
-    Companyテーブルクラス
+    """Companyテーブルクラス
+
+    companiesテーブルのカラムの定義
+    オブジェクトを辞書変換する関数の定義
+
+    Attributes:
+        id (int): プライマリーキー
+        name (str): 鉄道会社名
+        address (str): 本社の住所
+        founded (str): 設立日
+        created_at (timestamp): レコード作成時間
+        updated_at (timestamp): レコード更新時間
+        lines (:obj:Line): linesテーブル(OneToMany)
     """
 
     # テーブル名
@@ -44,6 +80,14 @@ class Company(Base):
     lines = relationship("Line", backref="companies")
 
     def to_join_line_station_dict(self):
+        """linesとstationsが結合されたテーブルの辞書変換関数
+
+        linesテーブルとstationsテーブルが結合された
+        Companyオブジェクトを辞書型に変換する関数
+
+        Returns:
+            辞書型: 下記の辞書が返される
+        """
         company_dict = {
             'id': self.id,
             'name': self.name,
@@ -54,6 +98,18 @@ class Company(Base):
         return company_dict
 
     def to_line_station_dict(self, lines):
+        """stationsが結合されたテーブルの辞書変換関数
+
+        stationsテーブルが結合された
+        Lineオブジェクトを辞書型に変換する関数
+
+        Args:
+            lines (:obj:Line[]): Lineオブジェクトのリスト
+
+        Returns:
+            辞書型: 下記の辞書が返される
+
+        """
         line_dict_list = []
         for line in lines:
             line_dict = {
@@ -67,6 +123,17 @@ class Company(Base):
         return line_dict_list
 
     def to_station_dict(self, stations):
+        """stationsテーブルの辞書変換関数
+
+        Stationオブジェクトを辞書型に変換する関数
+
+        Args:
+            stations (:obj:Station[]): Stationオブジェクトのリスト
+
+        Returns:
+            辞書型: 下記の辞書が返される
+
+        """
         station_dict_list = []
         for station in stations:
             station_dict = {
@@ -79,6 +146,14 @@ class Company(Base):
         return station_dict_list
 
     def to_company_dict(self):
+        """結合のないcompaniesテーブルの辞書変換関数
+
+        Companyオブジェクトを辞書型に変換する関数
+
+        Returns:
+            辞書型: 下記の辞書が返される
+
+        """
         company_dict = {
             'id': self.id,
             'name': self.name,
@@ -88,8 +163,22 @@ class Company(Base):
         return company_dict
 
 class Line(Base):
-    """
-    Lineテーブルクラス
+    """Lineテーブルクラス
+
+    linesテーブルのカラムの定義
+    オブジェクトを辞書変換する関数の定義
+
+    Attributes:
+        id (int): プライマリーキー
+        company_id (int): companiesテーブルとつなぐ外部キー
+        prefecture_id (str): prefecturesテーブルとつなぐ外部キー
+        name (str): 路線名
+        polygon (str): {lat: float, lng: float}の文字列化されたJSON
+        color (str): 路線のカラーコード
+        created_at (timestamp): レコード作成時間
+        updated_at (timestamp): レコード更新時間
+        company (:obj:Compamy): companiesテーブル(ManyToOne)
+        stations (:obj:Station): stationsテーブル(ManyToMany)
     """
 
     # テーブル名
@@ -101,27 +190,23 @@ class Line(Base):
     name = Column(String(20))
     polygon = Column(LONGTEXT)
     color = Column(String(20))
-    company = relationship('Company')
     created_at = Column(DateTime, nullable=False, server_default=current_timestamp())
     updated_at = Column(DateTime, nullable=False, server_default=text('CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP'))
+    company = relationship('Company')
     stations = relationship(
         'Station',
         secondary=LineStation.__tablename__,
     )
 
-    def to_dict(self):
-        polygon = eval(self.polygon)
-        line_dict = {
-            'id': self.id,
-            'company_id': self.company_id,
-            'name': self.name,
-            'polygon': polygon,
-            'color': self.color,
-            'stations': [station.to_station_dict() for station in self.stations]
-        }
-        return line_dict
-
     def to_line_dict(self):
+        """結合のないlinesテーブルの辞書変換関数
+
+        Lineオブジェクトを辞書型に変換する関数
+
+        Returns:
+            辞書型: 下記の辞書が返される
+
+        """
         polygon = eval(self.polygon)
         line_dict = {
             'id': self.id,
@@ -133,8 +218,29 @@ class Line(Base):
         return line_dict
 
 class Station(Base):
-    """
-    Stationテーブルクラス
+    """Stationテーブルクラス
+
+    stationsテーブルのカラムの定義
+    オブジェクトを辞書変換する関数の定義
+
+    Attributes:
+        id (int): プライマリーキー
+        company_id (int): companiesテーブルとつなぐ外部キー
+        prefecture_id (str): prefecturesテーブルとつなぐ外部キー
+        name (str): 駅名
+        address (str): 駅の住所
+        city_code (str): citiesテーブルとつなぐ外部キー
+        place_id (str): Google Maps APIのplace_id
+        place_ids (str): 複数取れた場合のplace_idの文字列JSON
+        place_result (str): 取得失敗回数と更新の日時が格納された文字列JSON
+        geohash (str): 駅のgeohash
+        lat (float): 駅の緯度
+        lng (float): 駅の経度
+        search_text (str): 駅の検索に必要な文字
+        created_at (timestamp): レコード作成時間
+        updated_at (timestamp): レコード更新時間
+        company (:obj:Compamy): companiesテーブル(ManyToOne)
+        lines (:obj:Line[]): linesテーブル(ManyToMany)
     """
 
     # テーブル名
@@ -163,6 +269,14 @@ class Station(Base):
     company = relationship('Company')
 
     def to_join_company_line_station_dict(self):
+        """companies, lines, stationsが結合されたテーブルの辞書変換関数
+
+        companiesテーブル、linesテーブルとstationsテーブルが結合された
+        Stationオブジェクトを辞書型に変換する関数
+
+        Returns:
+            辞書型: 下記の辞書が返される
+        """
         station_dict = {
             'id': self.id,
             'company_id': self.company_id,
@@ -181,6 +295,18 @@ class Station(Base):
         return station_dict
 
     def to_line_station_dict(self, lines):
+        """stationsが結合されたテーブルの辞書変換関数
+
+        stationsテーブルが結合された
+        Lineオブジェクトを辞書型に変換する関数
+
+        Args:
+            lines (:obj:Line[]): Lineオブジェクトのリスト
+
+        Returns:
+            辞書型: 下記の辞書が返される
+
+        """
         line_dict_station = []
         for line in lines:
             polygon = eval(line.polygon)
@@ -196,6 +322,14 @@ class Station(Base):
         return line_dict_station
 
     def to_join_company_line_dict(self):
+        """companies, linesが結合されたテーブルの辞書変換関数
+
+        companiesテーブルとlinesテーブルが結合された
+        Stationオブジェクトを辞書型に変換する関数
+
+        Returns:
+            辞書型: 下記の辞書が返される
+        """
         station_dict = {
             'id': self.id,
             'company_id': self.company_id,
@@ -214,6 +348,17 @@ class Station(Base):
         return station_dict
 
     def to_line_dict(self, lines):
+        """結合のないlinesテーブルの辞書変換関数
+
+        Stationオブジェクトを辞書型に変換する関数
+
+        Args:
+            lines (:obj:Line[]): Lineオブジェクトのリスト
+
+        Returns:
+            辞書型: 下記の辞書が返される
+
+        """
         line_dict_station = []
         for line in lines:
             line_dict = {
@@ -226,6 +371,14 @@ class Station(Base):
         return line_dict_station
 
     def to_station_dict(self):
+        """結合のないstationsテーブルの辞書変換関数
+
+        Stationオブジェクトを辞書型に変換する関数
+
+        Returns:
+            辞書型: 下記の辞書が返される
+
+        """
         station_dict = {
             'id': self.id,
             'company_id': self.company_id,
@@ -243,8 +396,21 @@ class Station(Base):
 
 
 class Prefecture(Base):
-    """
-    Prefectureテーブルクラス
+    """Prefectureテーブルクラス
+
+    prefecturesテーブルのカラムの定義
+    オブジェクトを辞書変換する関数の定義
+
+    Attributes:
+        id (str): 都道府県コード
+        name (str): 都道府県名
+        lat (float): 都道府県の緯度
+        lng (float): 都道府県の緯度
+        created_at (timestamp): レコード作成時間
+        updated_at (timestamp): レコード更新時間
+        cities (:obj:City): citiesテーブル(OneToMany)
+        stations (:obj:Station): stationsテーブル(OneToMany)
+        spots (:obj:Spot): spotsテーブル(OneToMany)
     """
 
     # テーブル名
