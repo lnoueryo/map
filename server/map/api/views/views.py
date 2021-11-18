@@ -1,6 +1,4 @@
 import sys
-from django.http import HttpResponse, JsonResponse
-import requests
 import json
 from datetime import timedelta
 import urllib.request
@@ -8,6 +6,11 @@ import datetime
 import pytz
 import logging
 
+from django.http import HttpResponse, JsonResponse
+from django.conf import settings
+from django.core.cache import cache
+from django.http import Http404
+import requests
 import sqlalchemy as sa
 from sqlalchemy.orm import backref, sessionmaker, scoped_session
 from sqlalchemy import and_, inspect
@@ -15,16 +18,12 @@ from bs4 import BeautifulSoup
 from bs4.element import Comment
 from rest_framework.views import APIView
 import tweepy
-from django.conf import settings
-from django.core.cache import cache
 
 from gmap.house_model import HouseModel
 from map.models import *
 from gmap.geohash import Geohash
 from map.sqlite.views import Sqlite
-
 sq = Sqlite()
-import socket
 
 class TableAPI(APIView):
 
@@ -50,8 +49,8 @@ class CompanyAPI(APIView):
         session = Session()
         try:
             companies = session.query(Company).all()
-        except Exception  as e:
-            if datetime.time(10,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+        except Exception:
+            if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
                 return JsonResponse(error_response(502), status=502, safe=False)
             company_dict_list = sq.get_companies()
         else:
@@ -64,13 +63,15 @@ class CompanyAPI(APIView):
 class PrefectureCityAPI(APIView):
 
     def get(self, request):
-
+        prefecture_city_cache = cache.get('prefecture_city')
+        if prefecture_city_cache:
+            return JsonResponse(prefecture_city_cache, safe=False)
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         try:
             prefectures = session.query(Prefecture).all()
         except Exception  as e:
-            if datetime.time(10,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+            if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
                 return JsonResponse(error_response(502), status=502, safe=False)
             prefecture_dict_list = sq.get_prefectures_cities()
         else:
@@ -78,44 +79,52 @@ class PrefectureCityAPI(APIView):
         finally:
             session.close()
             response = JsonResponse(prefecture_dict_list, safe=False)
-            response.__setitem__('Cache-Control', 'public, max-age=300')
+            response.__setitem__('Cache-Control', 'public, max-age=300') #5分
+            cache.set('prefecture_city', prefecture_dict_list, 600) #10分
             return response
 
 class SpotAPI(APIView):
     gh = Geohash()
     def get(self, request):
-        if request.GET.dict():
-            id = request.GET.dict()['id']
-            Session = scoped_session(sessionmaker(bind=engine))
-            session = Session()
-            try:
-                spot = session.query(Spot).filter(Spot.id == id).one_or_none()
-            except Exception  as e:
-                if datetime.time(10,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+        if 'id' not in request.GET.dict():
+            raise Http404()
+        id = request.GET.dict()['id']
+        try:
+            id = int(id)
+        except Exception:
+            raise Http404()
+        Session = scoped_session(sessionmaker(bind=engine))
+        session = Session()
+        try:
+            spot = session.query(Spot).filter(Spot.id == id).one_or_none()
+        except Exception as e:
+            if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                return JsonResponse(error_response(502), status=502, safe=False)
+            spot_dict = sq.get_spot(id)
+        else:
+            spot_dict = spot.to_spot_dict()
+            neighbors = self.get_neighbors(spot_dict['geohash'])
+            num = 1
+            while num < 6:
+                try:
+                    stations = session.query(Station).filter(Station.geohash.in_(neighbors)).all()
+                except Exception as e:
                     return JsonResponse(error_response(502), status=502, safe=False)
-                spot_dict = sq.get_spot(id)
-            else:
-                spot_dict = spot.to_spot_dict()
-                neighbors = self.get_neighbors(spot_dict['geohash'])
-                num = 1
-                while num < 6:
-                    try:
-                        stations = session.query(Station).filter(Station.geohash.in_(neighbors)).all()
-                    except Exception as e:
-                        return JsonResponse(error_response(502), status=502, safe=False)
+                else:
+                    if stations:
+                        break
                     else:
-                        if stations:
-                            break
-                        else:
-                            for neighbor in neighbors:
-                                neighbors = neighbors + self.get_neighbors(neighbor)
-                            neighbors = list(set(neighbors))
-                        num += 1
-                station_dict_list = [station.to_join_company_line_dict() for station in stations]
-                spot_dict['stations'] = station_dict_list
-            finally:
-                session.close()
-                return JsonResponse(spot_dict, safe=False)
+                        for neighbor in neighbors:
+                            neighbors = neighbors + self.get_neighbors(neighbor)
+                        neighbors = list(set(neighbors))
+                    num += 1
+            station_dict_list = [station.to_join_company_line_dict() for station in stations]
+            spot_dict['stations'] = station_dict_list
+        finally:
+            session.close()
+            response = JsonResponse(spot_dict, safe=False)
+            response.__setitem__('Cache-Control', 'public, max-age=300')
+            return response
 
 
     def get_neighbors(self, geohash):
@@ -126,12 +135,15 @@ class SpotAPI(APIView):
 
 class PrefectureAPI(APIView):
     def get(self, request):
+        prefectures_cache = cache.get('prefectures')
+        if prefectures_cache:
+            return JsonResponse(prefectures_cache, safe=False)
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         try:
             prefectures = session.query(Prefecture).all()
         except Exception as e:
-            if datetime.time(10,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+            if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
                 return JsonResponse(error_response(502), status=502, safe=False)
             prefecture_dict_list = sq.get_prefectures()
         else:
@@ -139,7 +151,8 @@ class PrefectureAPI(APIView):
         finally:
             session.close()
             response = JsonResponse(prefecture_dict_list, safe=False)
-            response.__setitem__('Cache-Control', 'public, max-age=300')
+            response.__setitem__('Cache-Control', 'public, max-age=300') #5分
+            cache.set('prefectures', prefecture_dict_list, 600) #10分
             return response
 
 class StationAPI(APIView):
@@ -147,13 +160,13 @@ class StationAPI(APIView):
     def get(self, request):
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
-        if('name' in request.GET.dict().keys()):
+        if 'name' in request.GET.dict():
             id = request.GET.dict()['prefecture_id']
             name = request.GET.dict()['name']
             try:
                 stations = session.query(Station).filter(Station.prefecture_id == id).filter(Station.name == name).all()
             except Exception as e:
-                if datetime.time(10,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+                if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
                     return JsonResponse(error_response(502), status=502, safe=False)
                 station_dict_list = sq.get_stations_by_name(id, name)
             else:
@@ -162,11 +175,21 @@ class StationAPI(APIView):
                 session.close()
                 return JsonResponse(station_dict_list, safe=False)
 
+        if 'prefecture_id' not in request.GET.dict():
+            session.close()
+            raise Http404()
         id = request.GET.dict()['prefecture_id']
         try:
+            int(id)
+        except:
+            raise Http404()
+        try:
             stations = session.query(Station).filter(Station.prefecture_id == id).all()
+            if not stations:
+                session.close()
+                return JsonResponse([], safe=False)
         except Exception as e:
-            if datetime.time(10,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+            if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
                 return JsonResponse(error_response(502), status=502, safe=False)
             station_dict_list = sq.get_stations(id)
         else:
@@ -179,13 +202,25 @@ class StationAPI(APIView):
 
 class LineAPI(APIView):
     def get(self, request):
+        if 'prefecture_id' not in request.GET.dict():
+            raise Http404()
+        id = request.GET.dict()['prefecture_id']
+        line_cache = cache.get(f'line_{id}')
+        if line_cache:
+            return JsonResponse(line_cache, safe=False)
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
-        id = request.GET.dict()['prefecture_id']
+        try:
+            int(id)
+        except:
+            raise Http404()
         try:
             lines = session.query(Line).filter(Line.prefecture_id == id).all()
+            if not lines:
+                session.close()
+                return JsonResponse([], safe=False)
         except Exception as e:
-            if datetime.time(10,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+            if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
                 return JsonResponse(error_response(502), status=502, safe=False)
             line_dict_list = sq.get_lines(id)
             return JsonResponse({'error': e}, safe=False)
@@ -194,18 +229,28 @@ class LineAPI(APIView):
         finally:
             session.close()
             response = JsonResponse(line_dict_list, safe=False)
-            response.__setitem__('Cache-Control', 'public, max-age=300')
+            response.__setitem__('Cache-Control', 'public, max-age=300') #5分
+            cache.set(f'line_{id}', line_dict_list, 600) #10分
             return response
 
 class CityAPI(APIView):
     def get(self, request):
+        if 'city_code' not in request.GET.dict():
+            raise Http404()
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
         id = request.GET.dict()['city_code']
         try:
+            int(id)
+        except:
+            raise Http404()
+        try:
             cities = session.query(City).filter(City.id == id).all()
+            if not cities:
+                session.close()
+                return JsonResponse([], safe=False)
         except Exception as e:
-            if datetime.time(10,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+            if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
                 return JsonResponse(error_response(502), status=502, safe=False)
             city_dict_list = sq.get_cities(id)
         else:
@@ -218,6 +263,9 @@ class SearchStationAPI(APIView):
     def get(self, request):
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
+        if 'word' not in request.GET.dict():
+            session.close()
+            raise Http404()
         word = request.GET.dict()['word']
         word = word.replace('　', ' ')
         words = word.split(' ')
@@ -226,9 +274,9 @@ class SearchStationAPI(APIView):
             filters = []
             for word in words:
                 filters.append(and_(Station.search_text.like('%' + word + '%')))
-            stations = query.filter(and_(*filters)).all()
+            stations = query.filter(*filters).all()
         except Exception as e:
-            if datetime.time(10,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+            if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
                 return JsonResponse(error_response(502), status=502, safe=False)
             new_station_dict_list = sq.search_stations()
         else:
@@ -243,10 +291,13 @@ class SearchStationAPI(APIView):
             session.close()
             return JsonResponse(new_station_dict_list, safe=False)
 
-class SearchSpotAPI(APIView):
+class SearchTownAPI(APIView):
     def get(self, request):
         Session = scoped_session(sessionmaker(bind=engine))
         session = Session()
+        if 'word' not in request.GET.dict():
+            session.close()
+            raise Http404()
         word = request.GET.dict()['word']
         word = word.replace('　', ' ')
         words = word.split(' ')
@@ -255,9 +306,9 @@ class SearchSpotAPI(APIView):
             filters = []
             for word in words:
                 filters.append(and_(Town.address.like('%' + word + '%')))
-            towns = query.filter(and_(*filters)).all()
+            towns = query.filter(*filters).all()
         except Exception as e:
-            if datetime.time(10,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
+            if datetime.time(12,00,00) < datetime.datetime.now(pytz.timezone('Asia/Tokyo')).time() < datetime.time(20,00,00):
                 return JsonResponse(error_response(502), status=502, safe=False)
             new_town_dict_list = sq.search_towns(words)
         else:
@@ -310,6 +361,8 @@ class TwitterAPI(APIView):
     auth.set_access_token(settings.TWITTER['ACCESS_TOKEN'], settings.TWITTER['ACCESS_TOKEN_SECRET'])
     api = tweepy.API(auth)
     def get(self, request):
+        if 'name' not in request.GET.dict():
+            raise Http404()
         title = (request.GET.dict())['name']
         try:
             tweets_obj = self.api.search(title, lang='ja', rpp=80, count=100, result_type='recent', tweet_mode='extended')

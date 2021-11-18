@@ -1,10 +1,15 @@
 from .base import *
 import io
+import warnings
+
 import sqlalchemy as sa
+from sqlalchemy import exc as sa_exc
 import pymysql
 import google.auth
 import environ
 from google.cloud import secretmanager, logging
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore", category=sa_exc.SAWarning)
 
 client = google.cloud.logging.Client()
 client.setup_logging()

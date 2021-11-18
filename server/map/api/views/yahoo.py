@@ -1,4 +1,5 @@
 from django.http import HttpResponse, JsonResponse
+from django.http.response import Http404
 import requests
 import json
 import re
@@ -21,6 +22,13 @@ class ReverseGeocodeAPI(APIView):
     """
     def get(self, request):
         params = request.GET.dict()
+        if 'lat' not in params or 'lng' not in params:
+            raise Http404()
+        try:
+            params['lat'] = float(params['lat'])
+            params['lng'] = float(params['lng'])
+        except Exception:
+            raise Http404()
         payload = {'appid': API_KEY, 'output': 'json', 'lat': params['lat'], 'lon': params['lng']}
         url = 'https://map.yahooapis.jp/geoapi/V1/reverseGeoCoder'
         try:
@@ -72,6 +80,13 @@ class PlaceInfoAPI(APIView):
 
     def get(self, request):
         params = request.GET.dict()
+        if 'lat' not in params or 'lng' not in params:
+            raise Http404()
+        try:
+            params['lat'] = float(params['lat'])
+            params['lng'] = float(params['lng'])
+        except Exception:
+            raise Http404()
         payload = {
             'appid': API_KEY,
             'output': 'json',

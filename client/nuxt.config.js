@@ -28,7 +28,7 @@ export default {
     script: [
       { src: `https://maps.googleapis.com/maps/api/js?key=${process.env.NODE_ENV === 'production' ? process.env.PROD_API_KEY : process.env.DEV_API_KEY}&libraries=geometry,places&v=quarterly`, defer: true, body: true },
       { src: 'https://polyfill.io/v3/polyfill.min.js?features=default', defer: true, body: true },
-      { src: 'https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js', defer: true, body: true },
+      // { src: 'https://unpkg.com/@googlemaps/markerclustererplus/dist/index.min.js', defer: true, body: true },
       // { src: 'https://unpkg.com/leaflet@1.7.1/dist/leaflet-src.js', integrity: 'sha512-I5Hd7FcJ9rZkH7uD01G3AjsuzFy3gqz7HIJvzFZGFt2mrCS4Piw9bYZvCgUE0aiJuiZFYIJIwpbNnDIM6ohTrg==', crossorigin: '', defer: true, body: true },
       // { src: 'https://unpkg.com/leaflet.gridlayer.googlemutant@latest/dist/Leaflet.GoogleMutant.js', defer: true, body: true },
     ]

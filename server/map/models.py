@@ -49,7 +49,7 @@ class Company(Base):
             'name': self.name,
             'address': self.address,
             'founded': self.founded,
-            'lines': self.to_station_dict(self.lines)
+            'lines': self.to_line_station_dict(self.lines)
         }
         return company_dict
 
@@ -365,7 +365,6 @@ class City(Base):
             'name': self.name,
             'lat': self.lat,
             'lng': self.lng,
-            'polygons': eval(self.polygons),
             'layouts': eval(self.layouts),
             'columns': eval(self.columns),
             'facility': self.facility.to_facility_dict(),
@@ -575,7 +574,7 @@ class Population(Base):
 
 class Spot(Base):
     """
-    Populationテーブルクラス
+    Spotテーブルクラス
     """
 
     # テーブル名
@@ -606,7 +605,7 @@ class Spot(Base):
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
-            'cities': [city.to_city_dict() for city in self.cities]
+            'city': self.city.to_city_dict()
         }
         return spot_dict
 
@@ -670,11 +669,11 @@ class Town(Base):
             'address': self.address,
             'prefecture_id': self.prefecture_id,
             'city_code': self.city_code,
-            'count': self.count,
-            'count_ratio': self.count_ratio,
             'lat': self.lat,
             'lng': self.lng,
             'geohash': self.geohash,
+            'count': self.count,
+            'count_ratio': self.count_ratio,
             'layouts': layouts,
             'columns': columns,
         }
