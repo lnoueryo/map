@@ -92,3 +92,5 @@ sw.*
 assets
 
 dist
+
+.firebase/

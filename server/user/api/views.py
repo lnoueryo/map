@@ -33,7 +33,7 @@ class Account():
 
     def set_cookie(self, session_id, session_data):
         response = JsonResponse(session_data, safe=False)
-        response.set_cookie('session_id', session_id, secure=True, samesite='Lax')
+        response.set_cookie('session_id', session_id)
         return response
 
     def user_data(self, request):
@@ -68,7 +68,7 @@ class AuthenticationAPI(APIView):
                 if user.password == password:
                     session_id, session_data = account.create_session(user)
                     request.session[session_id] = session_data
-                    response = account.set_cookie(session_id, session_data, secure=True, samesite='Lax')
+                    response = account.set_cookie(session_id, session_data)
                 else:
                     response = JsonResponse({'message': 'password is wrong'}, safe=False, status=401)
             else:

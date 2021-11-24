@@ -131,13 +131,15 @@ export default Vue.extend({
           this.$store.dispatch("station/getCurrentBounds", bounds);
         }, 250);
       });
-      this.$mapConfig.map.setZoom(15);
-      this.$mapConfig.map.panTo(
-        new google.maps.LatLng(
-          (this as any).particularStations[0].lat,
-          (this as any).particularStations[0].lng
-        )
-      );
+      if(google) {
+        this.$mapConfig.map.setZoom(15);
+        this.$mapConfig.map.panTo(
+          new google.maps.LatLng(
+            (this as any).particularStations[0].lat,
+            (this as any).particularStations[0].lng
+          )
+        );
+      }
     },
     async makeMarkers() {
       if ("company_id" in this.$route.query) {

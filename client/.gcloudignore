@@ -18,3 +18,4 @@ utils
 jest.config.js
 nuxt.config.js
 old_nuxt.config.js
+.firebase
