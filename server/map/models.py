@@ -479,6 +479,28 @@ class Prefecture(Base):
             'lng': self.lng,
         }
         return prefecture_dict
+
+    def validate(self):
+        column_dict_list = [
+            {'column': 'id', 'value': self.id, 'type': str, 'check': 'len', 'num': 3, 'required': True},
+            {'column': 'name', 'value': self.name, 'type': str, 'check': '', 'required': True},
+            {'column': 'lat', 'value': self.lat, 'type': float, 'check': '', 'required': True},
+            {'column': 'lng', 'value': self.lng, 'type': float, 'check': '', 'required': True},
+        ]
+        for column_dict in column_dict_list:
+            validation = validate_type(column_dict)
+            if not validation['status']:
+                return validation
+        if len(self.id) >= 4:
+            return {'status': False, 'message': 'id must be less than 3 characters'}
+        if self.name[-1] not in ['都', '道', '府', '県']:
+            return {'status': False, 'message': 'last character must be one of these 「都」,「道」,「府」,「県」'}
+        if 20 > self.lat and self.lat > 46:
+            return {'status': False, 'message': 'lat must be between 20 and 46'}
+        if not 122 > self.lng and self.lng > 154:
+            return {'status': False, 'message': 'lng must be between 122 and 154'}
+        return {'status': True}
+
 class City(Base):
     """
     Cityテーブルクラス
@@ -548,6 +570,8 @@ class City(Base):
             'name': self.name,
             'lat': self.lat,
             'lng': self.lng,
+            'layouts': eval(self.layouts),
+            'columns': eval(self.columns),
         }
         return city_dict
 
@@ -771,9 +795,18 @@ class Spot(Base):
             'geohash': self.geohash,
             'lat': self.lat,
             'lng': self.lng,
-            'city': self.city.to_city_dict()
+            'city': self.to_city_dict(self.city)
         }
         return spot_dict
+
+    def to_city_dict(self, city):
+        city_dict = {
+            'id': city.id,
+            'name': city.name,
+            'lat': city.lat,
+            'lng': city.lng,
+        }
+        return city_dict
 
     def to_spot_dict(self):
         spot_dict = {
@@ -848,3 +881,14 @@ class Town(Base):
 def change_time(time):
     added_timezone = time + timedelta(hours=9)
     return added_timezone.strftime('%Y/%m/%d %H:%M:%S')
+
+def validate_type(column_dict):
+    if type(column_dict['value']) == column_dict['type']:
+        if column_dict['required']:
+            if column_dict['value']:
+                return {'status': True, 'message': ''}
+            else:
+                return {'status': False, 'message': f'{column_dict["column"]} is required'}
+        return {'status': True, 'message': ''}
+    else:
+        return {'status': False, 'message': f'{column_dict["column"]} must be {"integer" if column_dict["type"] == int else "float" if column_dict["type"] == float else "string"}'}

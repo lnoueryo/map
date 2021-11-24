@@ -390,7 +390,7 @@ class CityModelTests(unittest.TestCase):
         session = Session()
         city = session.query(City).filter(City.id=='13101').first()
         values = list(city.to_city_dict().keys())
-        needed_columns = ['id', 'name', 'lat', 'lng']
+        needed_columns = ['id', 'name', 'lat', 'lng', 'layouts', 'columns']
         self.assertTrue(set(values) == set(needed_columns))
         session.close()
 
@@ -470,6 +470,11 @@ class SpotModelTests(unittest.TestCase):
         spot_values = list(spot_dict.keys())
         needed_spot_columns = ['id', 'name', 'prefecture_id', 'city_code', 'lat', 'lng', 'place_id', 'address', 'geohash', 'city']
         self.assertTrue(set(spot_values) == set(needed_spot_columns))
+        city_dict = spot_dict['city']
+        city_values = list(city_dict.keys())
+        needed_city_columns = ['id', 'name', 'lat', 'lng']
+        for city_value in city_values:
+            self.assertIn(city_value, needed_city_columns)
         session.close()
 
     def test_to_spot_dict(self):

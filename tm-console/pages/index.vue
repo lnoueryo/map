@@ -2,12 +2,11 @@
   <v-main>
     <v-container>
       <div class="d-flex flex-wrap justify-space-around" v-if="tables">
-        <v-card class="my-3 card" max-width="344" v-for="(table, i) in tables" :key="i" :to="'/' + table.to">
+        <v-card class="my-3 card" max-width="344" v-for="(table, i) in tables" :key="i" :to="{name: 'management', query: {table: table.name}}">
           <v-card-text>
             <p class="text-h4 text--primary">
               {{table.name}}
             </p>
-            <!-- <p>{{table.describe}}</p> -->
             <div class="d-flex">
               <div class="text--primary px-1" style="width: 50%" v-for="(columnArray, i) in table.columns" :key="i">
                 <div v-for="(column, j) in columnArray" :key="j">
